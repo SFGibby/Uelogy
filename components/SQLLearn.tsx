@@ -310,7 +310,7 @@ export default function SQLLearn() {
           <span>SQL CRASH COURSE</span>
           <span className="ml-4 text-sm" style={dimStyle}>// SOLAR SALES DATABASE</span>
         </div>
-        <a href="/" style={dimStyle} className="text-sm hover:text-[#33ff33] transition-colors">{'<- BACK'}</a>
+        <span></span>
       </div>
 
       <div className="flex flex-1 overflow-hidden">

@@ -23,7 +23,15 @@ export default function RootLayout({
       lang="en"
       className={`${vt323.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <nav style={{fontFamily:'var(--font-vt323), monospace', borderBottom:'1px solid #1aaa1a', background:'#000'}}>
+          <div style={{maxWidth:'900px', margin:'0 auto', padding:'10px 24px', display:'flex', gap:'32px', alignItems:'center'}}>
+            <a href="/" style={{color:'#33ff33', textDecoration:'none', fontSize:'18px', textShadow:'0 0 6px #33ff33'}}>UELOGY</a>
+            <a href="/sql" style={{color:'#1aaa1a', textDecoration:'none', fontSize:'18px'}}>SQL</a>
+          </div>
+        </nav>
+        {children}
+      </body>
     </html>
   );
 }
