@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error no types for sql.js
+import initSqlJs from 'sql.js';
 
 const SETUP_SQL = `
 CREATE TABLE reps (
@@ -227,7 +230,7 @@ export default function SQLLearn() {
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).initSqlJs({ locateFile: () => '/sql-wasm.wasm' }).then((SQL: any) => {
+    initSqlJs({ locateFile: () => '/sql-wasm.wasm' }).then((SQL: any) => {
       const database = new SQL.Database();
       database.run(SETUP_SQL);
       setDb(database);
