@@ -36,6 +36,7 @@ export default function RootLayout({
           }}>
             <a href="/" style={{ color: '#fff', textDecoration: 'none', fontSize: '14px', fontWeight: 600, letterSpacing: '0.03em' }}>HOME</a>
             <a href="/learning" style={{ color: '#888', textDecoration: 'none', fontSize: '14px', fontWeight: 400, letterSpacing: '0.03em' }}>LEARNING</a>
+            <a href="/collection" style={{ color: '#888', textDecoration: 'none', fontSize: '14px', fontWeight: 400, letterSpacing: '0.03em' }}>COLLECTION</a>
           </div>
         </nav>
         {children}
