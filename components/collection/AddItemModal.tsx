@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, DragEvent } from 'react';
 import { supabase, CollectionItem } from '../../lib/supabase';
 import type { SearchResult } from '../../app/api/search/route';
 
@@ -126,6 +126,35 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
 
   const [apiImageUrl, setApiImageUrl] = useState(editItem?.api_image_url ?? '');
   const [avgSoldPrice, setAvgSoldPrice] = useState(editItem?.avg_sold_price ?? null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.url) setForm(f => ({ ...f, image_url: data.url }));
+      else alert('Upload failed: ' + data.error);
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const fetchPlayerImage = useCallback(async (player: string) => {
+    if (!player.trim()) return;
+    try {
+      const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(player)}`);
+      const data = await res.json();
+      const p = data?.player?.[0];
+      const img = p?.strCutout || p?.strThumb || p?.strRender;
+      if (img) setForm(f => ({ ...f, image_url: img }));
+    } catch { /* silent */ }
+  }, []);
 
   const isCard = type === 'mtg' || type === 'pokemon' || type === 'sports_card';
 
@@ -327,7 +356,15 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
                     </select>
                   </div>
                   <div style={field()}>
-                    <div style={label}>Player / Person</div>
+                    <div style={{ ...label, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Player / Person</span>
+                      {form.player && (
+                        <button
+                          onClick={() => fetchPlayerImage(form.player)}
+                          style={{ background: 'none', border: '1px solid #a78bfa44', borderRadius: 4, color: '#a78bfa', fontSize: 10, padding: '2px 8px', cursor: 'pointer' }}
+                        >AUTO-FETCH</button>
+                      )}
+                    </div>
                     <input style={inp} value={form.player} onChange={e => setForm(f => ({ ...f, player: e.target.value }))} placeholder="e.g. Michael Jordan" />
                   </div>
                 </div>
@@ -427,11 +464,73 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
                 </div>
               )}
 
-              {/* Image URL (non-card or override) */}
-              {(type === 'memorabilia' || type === 'other' || type === 'sports_card') && (
+              {/* Image upload zone — for non-API card types and as override for any type */}
+              {(type === 'sports_card' || type === 'memorabilia' || type === 'other' || (editItem && !apiImageUrl)) && (
                 <div>
-                  <div style={label}>Image URL (optional)</div>
-                  <input style={inp} value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} placeholder="Paste image link (Imgur, etc.)" />
+                  <div style={{ ...label, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Photo</span>
+                    {type === 'sports_card' && form.player && (
+                      <button
+                        onClick={() => fetchPlayerImage(form.player)}
+                        style={{ background: 'none', border: '1px solid #3b82f644', borderRadius: 4, color: '#3b82f6', fontSize: 10, padding: '2px 8px', cursor: 'pointer', letterSpacing: '0.04em' }}
+                      >
+                        AUTO-FETCH PLAYER IMAGE
+                      </button>
+                    )}
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f); }}
+                  />
+
+                  {form.image_url ? (
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <img src={form.image_url} alt="" style={{ maxHeight: 160, maxWidth: '100%', borderRadius: 8, objectFit: 'contain', display: 'block' }} />
+                      <button
+                        onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                        style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.7)', border: '1px solid #444', borderRadius: '50%', color: '#ccc', width: 24, height: 24, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >✕</button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ marginTop: 8, display: 'block', background: 'none', border: '1px solid #333', borderRadius: 6, color: '#888', fontSize: 11, padding: '4px 10px', cursor: 'pointer' }}
+                      >Replace photo</button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                      onDragLeave={() => setDragOver(false)}
+                      onDrop={(e: DragEvent<HTMLDivElement>) => {
+                        e.preventDefault();
+                        setDragOver(false);
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) uploadFile(f);
+                      }}
+                      style={{
+                        border: `2px dashed ${dragOver ? '#7c3aed' : '#333'}`,
+                        borderRadius: 8,
+                        padding: '28px 20px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        background: dragOver ? 'rgba(124,58,237,0.06)' : 'transparent',
+                        transition: 'border-color 0.15s, background 0.15s',
+                      }}
+                    >
+                      {uploading ? (
+                        <div style={{ color: '#888', fontSize: 13 }}>Uploading…</div>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                          <div style={{ color: '#888', fontSize: 13 }}>Click to upload or drag a photo here</div>
+                          <div style={{ color: '#555', fontSize: 11, marginTop: 4 }}>JPG, PNG, HEIC, WebP</div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
