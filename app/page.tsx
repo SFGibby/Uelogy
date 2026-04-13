@@ -29,18 +29,13 @@ const WHAT_I_DO = [
   },
 ];
 
-// Instagram placeholder gradients — swap these out with LightWidget embed for a live feed
-// Setup takes ~5 min at lightwidget.com → replace this section with their iframe
-const IG_SWATCHES = [
-  'linear-gradient(135deg,#667eea,#764ba2)',
-  'linear-gradient(135deg,#f093fb,#f5576c)',
-  'linear-gradient(135deg,#4facfe,#00f2fe)',
-  'linear-gradient(135deg,#43e97b,#38f9d7)',
-  'linear-gradient(135deg,#fa709a,#fee140)',
-  'linear-gradient(135deg,#30cfd0,#330867)',
-  'linear-gradient(135deg,#a18cd1,#fbc2eb)',
-  'linear-gradient(135deg,#ffecd2,#fcb69f)',
-  'linear-gradient(135deg,#ff9a9e,#fecfef)',
+const PHOTOS = [
+  { src: '/photos/utah-group.jpg',  alt: 'Family reunion at the red rocks' },
+  { src: '/photos/milky-way.jpg',   alt: 'Milky Way over Lake Powell' },
+  { src: '/photos/lake-powell.jpg', alt: 'Friends at Lake Powell' },
+  { src: '/photos/volleyball.jpg',  alt: 'Volleyball in the water' },
+  { src: '/photos/zion.jpg',        alt: 'The Narrows, Zion National Park' },
+  { src: '/photos/leeds.jpg',       alt: 'Leeds Christmas market' },
 ];
 
 const term: React.CSSProperties = {
@@ -274,9 +269,9 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Photo grid — replace with LightWidget iframe for live feed */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, maxWidth: 540 }}>
-            {IG_SWATCHES.map((bg, i) => (
+          {/* Photo grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, maxWidth: 600 }}>
+            {PHOTOS.map((photo, i) => (
               <a
                 key={i}
                 href="https://www.instagram.com/samuelgibby/"
@@ -285,24 +280,32 @@ export default function Home() {
                 style={{
                   aspectRatio: '1',
                   display: 'block',
-                  background: bg,
+                  overflow: 'hidden',
                   borderRadius: 4,
-                  opacity: 0.7,
-                  transition: 'opacity 0.2s, transform 0.2s',
+                  position: 'relative',
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.opacity = '1';
-                  e.currentTarget.style.transform = 'scale(1.03)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.opacity = '0.7';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-              />
+              >
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transition: 'transform 0.3s ease, filter 0.3s ease',
+                    filter: 'brightness(0.85)',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.06)';
+                    (e.currentTarget as HTMLImageElement).style.filter = 'brightness(1)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
+                    (e.currentTarget as HTMLImageElement).style.filter = 'brightness(0.85)';
+                  }}
+                />
+              </a>
             ))}
-          </div>
-          <div style={{ marginTop: 16, fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.04em' }}>
-            Connect a live feed at lightwidget.com — free, 5 min setup
           </div>
         </section>
 
