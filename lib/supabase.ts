@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// These are public-facing keys (safe to hardcode — anon key has no write access beyond RLS)
+const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_rsJEEE17xhg45mkpVDithw_mCwwlDFh';
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export interface CollectionItem {
   id: string;
