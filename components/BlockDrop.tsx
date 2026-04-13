@@ -68,9 +68,10 @@ function saveToLeaderboard(entry:LeaderboardEntry): LeaderboardEntry[] {
 
 interface BlockDropProps {
   onMilestone?: (level: number) => void;
+  onGameEnd?: () => void;
 }
 
-export default function BlockDrop({ onMilestone }: BlockDropProps) {
+export default function BlockDrop({ onMilestone, onGameEnd }: BlockDropProps) {
   const stateRef = useRef({
     grid: createGrid(), piece: randomPiece(), next: randomPiece(),
     score:0, lines:0, level:1, tetrises:0, milestone:0,
@@ -144,7 +145,8 @@ export default function BlockDrop({ onMilestone }: BlockDropProps) {
     const entry:LeaderboardEntry={name:(nameInput.trim()||'AAA').slice(0,10).toUpperCase(), score:stateRef.current.score, date:new Date().toLocaleDateString()};
     setLeaderboard(saveToLeaderboard(entry));
     setShowNameInput(false); setShowLeaderboard(true);
-  },[nameInput]);
+    onGameEnd?.();
+  },[nameInput, onGameEnd]);
 
   useEffect(()=>{ rafRef.current=requestAnimationFrame(gameLoop); return()=>cancelAnimationFrame(rafRef.current); },[gameLoop]);
 
@@ -269,7 +271,7 @@ export default function BlockDrop({ onMilestone }: BlockDropProps) {
               placeholder="_ _ _ _ _"
             />
             <button onClick={submitScore} className="border border-[#33ff33] px-6 py-1 hover:bg-[#33ff33] hover:text-black transition-all">SAVE</button>
-            <button onClick={startGame} className="text-[#1aaa1a] text-sm hover:text-[#33ff33]">SKIP</button>
+            <button onClick={()=>{onGameEnd?.(); startGame();}} className="text-[#1aaa1a] text-sm hover:text-[#33ff33]">SKIP</button>
           </div>
         )}
 
