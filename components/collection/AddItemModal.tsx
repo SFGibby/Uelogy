@@ -13,7 +13,76 @@ const TYPES = [
 ];
 
 const SUBTYPES = ['Shoe', 'Hat', 'Ball', 'Jersey', 'Helmet', 'Bat', 'Glove', 'Photo', 'Other'];
-const CONDITIONS = ['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played', 'Damaged', 'Graded'];
+const CONDITIONS: Record<string, string[]> = {
+  mtg: [
+    'Mint (M)',
+    'Near Mint (NM)',
+    'Lightly Played (LP)',
+    'Moderately Played (MP)',
+    'Heavily Played (HP)',
+    'Damaged (DMG)',
+  ],
+  pokemon: [
+    'Mint (M)',
+    'Near Mint (NM)',
+    'Lightly Played (LP)',
+    'Moderately Played (MP)',
+    'Heavily Played (HP)',
+    'Damaged (DMG)',
+    'Graded — PSA',
+    'Graded — BGS',
+    'Graded — CGC',
+    'Graded — SGC',
+  ],
+  sports_card: [
+    'Raw — Mint',
+    'Raw — Near Mint/Mint (NM-MT)',
+    'Raw — Near Mint (NM)',
+    'Raw — Excellent/Mint (EX-MT)',
+    'Raw — Excellent (EX)',
+    'Raw — Very Good/Excellent (VG-EX)',
+    'Raw — Very Good (VG)',
+    'Raw — Good (G)',
+    'Raw — Fair',
+    'Raw — Poor',
+    'Graded — PSA 10',
+    'Graded — PSA 9',
+    'Graded — PSA 8',
+    'Graded — PSA 7',
+    'Graded — PSA 6',
+    'Graded — PSA 5 or below',
+    'Graded — BGS 10 (Pristine)',
+    'Graded — BGS 9.5 (Gem Mint)',
+    'Graded — BGS 9',
+    'Graded — BGS 8.5',
+    'Graded — BGS 8 or below',
+    'Graded — SGC 10',
+    'Graded — SGC 9.5',
+    'Graded — SGC 9',
+    'Graded — CGC 10',
+    'Graded — CGC 9.5',
+    'Graded — CGC 9',
+  ],
+  memorabilia: [
+    'Mint / Unplayed',
+    'Excellent',
+    'Very Good',
+    'Good',
+    'Fair',
+    'Poor',
+    'Authenticated (PSA/DNA)',
+    'Authenticated (JSA)',
+    'Authenticated (Beckett)',
+    'Authenticated (Fanatics)',
+  ],
+  other: [
+    'Mint',
+    'Near Mint',
+    'Good',
+    'Fair',
+    'Poor',
+  ],
+};
 
 interface Props {
   onClose: () => void;
@@ -295,21 +364,13 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
                 </div>
               )}
 
-              {/* Condition + Grade */}
-              <div style={row}>
-                <div style={field()}>
-                  <div style={label}>Condition</div>
-                  <select style={inp} value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
-                    <option value="">Select…</option>
-                    {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                {(form.condition === 'Graded' || form.grade) && (
-                  <div style={field()}>
-                    <div style={label}>Grade</div>
-                    <input style={inp} value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))} placeholder="PSA 10, BGS 9.5…" />
-                  </div>
-                )}
+              {/* Condition */}
+              <div>
+                <div style={label}>Condition</div>
+                <select style={inp} value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
+                  <option value="">Select condition…</option>
+                  {(CONDITIONS[type] ?? CONDITIONS.other).map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
 
               {/* Checkboxes */}
