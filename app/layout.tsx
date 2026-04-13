@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { VT323 } from "next/font/google";
 import "./globals.css";
+import FaviconRandomizer from "../components/FaviconRandomizer";
 
 const vt323 = VT323({
   variable: "--font-vt323",
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${vt323.variable} h-full`}>
       <body className="min-h-full flex flex-col">
+        <FaviconRandomizer />
         <nav style={{
           background: '#111',
           borderBottom: '1px solid #222',
