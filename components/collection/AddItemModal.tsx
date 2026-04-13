@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, DragEvent } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase, CollectionItem } from '../../lib/supabase';
 import type { SearchResult } from '../../app/api/search/route';
 
@@ -143,17 +143,6 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
     } finally {
       setUploading(false);
     }
-  }, []);
-
-  const fetchPlayerImage = useCallback(async (player: string) => {
-    if (!player.trim()) return;
-    try {
-      const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(player)}`);
-      const data = await res.json();
-      const p = data?.player?.[0];
-      const img = p?.strCutout || p?.strThumb || p?.strRender;
-      if (img) setForm(f => ({ ...f, image_url: img }));
-    } catch { /* silent */ }
   }, []);
 
   const isCard = type === 'mtg' || type === 'pokemon' || type === 'sports_card';
@@ -356,15 +345,7 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
                     </select>
                   </div>
                   <div style={field()}>
-                    <div style={{ ...label, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Player / Person</span>
-                      {form.player && (
-                        <button
-                          onClick={() => fetchPlayerImage(form.player)}
-                          style={{ background: 'none', border: '1px solid #a78bfa44', borderRadius: 4, color: '#a78bfa', fontSize: 10, padding: '2px 8px', cursor: 'pointer' }}
-                        >AUTO-FETCH</button>
-                      )}
-                    </div>
+                    <div style={label}>Player / Person</div>
                     <input style={inp} value={form.player} onChange={e => setForm(f => ({ ...f, player: e.target.value }))} placeholder="e.g. Michael Jordan" />
                   </div>
                 </div>
@@ -467,17 +448,7 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
               {/* Image upload zone — for non-API card types and as override for any type */}
               {(type === 'sports_card' || type === 'memorabilia' || type === 'other' || (editItem && !apiImageUrl)) && (
                 <div>
-                  <div style={{ ...label, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>Photo</span>
-                    {type === 'sports_card' && form.player && (
-                      <button
-                        onClick={() => fetchPlayerImage(form.player)}
-                        style={{ background: 'none', border: '1px solid #3b82f644', borderRadius: 4, color: '#3b82f6', fontSize: 10, padding: '2px 8px', cursor: 'pointer', letterSpacing: '0.04em' }}
-                      >
-                        AUTO-FETCH PLAYER IMAGE
-                      </button>
-                    )}
-                  </div>
+                  <div style={label}>Photo of card / item</div>
 
                   <input
                     ref={fileInputRef}
