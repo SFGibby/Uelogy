@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, CollectionItem } from '../../lib/supabase';
 import AddItemModal from './AddItemModal';
 
-const TYPE_META: Record<string, { label: string; color: string }> = {
-  mtg:          { label: 'MTG',         color: '#f59e0b' },
-  pokemon:      { label: 'Pokémon',     color: '#ef4444' },
-  sports_card:  { label: 'Sports Card', color: '#3b82f6' },
-  memorabilia:  { label: 'Memorabilia', color: '#8b5cf6' },
-  other:        { label: 'Other',       color: '#6b7280' },
+const TYPE_META: Record<string, { label: string; color: string; glow: string }> = {
+  mtg:          { label: 'MTG',         color: '#f59e0b', glow: 'rgba(245,158,11,0.3)' },
+  pokemon:      { label: 'Pokémon',     color: '#ef4444', glow: 'rgba(239,68,68,0.3)' },
+  sports_card:  { label: 'Sports Card', color: '#3b82f6', glow: 'rgba(59,130,246,0.3)' },
+  memorabilia:  { label: 'Memorabilia', color: '#a78bfa', glow: 'rgba(167,139,250,0.3)' },
+  other:        { label: 'Other',       color: '#6b7280', glow: 'rgba(107,114,128,0.3)' },
 };
 
 export default function CollectionTracker() {
@@ -21,7 +21,6 @@ export default function CollectionTracker() {
   const [filterType, setFilterType] = useState('');
   const [sortBy, setSortBy] = useState<'created_at' | 'name' | 'avg_sold_price' | 'purchase_price'>('created_at');
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
-  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,89 +74,135 @@ export default function CollectionTracker() {
   });
 
   const totalValue = filtered.reduce((sum, i) => sum + (i.avg_sold_price ?? i.purchase_price ?? 0) * (i.quantity ?? 1), 0);
-  const c = { bg: '#0f0f0f', card: '#1a1a1a', border: '#2a2a2a', text: '#f0f0f0', muted: '#888' };
 
-  const inp: React.CSSProperties = { background: '#1a1a1a', border: `1px solid ${c.border}`, borderRadius: 8, padding: '8px 14px', color: c.text, fontSize: 13, outline: 'none' };
+  const inp: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 8,
+    padding: '8px 14px',
+    color: '#e8e8e8',
+    fontSize: 13,
+    outline: 'none',
+    backdropFilter: 'blur(8px)',
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: c.bg, color: c.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1a 40%, #0a0f0a 100%)',
+      color: '#e8e8e8',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Ambient background glow blobs */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '10%', left: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)', filter: 'blur(40px)', transform: 'translate(-50%, -50%)' }} />
+      </div>
 
-      {/* Header */}
-      <div style={{ borderBottom: `1px solid ${c.border}`, padding: '24px 32px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: -0.5 }}>My Collection</h1>
-            <div style={{ color: c.muted, fontSize: 13, marginTop: 4 }}>
-              {filtered.length} item{filtered.length !== 1 ? 's' : ''}
-              {totalValue > 0 && <span style={{ marginLeft: 12, color: '#4ade80', fontWeight: 600 }}>≈ ${totalValue.toFixed(2)}</span>}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <div style={{
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '28px 32px',
+          background: 'rgba(255,255,255,0.02)',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.5, background: 'linear-gradient(135deg, #e8e8e8 0%, #a0a0a0 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                The Collection
+              </h1>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 5, letterSpacing: '0.02em' }}>
+                {filtered.length} item{filtered.length !== 1 ? 's' : ''}
+                {totalValue > 0 && (
+                  <span style={{ marginLeft: 16, color: '#4ade80', fontWeight: 700, fontSize: 14 }}>
+                    ≈ ${totalValue.toFixed(2)}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={exportCSV} style={{ ...inp, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                Export CSV
+              </button>
+              <button
+                onClick={() => { setEditItem(null); setShowModal(true); }}
+                style={{
+                  padding: '9px 22px',
+                  background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+                  color: '#fff',
+                  border: '1px solid rgba(167,139,250,0.4)',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 0 20px rgba(124,58,237,0.3)',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                + Add Item
+              </button>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={exportCSV} style={{ ...inp, cursor: 'pointer', fontSize: 12 }}>Export CSV</button>
-            <button onClick={() => { setEditItem(null); setShowModal(true); }}
-              style={{ padding: '8px 18px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              + Add Item
-            </button>
+        </div>
+
+        {/* Filter bar */}
+        <div style={{ padding: '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              style={{ ...inp, minWidth: 220, flex: 1 }}
+              placeholder="Search by name, set, player…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select style={inp} value={filterType} onChange={e => setFilterType(e.target.value)}>
+              <option value="">All Types</option>
+              {Object.entries(TYPE_META).map(([v, m]) => <option key={v} value={v}>{m.label}</option>)}
+            </select>
+            <select style={inp} value={`${sortBy}:${sortDir}`} onChange={e => {
+              const [f, d] = e.target.value.split(':');
+              setSortBy(f as typeof sortBy);
+              setSortDir(d as typeof sortDir);
+            }}>
+              <option value="created_at:desc">Newest First</option>
+              <option value="created_at:asc">Oldest First</option>
+              <option value="name:asc">Name A–Z</option>
+              <option value="name:desc">Name Z–A</option>
+              <option value="avg_sold_price:desc">Highest Value</option>
+              <option value="avg_sold_price:asc">Lowest Value</option>
+              <option value="purchase_price:desc">Purchase Price ↓</option>
+            </select>
           </div>
         </div>
-      </div>
 
-      {/* Filter bar */}
-      <div style={{ borderBottom: `1px solid ${c.border}`, padding: '14px 32px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input style={{ ...inp, minWidth: 200, flex: 1 }} placeholder="Search by name, set, player…"
-            value={search} onChange={e => setSearch(e.target.value)} />
-          <select style={inp} value={filterType} onChange={e => setFilterType(e.target.value)}>
-            <option value="">All Types</option>
-            {Object.entries(TYPE_META).map(([v, m]) => <option key={v} value={v}>{m.label}</option>)}
-          </select>
-          <select style={inp} value={`${sortBy}:${sortDir}`} onChange={e => {
-            const [f, d] = e.target.value.split(':');
-            setSortBy(f as typeof sortBy);
-            setSortDir(d as typeof sortDir);
-          }}>
-            <option value="created_at:desc">Newest First</option>
-            <option value="created_at:asc">Oldest First</option>
-            <option value="name:asc">Name A–Z</option>
-            <option value="name:desc">Name Z–A</option>
-            <option value="avg_sold_price:desc">Highest Value</option>
-            <option value="avg_sold_price:asc">Lowest Value</option>
-            <option value="purchase_price:desc">Purchase Price ↓</option>
-          </select>
-          <div style={{ display: 'flex', border: `1px solid ${c.border}`, borderRadius: 8, overflow: 'hidden' }}>
-            {(['grid', 'list'] as const).map(v => (
-              <button key={v} onClick={() => setView(v)}
-                style={{ padding: '8px 12px', background: view === v ? '#2a2a2a' : 'transparent', border: 'none', color: view === v ? c.text : c.muted, cursor: 'pointer', fontSize: 13 }}>
-                {v === 'grid' ? '⊞' : '☰'}
-              </button>
-            ))}
-          </div>
+        {/* Wall */}
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 32px 64px' }}>
+          {loading ? (
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, textAlign: 'center', padding: 80 }}>
+              Loading collection…
+            </div>
+          ) : filtered.length === 0 ? (
+            <EmptyState hasItems={items.length > 0} onAdd={() => setShowModal(true)} />
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: 20,
+            }}>
+              {filtered.map(item => (
+                <DisplayCase
+                  key={item.id}
+                  item={item}
+                  onEdit={() => { setEditItem(item); setShowModal(true); }}
+                  onDelete={() => handleDelete(item.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 32px' }}>
-        {loading ? (
-          <div style={{ color: c.muted, fontSize: 14, textAlign: 'center', padding: 60 }}>Loading collection…</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 80 }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>📦</div>
-            <div style={{ color: c.muted, fontSize: 15 }}>{items.length === 0 ? 'Nothing here yet — add your first item.' : 'No items match your filters.'}</div>
-            {items.length === 0 && (
-              <button onClick={() => setShowModal(true)} style={{ marginTop: 20, padding: '10px 24px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                Add First Item
-              </button>
-            )}
-          </div>
-        ) : view === 'grid' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
-            {filtered.map(item => <ItemCard key={item.id} item={item} onEdit={() => { setEditItem(item); setShowModal(true); }} onDelete={() => handleDelete(item.id)} />)}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filtered.map(item => <ItemRow key={item.id} item={item} onEdit={() => { setEditItem(item); setShowModal(true); }} onDelete={() => handleDelete(item.id)} />)}
-          </div>
-        )}
       </div>
 
       {showModal && (
@@ -171,70 +216,264 @@ export default function CollectionTracker() {
   );
 }
 
-function ItemCard({ item, onEdit, onDelete }: { item: CollectionItem; onEdit: () => void; onDelete: () => void }) {
+function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit: () => void; onDelete: () => void }) {
   const meta = TYPE_META[item.type] ?? TYPE_META.other;
   const img = item.api_image_url || item.image_url;
   const value = item.avg_sold_price ?? item.purchase_price;
+  const [hovered, setHovered] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'border-color 0.15s' }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = '#3a3a3a')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2a')}>
-      <div style={{ height: 180, background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        {img ? (
-          <img src={img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: item.type === 'mtg' || item.type === 'pokemon' ? 8 : 0 }} />
-        ) : (
-          <div style={{ fontSize: 40 }}>{item.type === 'memorabilia' ? '🏆' : '🃏'}</div>
-        )}
-        <div style={{ position: 'absolute', top: 8, left: 8, background: meta.color + 'dd', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, letterSpacing: '0.05em' }}>
-          {meta.label}
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
+      style={{
+        position: 'relative',
+        borderRadius: 16,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transform: hovered ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
+        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+        boxShadow: hovered
+          ? `0 20px 60px ${meta.glow}, 0 0 0 1px ${meta.color}55, inset 0 1px 0 rgba(255,255,255,0.15)`
+          : '0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)',
+      }}
+    >
+      {/* Glass case frame */}
+      <div style={{
+        background: hovered
+          ? `linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 50%, ${meta.color}18 100%)`
+          : 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(12px)',
+        border: `1px solid ${hovered ? meta.color + '44' : 'rgba(255,255,255,0.10)'}`,
+        borderRadius: 16,
+        transition: 'background 0.25s ease, border-color 0.25s ease',
+      }}>
+
+        {/* Image area */}
+        <div style={{
+          height: 220,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 16,
+          position: 'relative',
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.05) 100%)',
+        }}>
+          {img ? (
+            <img
+              src={img}
+              alt={item.name}
+              style={{
+                maxHeight: '100%',
+                maxWidth: '100%',
+                objectFit: 'contain',
+                borderRadius: item.type === 'memorabilia' ? 8 : 6,
+                boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)`,
+                filter: hovered ? 'brightness(1.08)' : 'brightness(1)',
+                transition: 'filter 0.25s ease',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: 120,
+              height: 168,
+              background: `linear-gradient(135deg, ${meta.color}22, ${meta.color}08)`,
+              border: `1px solid ${meta.color}33`,
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 48,
+            }}>
+              {item.type === 'memorabilia' ? '🏆' : item.type === 'sports_card' ? '🏅' : '🃏'}
+            </div>
+          )}
+
+          {/* Type badge */}
+          <div style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            background: meta.color + 'cc',
+            color: '#fff',
+            fontSize: 9,
+            fontWeight: 800,
+            padding: '3px 8px',
+            borderRadius: 20,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            boxShadow: `0 2px 8px ${meta.glow}`,
+          }}>
+            {meta.label}
+          </div>
+
+          {/* Special badges */}
+          <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+            {item.is_foil && (
+              <div style={{ background: 'linear-gradient(135deg, #ffd700, #ff8c00)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
+                ✨ FOIL
+              </div>
+            )}
+            {item.is_rookie && (
+              <div style={{ background: 'rgba(74,222,128,0.85)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
+                RC
+              </div>
+            )}
+            {item.is_autographed && (
+              <div style={{ background: 'rgba(251,191,36,0.85)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
+                AUTO
+              </div>
+            )}
+            {item.grade && (
+              <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>
+                {item.grade}
+              </div>
+            )}
+          </div>
+
+          {/* Hover menu */}
+          {hovered && (
+            <div style={{
+              position: 'absolute',
+              bottom: 10,
+              right: 10,
+              display: 'flex',
+              gap: 6,
+            }}>
+              <button
+                onClick={e => { e.stopPropagation(); onEdit(); }}
+                style={{
+                  padding: '5px 12px',
+                  background: 'rgba(255,255,255,0.12)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 20,
+                  color: '#fff',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Edit
+              </button>
+              <button
+                onClick={e => { e.stopPropagation(); onDelete(); }}
+                style={{
+                  padding: '5px 10px',
+                  background: 'rgba(239,68,68,0.2)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  borderRadius: 20,
+                  color: '#fca5a5',
+                  fontSize: 11,
+                  cursor: 'pointer',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
-        {item.is_foil && <div style={{ position: 'absolute', top: 8, right: 8, background: '#fff2', color: '#fff', fontSize: 10, padding: '2px 7px', borderRadius: 10 }}>✨ Foil</div>}
-      </div>
-      <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f0f0', lineHeight: 1.3, wordBreak: 'break-word' }}>{item.name}</div>
-        {item.set_name && <div style={{ fontSize: 11, color: '#888' }}>{item.set_name}{item.card_number ? ` · #${item.card_number}` : ''}</div>}
-        {item.player && <div style={{ fontSize: 11, color: '#888' }}>{item.player}</div>}
-        {item.condition && <div style={{ fontSize: 11, color: '#888' }}>{item.grade || item.condition}</div>}
-        {value != null && (
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#4ade80', marginTop: 4 }}>${value.toFixed(2)}</div>
-        )}
-      </div>
-      <div style={{ display: 'flex', borderTop: '1px solid #2a2a2a' }}>
-        <button onClick={onEdit} style={{ flex: 1, padding: '8px', background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 12, borderRight: '1px solid #2a2a2a' }}>Edit</button>
-        <button onClick={onDelete} style={{ flex: 1, padding: '8px', background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+
+        {/* Info panel */}
+        <div style={{
+          padding: '12px 14px 14px',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(0,0,0,0.2)',
+        }}>
+          <div style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#f0f0f0',
+            lineHeight: 1.3,
+            wordBreak: 'break-word',
+            marginBottom: 4,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            {item.name}
+          </div>
+          {(item.set_name || item.player || item.team) && (
+            <div style={{
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.4)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {item.player || item.set_name}
+              {item.team ? ` · ${item.team}` : item.card_number ? ` · #${item.card_number}` : ''}
+            </div>
+          )}
+          {(item.condition || item.year) && (
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
+              {[item.condition, item.year].filter(Boolean).join(' · ')}
+            </div>
+          )}
+          {value != null && (
+            <div style={{
+              fontSize: 16,
+              fontWeight: 800,
+              color: '#4ade80',
+              marginTop: 8,
+              textShadow: '0 0 20px rgba(74,222,128,0.4)',
+            }}>
+              ${value.toFixed(2)}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function ItemRow({ item, onEdit, onDelete }: { item: CollectionItem; onEdit: () => void; onDelete: () => void }) {
-  const meta = TYPE_META[item.type] ?? TYPE_META.other;
-  const img = item.api_image_url || item.image_url;
-  const value = item.avg_sold_price ?? item.purchase_price;
-
+function EmptyState({ hasItems, onAdd }: { hasItems: boolean; onAdd: () => void }) {
   return (
-    <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 16 }}>
-      <div style={{ width: 48, height: 64, background: '#111', borderRadius: 6, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {img ? <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 20 }}>{item.type === 'memorabilia' ? '🏆' : '🃏'}</span>}
+    <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+      <div style={{
+        width: 120,
+        height: 120,
+        margin: '0 auto 24px',
+        background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.10))',
+        border: '1px solid rgba(124,58,237,0.2)',
+        borderRadius: 24,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 52,
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 8px 40px rgba(124,58,237,0.15)',
+      }}>
+        🏛️
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#f0f0f0' }}>{item.name}</span>
-          <span style={{ background: meta.color + '22', color: meta.color, fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10 }}>{meta.label}</span>
-          {item.is_foil && <span style={{ color: '#888', fontSize: 11 }}>✨ Foil</span>}
-          {item.is_rookie && <span style={{ color: '#888', fontSize: 11 }}>RC</span>}
-          {item.is_autographed && <span style={{ color: '#888', fontSize: 11 }}>AUTO</span>}
-        </div>
-        <div style={{ color: '#888', fontSize: 12, marginTop: 3 }}>
-          {[item.set_name, item.card_number ? `#${item.card_number}` : null, item.grade || item.condition, item.year].filter(Boolean).join(' · ')}
-        </div>
+      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, marginBottom: 8 }}>
+        {hasItems ? 'No items match your filters.' : 'The wall is empty.'}
       </div>
-      {value != null && <div style={{ fontSize: 16, fontWeight: 700, color: '#4ade80', flexShrink: 0 }}>${value.toFixed(2)}</div>}
-      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-        <button onClick={onEdit} style={{ padding: '6px 12px', background: '#2a2a2a', border: 'none', color: '#bbb', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Edit</button>
-        <button onClick={onDelete} style={{ padding: '6px 12px', background: '#2a2a2a', border: 'none', color: '#bbb', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>✕</button>
-      </div>
+      {!hasItems && (
+        <>
+          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, marginBottom: 28 }}>
+            Add your first piece to start your collection.
+          </div>
+          <button
+            onClick={onAdd}
+            style={{
+              padding: '11px 28px',
+              background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+              color: '#fff',
+              border: '1px solid rgba(167,139,250,0.4)',
+              borderRadius: 12,
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 0 30px rgba(124,58,237,0.4)',
+            }}
+          >
+            Add First Item
+          </button>
+        </>
+      )}
     </div>
   );
 }
