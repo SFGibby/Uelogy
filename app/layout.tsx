@@ -13,6 +13,9 @@ const vt323 = VT323({
 export const metadata: Metadata = {
   title: "Samuel Gibson",
   description: "Director of IT & Business Systems",
+  icons: {
+    icon: '/favicon-s.png',
+  },
 };
 
 export default function RootLayout({

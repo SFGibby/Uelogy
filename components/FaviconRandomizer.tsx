@@ -6,13 +6,13 @@ const FAVICONS = ['/favicon-s.png', '/favicon-u.png', '/favicon-e.png', '/favico
 export default function FaviconRandomizer() {
   useEffect(() => {
     const pick = FAVICONS[Math.floor(Math.random() * FAVICONS.length)];
-    let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
+    // Remove any existing icon links (Next.js may add multiple)
+    document.querySelectorAll("link[rel*='icon']").forEach(el => el.remove());
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
     link.href = pick;
+    document.head.appendChild(link);
   }, []);
   return null;
 }
