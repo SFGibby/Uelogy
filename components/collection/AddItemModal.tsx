@@ -475,7 +475,7 @@ export default function AddItemModal({ onClose, onSaved, editItem }: Props) {
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                       onDragLeave={() => setDragOver(false)}
-                      onDrop={(e: DragEvent<HTMLDivElement>) => {
+                      onDrop={(e: React.DragEvent<HTMLDivElement>) => {
                         e.preventDefault();
                         setDragOver(false);
                         const f = e.dataTransfer.files?.[0];

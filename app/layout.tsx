@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { VT323 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import FaviconRandomizer from "../components/FaviconRandomizer";
 import Nav from "../components/Nav";
 
-const vt323 = VT323({
+const vt323 = localFont({
+  src: "../public/fonts/VT323.woff2",
   variable: "--font-vt323",
-  subsets: ["latin"],
-  weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
