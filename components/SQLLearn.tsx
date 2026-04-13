@@ -1,6 +1,27 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+
+const PROGRESS_KEY = 'sql_learn_progress';
+
+interface Progress {
+  activeLesson: number;
+  queries: Record<string, string>;
+  completed: string[];
+}
+
+function loadProgress(): Progress {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : { activeLesson: 0, queries: {}, completed: [] };
+  } catch {
+    return { activeLesson: 0, queries: {}, completed: [] };
+  }
+}
+
+function saveProgress(p: Progress) {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch { /* silent */ }
+}
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error no types for sql.js
 import initSqlJs from 'sql.js';
@@ -239,9 +260,20 @@ export default function SQLLearn() {
   const [columns, setColumns] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [ran, setRan] = useState(false);
+  const [completed, setCompleted] = useState<string[]>([]);
+  const progressRef = useRef<Progress>({ activeLesson: 0, queries: {}, completed: [] });
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    const p = loadProgress();
+    progressRef.current = p;
+    const savedLesson = Math.min(p.activeLesson, LESSONS.length - 1);
+    setActiveLesson(savedLesson);
+    setCompleted(p.completed);
+    const savedQuery = p.queries[LESSONS[savedLesson].id] ?? LESSONS[savedLesson].query;
+    setQuery(savedQuery);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initSqlJs({ locateFile: () => '/sql-wasm.wasm' }).then((SQL: any) => {
       const database = new SQL.Database();
@@ -249,6 +281,14 @@ export default function SQLLearn() {
       setDb(database);
       setReady(true);
     });
+  }, []);
+
+  const persistQuery = useCallback((lessonId: string, q: string) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      progressRef.current.queries[lessonId] = q;
+      saveProgress(progressRef.current);
+    }, 600);
   }, []);
 
   const runQuery = useCallback(() => {
@@ -263,6 +303,15 @@ export default function SQLLearn() {
         setResults([]);
         setColumns([]);
         setRan(true);
+        // Mark complete even for non-SELECT queries (e.g. INSERT)
+        setCompleted(prev => {
+          const id = LESSONS[activeLesson].id;
+          if (prev.includes(id)) return prev;
+          const next = [...prev, id];
+          progressRef.current.completed = next;
+          saveProgress(progressRef.current);
+          return next;
+        });
         return;
       }
       const { columns: cols, values } = res[0];
@@ -273,19 +322,31 @@ export default function SQLLearn() {
         return obj;
       }));
       setRan(true);
+      // Mark lesson complete on successful run
+      setCompleted(prev => {
+        const id = LESSONS[activeLesson].id;
+        if (prev.includes(id)) return prev;
+        const next = [...prev, id];
+        progressRef.current.completed = next;
+        saveProgress(progressRef.current);
+        return next;
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
       setRan(true);
     }
-  }, [db, query]);
+  }, [db, query, activeLesson]);
 
   const selectLesson = (i: number) => {
     setActiveLesson(i);
-    setQuery(LESSONS[i].query);
+    const saved = progressRef.current.queries[LESSONS[i].id] ?? LESSONS[i].query;
+    setQuery(saved);
     setResults([]);
     setColumns([]);
     setError('');
     setRan(false);
+    progressRef.current.activeLesson = i;
+    saveProgress(progressRef.current);
   };
 
   useEffect(() => {
@@ -325,29 +386,51 @@ export default function SQLLearn() {
         flexShrink: 0,
         overflowY: 'auto',
       }}>
-        <div style={{ padding: '20px 16px 12px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase' }}>
-          SQL Fundamentals
+        <div style={{ padding: '20px 16px 8px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>SQL Fundamentals</span>
+          <span style={{ color: '#4ade80', fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
         </div>
-        {LESSONS.map((l, i) => (
-          <button
-            key={l.id}
-            onClick={() => selectLesson(i)}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '10px 16px',
-              fontSize: '13px',
-              background: i === activeLesson ? '#2a2a2a' : 'transparent',
-              color: i === activeLesson ? c.text : c.muted,
-              border: 'none',
-              borderLeft: i === activeLesson ? `2px solid ${c.accent}` : '2px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            {l.title}
-          </button>
-        ))}
+        {LESSONS.map((l, i) => {
+          const done = completed.includes(l.id);
+          return (
+            <button
+              key={l.id}
+              onClick={() => selectLesson(i)}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                padding: '10px 16px',
+                fontSize: '13px',
+                background: i === activeLesson ? '#2a2a2a' : 'transparent',
+                color: i === activeLesson ? c.text : done ? '#4ade80cc' : c.muted,
+                border: 'none',
+                borderLeft: i === activeLesson ? `2px solid ${c.accent}` : '2px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+              }}
+            >
+              <span>{l.title}</span>
+              {done && <span style={{ fontSize: 12, color: '#4ade80', flexShrink: 0 }}>✓</span>}
+            </button>
+          );
+        })}
+        <button
+          onClick={() => {
+            if (!confirm('Reset all progress?')) return;
+            const fresh = { activeLesson: 0, queries: {}, completed: [] };
+            progressRef.current = fresh;
+            saveProgress(fresh);
+            setCompleted([]);
+            selectLesson(0);
+          }}
+          style={{ margin: '12px 16px 16px', padding: '6px 12px', background: 'none', border: `1px solid ${c.border}`, borderRadius: 6, color: c.muted, fontSize: 11, cursor: 'pointer', letterSpacing: '0.04em' }}
+        >
+          Reset Progress
+        </button>
       </div>
 
       {/* Main */}
@@ -402,7 +485,10 @@ export default function SQLLearn() {
           <textarea
             ref={textareaRef}
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => {
+              setQuery(e.target.value);
+              persistQuery(LESSONS[activeLesson].id, e.target.value);
+            }}
             rows={6}
             spellCheck={false}
             style={{
