@@ -62,7 +62,7 @@ INSERT INTO deals VALUES (12,4,4,6.5,22000,'cancelled','2024-08-15');
 const LESSONS = [
   {
     id: 'intro',
-    title: '00. WHAT IS SQL',
+    title: '00. What is SQL',
     concept: `SQL (Structured Query Language) is how you talk to databases.
 A database is just a collection of tables — like spreadsheets that can talk to each other.
 
@@ -77,7 +77,7 @@ Every query starts with SELECT.`,
   },
   {
     id: 'select',
-    title: '01. SELECT COLUMNS',
+    title: '01. Select Columns',
     concept: `Instead of grabbing everything with *, you can pick specific columns.
 
 This is useful when tables have 30 columns and you only need 3.`,
@@ -86,7 +86,7 @@ This is useful when tables have 30 columns and you only need 3.`,
   },
   {
     id: 'where',
-    title: '02. WHERE (FILTERING)',
+    title: '02. WHERE (Filtering)',
     concept: `WHERE lets you filter rows — like a search.
 
 Operators you can use:
@@ -197,7 +197,7 @@ ORDER BY deals.sale_price DESC;`,
   },
   {
     id: 'groupby_join',
-    title: '10. REP LEADERBOARD',
+    title: '10. Rep Leaderboard',
     concept: `Put it all together: JOIN + GROUP BY + ORDER BY.
 
 This is a real query you'd run at a solar company to see
@@ -216,6 +216,19 @@ ORDER BY total_revenue DESC;`,
 ];
 
 type Row = Record<string, string | number | null>;
+
+const c = {
+  bg: '#1a1a1a',
+  sidebar: '#212121',
+  border: '#2e2e2e',
+  text: '#e5e5e5',
+  muted: '#8a8a8a',
+  accent: '#7c3aed',
+  accentHover: '#6d28d9',
+  codeBg: '#141414',
+  rowAlt: '#1f1f1f',
+  error: '#f87171',
+};
 
 export default function SQLLearn() {
   const [db, setDb] = useState<unknown>(null);
@@ -288,127 +301,193 @@ export default function SQLLearn() {
 
   const lesson = LESSONS[activeLesson];
 
-  const termStyle = {
-    fontFamily: 'var(--font-vt323), monospace',
-    color: '#33ff33',
-    textShadow: '0 0 6px #33ff33',
-  };
-
-  const dimStyle = { color: '#1aaa1a', textShadow: 'none' };
-
   if (!ready) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center" style={termStyle}>
-        <div>LOADING SQL ENGINE...</div>
+      <div style={{ minHeight: '100vh', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: c.muted, fontFamily: 'system-ui, sans-serif', fontSize: '14px' }}>Loading SQL engine…</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col" style={termStyle}>
-      {/* Header */}
-      <div className="border-b border-[#1aaa1a] px-6 py-3 flex items-center justify-between">
-        <div>
-          <span style={dimStyle}>{'> '}</span>
-          <span>SQL CRASH COURSE</span>
-          <span className="ml-4 text-sm" style={dimStyle}>// SOLAR SALES DATABASE</span>
+    <div style={{
+      minHeight: '100vh',
+      background: c.bg,
+      display: 'flex',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+      color: c.text,
+    }}>
+      {/* Sidebar */}
+      <div style={{
+        width: '220px',
+        background: c.sidebar,
+        borderRight: `1px solid ${c.border}`,
+        flexShrink: 0,
+        overflowY: 'auto',
+      }}>
+        <div style={{ padding: '20px 16px 12px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase' }}>
+          SQL Fundamentals
         </div>
-        <span></span>
+        {LESSONS.map((l, i) => (
+          <button
+            key={l.id}
+            onClick={() => selectLesson(i)}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              padding: '10px 16px',
+              fontSize: '13px',
+              background: i === activeLesson ? '#2a2a2a' : 'transparent',
+              color: i === activeLesson ? c.text : c.muted,
+              border: 'none',
+              borderLeft: i === activeLesson ? `2px solid ${c.accent}` : '2px solid transparent',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            {l.title}
+          </button>
+        ))}
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Lesson list sidebar */}
-        <div className="w-56 border-r border-[#1aaa1a] overflow-y-auto flex-shrink-0">
-          {LESSONS.map((l, i) => (
-            <button
-              key={l.id}
-              onClick={() => selectLesson(i)}
-              className="w-full text-left px-4 py-3 text-sm border-b border-[#0d660d] transition-colors"
-              style={i === activeLesson ? { background: '#0a1a0a', color: '#33ff33' } : { ...dimStyle, background: 'transparent' }}
-            >
-              {l.title}
-            </button>
-          ))}
+      {/* Main */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Concept */}
+        <div style={{
+          padding: '24px 28px',
+          borderBottom: `1px solid ${c.border}`,
+          background: c.bg,
+        }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', marginBottom: '12px' }}>
+            Concept
+          </div>
+          <pre style={{
+            fontSize: '14px',
+            lineHeight: '1.7',
+            color: c.text,
+            fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+            whiteSpace: 'pre-wrap',
+            margin: 0,
+          }}>
+            {lesson.concept}
+          </pre>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Concept panel */}
-          <div className="border-b border-[#1aaa1a] px-6 py-4" style={{ background: '#020a02' }}>
-            <div className="text-xs mb-3" style={dimStyle}>-- LESSON --</div>
-            <pre className="text-sm leading-relaxed whitespace-pre-wrap" style={{ ...dimStyle, fontFamily: 'inherit' }}>
-              {lesson.concept}
-            </pre>
-          </div>
-
-          {/* Query editor */}
-          <div className="border-b border-[#1aaa1a] px-6 py-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs" style={dimStyle}>-- QUERY EDITOR (Ctrl+Enter to run) --</span>
-              <button
-                onClick={runQuery}
-                className="px-4 py-1 border border-[#33ff33] text-sm hover:bg-[#33ff33] hover:text-black transition-all"
-                style={{ fontFamily: 'inherit' }}
-              >
-                RUN &gt;
-              </button>
+        {/* Query editor */}
+        <div style={{ padding: '20px 28px', borderBottom: `1px solid ${c.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase' }}>
+              Query Editor <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— ⌘ Enter to run</span>
             </div>
-            <textarea
-              ref={textareaRef}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              rows={6}
-              className="w-full bg-black border border-[#1aaa1a] px-4 py-3 text-sm outline-none resize-none focus:border-[#33ff33] transition-colors"
-              style={{ fontFamily: 'var(--font-vt323), monospace', fontSize: '16px', color: '#33ff33', caretColor: '#33ff33' }}
-              spellCheck={false}
-            />
-            <div className="mt-2 text-xs" style={dimStyle}>HINT: {lesson.hint}</div>
+            <button
+              onClick={runQuery}
+              style={{
+                padding: '6px 16px',
+                background: c.accent,
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = c.accentHover)}
+              onMouseLeave={e => (e.currentTarget.style.background = c.accent)}
+            >
+              Run
+            </button>
           </div>
+          <textarea
+            ref={textareaRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            rows={6}
+            spellCheck={false}
+            style={{
+              width: '100%',
+              background: c.codeBg,
+              border: `1px solid ${c.border}`,
+              borderRadius: '8px',
+              padding: '14px 16px',
+              color: c.text,
+              fontSize: '13px',
+              fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+              lineHeight: '1.6',
+              outline: 'none',
+              resize: 'none',
+              boxSizing: 'border-box',
+              caretColor: c.text,
+            }}
+            onFocus={e => (e.currentTarget.style.borderColor = c.accent)}
+            onBlur={e => (e.currentTarget.style.borderColor = c.border)}
+          />
+          <div style={{ marginTop: '8px', fontSize: '12px', color: c.muted }}>
+            Hint: {lesson.hint}
+          </div>
+        </div>
 
-          {/* Results */}
-          <div className="flex-1 overflow-auto px-6 py-4">
-            {!ran && (
-              <div className="text-sm" style={dimStyle}>{'> PRESS RUN TO EXECUTE QUERY'}</div>
-            )}
-            {ran && error && (
-              <div>
-                <div className="text-xs mb-2" style={dimStyle}>-- ERROR --</div>
-                <div className="text-sm" style={{ color: '#ff4444', textShadow: '0 0 6px #ff4444' }}>{error}</div>
+        {/* Results */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
+          {!ran && (
+            <div style={{ fontSize: '13px', color: c.muted }}>Run a query to see results.</div>
+          )}
+          {ran && error && (
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', marginBottom: '8px' }}>Error</div>
+              <div style={{ fontSize: '13px', color: c.error, fontFamily: 'ui-monospace, monospace' }}>{error}</div>
+            </div>
+          )}
+          {ran && !error && results.length === 0 && (
+            <div style={{ fontSize: '13px', color: c.muted }}>Query ran successfully. No rows returned.</div>
+          )}
+          {ran && !error && results.length > 0 && (
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', marginBottom: '12px' }}>
+                {results.length} row{results.length !== 1 ? 's' : ''} returned
               </div>
-            )}
-            {ran && !error && results.length === 0 && (
-              <div className="text-sm" style={dimStyle}>{'> QUERY OK. NO ROWS RETURNED.'}</div>
-            )}
-            {ran && !error && results.length > 0 && (
-              <div>
-                <div className="text-xs mb-3" style={dimStyle}>-- {results.length} ROW{results.length !== 1 ? 'S' : ''} RETURNED --</div>
-                <div className="overflow-x-auto">
-                  <table className="text-sm border-collapse" style={{ fontFamily: 'inherit' }}>
-                    <thead>
-                      <tr>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: '13px', width: '100%', fontFamily: 'ui-monospace, monospace' }}>
+                  <thead>
+                    <tr>
+                      {columns.map(col => (
+                        <th key={col} style={{
+                          padding: '8px 16px',
+                          textAlign: 'left',
+                          borderBottom: `1px solid ${c.border}`,
+                          color: c.muted,
+                          fontWeight: 600,
+                          fontSize: '11px',
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((row, i) => (
+                      <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : c.rowAlt }}>
                         {columns.map(col => (
-                          <th key={col} className="px-4 py-1 text-left border-b border-[#1aaa1a]" style={dimStyle}>
-                            {col.toUpperCase()}
-                          </th>
+                          <td key={col} style={{
+                            padding: '8px 16px',
+                            borderBottom: `1px solid ${c.border}`,
+                            color: row[col] === null ? c.muted : c.text,
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {row[col] === null ? 'NULL' : String(row[col])}
+                          </td>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((row, i) => (
-                        <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : '#020a02' }}>
-                          {columns.map(col => (
-                            <td key={col} className="px-4 py-1 border-b border-[#0d660d]">
-                              {row[col] === null ? <span style={dimStyle}>NULL</span> : String(row[col])}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -6,6 +6,13 @@ const COLS = 10;
 const ROWS = 20;
 const LEADERBOARD_KEY = 'blockdrop_leaderboard';
 
+// Milestone thresholds: milestone fires when score >= pts OR tetrises >= clears
+const MILESTONES = [
+  { pts: 1000, clears: 1 },
+  { pts: 2000, clears: 2 },
+  { pts: 3000, clears: 3 },
+];
+
 const PIECES = [
   [],
   [[1,1,1,1]],
@@ -59,10 +66,15 @@ function saveToLeaderboard(entry:LeaderboardEntry): LeaderboardEntry[] {
   return top10;
 }
 
-export default function BlockDrop() {
+interface BlockDropProps {
+  onMilestone?: (level: number) => void;
+}
+
+export default function BlockDrop({ onMilestone }: BlockDropProps) {
   const stateRef = useRef({
     grid: createGrid(), piece: randomPiece(), next: randomPiece(),
-    score:0, lines:0, level:1, gameOver:false, paused:false, started:false,
+    score:0, lines:0, level:1, tetrises:0, milestone:0,
+    gameOver:false, paused:false, started:false,
   });
   const [, forceUpdate] = useState(0);
   const [showNameInput, setShowNameInput] = useState(false);
@@ -72,10 +84,24 @@ export default function BlockDrop() {
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef(0);
   const dropCounter = useRef(0);
+  const onMilestoneRef = useRef(onMilestone);
+  onMilestoneRef.current = onMilestone;
 
   useEffect(()=>{ setLeaderboard(loadLeaderboard()); },[]);
 
   const tick = useCallback(()=>{ forceUpdate(n=>n+1); },[]);
+
+  const checkMilestones = useCallback((score: number, tetrises: number, current: number): number => {
+    let next = current;
+    for (let i = current; i < MILESTONES.length; i++) {
+      const m = MILESTONES[i];
+      if (score >= m.pts || tetrises >= m.clears) {
+        next = i + 1;
+      }
+    }
+    if (next > current) onMilestoneRef.current?.(next);
+    return next;
+  }, []);
 
   const drop = useCallback(()=>{
     const s=stateRef.current;
@@ -84,12 +110,16 @@ export default function BlockDrop() {
     else {
       s.grid=merge(s.grid,s.piece);
       const {grid,cleared}=clearLines(s.grid); s.grid=grid;
-      s.lines+=cleared; s.score+=[0,100,300,500,800][cleared]*s.level; s.level=Math.floor(s.lines/10)+1;
+      s.lines+=cleared;
+      s.score+=[0,100,300,500,800][cleared]*s.level;
+      s.level=Math.floor(s.lines/10)+1;
+      if(cleared===4) s.tetrises++;
+      s.milestone=checkMilestones(s.score, s.tetrises, s.milestone);
       s.piece=s.next; s.next=randomPiece();
       if(collides(s.grid,s.piece)){ s.gameOver=true; setShowNameInput(true); }
     }
     tick();
-  },[tick]);
+  },[tick, checkMilestones]);
 
   const gameLoop = useCallback((time:number)=>{
     const s=stateRef.current;
@@ -104,7 +134,8 @@ export default function BlockDrop() {
   const startGame = useCallback(()=>{
     const s=stateRef.current;
     s.grid=createGrid(); s.piece=randomPiece(); s.next=randomPiece();
-    s.score=0; s.lines=0; s.level=1; s.gameOver=false; s.started=true; s.paused=false;
+    s.score=0; s.lines=0; s.level=1; s.tetrises=0; s.milestone=0;
+    s.gameOver=false; s.started=true; s.paused=false;
     setShowNameInput(false); setNameInput(''); setShowLeaderboard(false);
     tick();
   },[tick]);
@@ -139,7 +170,6 @@ export default function BlockDrop() {
 
   const s = stateRef.current;
 
-  // Build ASCII grid
   const renderGrid = () => {
     const rows: string[] = [];
     for(let r=0;r<ROWS;r++){

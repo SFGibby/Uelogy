@@ -19,15 +19,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${vt323.variable} h-full`}
-    >
+    <html lang="en" className={`${vt323.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        <nav style={{fontFamily:'var(--font-vt323), monospace', borderBottom:'1px solid #1aaa1a', background:'#000'}}>
-          <div style={{maxWidth:'900px', margin:'0 auto', padding:'10px 24px', display:'flex', gap:'32px', alignItems:'center'}}>
-            <a href="/" style={{color:'#33ff33', textDecoration:'none', fontSize:'18px', textShadow:'0 0 6px #33ff33'}}>HOME</a>
-            <a href="/sql" style={{color:'#1aaa1a', textDecoration:'none', fontSize:'18px'}}>SQL</a>
+        <nav style={{
+          background: '#111',
+          borderBottom: '1px solid #222',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        }}>
+          <div style={{
+            maxWidth: '960px',
+            margin: '0 auto',
+            padding: '14px 24px',
+            display: 'flex',
+            gap: '28px',
+            alignItems: 'center',
+          }}>
+            <a href="/" style={{ color: '#fff', textDecoration: 'none', fontSize: '14px', fontWeight: 600, letterSpacing: '0.03em' }}>HOME</a>
+            <a href="/learning" style={{ color: '#888', textDecoration: 'none', fontSize: '14px', fontWeight: 400, letterSpacing: '0.03em' }}>LEARNING</a>
           </div>
         </nav>
         {children}
