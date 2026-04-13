@@ -252,7 +252,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     await transporter.sendMail({
       from: `"Sam's Weekly Brief" <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER,
+      to: process.env.NEWSLETTER_TO || process.env.GMAIL_USER,
       subject: `📰 Weekly Brief — ${today}`,
       html,
     });
