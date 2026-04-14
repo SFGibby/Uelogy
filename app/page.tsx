@@ -30,15 +30,15 @@ const WHAT_I_DO = [
 ];
 
 const PHOTOS = [
-  { src: '/photos/wife-dinner.jpg',    alt: 'Date night' },
-  { src: '/photos/wife-formal.jpg',    alt: 'Wedding reception' },
-  { src: '/photos/family-fun.jpg',     alt: 'Family' },
-  { src: '/photos/pickleball.jpg',     alt: 'Pickleball tournament podium' },
-  { src: '/photos/wife-cultural.jpg',  alt: 'Vietnamese wedding celebration' },
-  { src: '/photos/family-portrait.jpg', alt: 'Family portrait' },
-  { src: '/photos/volleyball.jpg',     alt: 'Volleyball at Lake Powell' },
-  { src: '/photos/utah-group.jpg',     alt: 'Red rocks with family' },
-  { src: '/photos/zion.jpg',           alt: 'The Narrows, Zion' },
+  { src: '/photos/wife-dinner.jpg',     alt: 'Date night' },
+  { src: '/photos/house-front.jpg',     alt: 'New house' },
+  { src: '/photos/family-fun.jpg',      alt: 'Family' },
+  { src: '/photos/pickleball.jpg',      alt: 'Pickleball tournament podium' },
+  { src: '/photos/wife-cultural.jpg',   alt: 'Vietnamese wedding celebration' },
+  { src: '/photos/hiking.jpg',          alt: 'Hiking' },
+  { src: '/photos/volleyball.jpg',      alt: 'Volleyball at Lake Powell' },
+  { src: '/photos/utah-group.jpg',      alt: 'Red rocks with family' },
+  { src: '/photos/wife-formal.jpg',     alt: 'Wedding reception' },
 ];
 
 const term: React.CSSProperties = {
