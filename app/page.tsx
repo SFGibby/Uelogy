@@ -30,12 +30,15 @@ const WHAT_I_DO = [
 ];
 
 const PHOTOS = [
-  { src: '/photos/utah-group.jpg',  alt: 'Family reunion at the red rocks' },
-  { src: '/photos/milky-way.jpg',   alt: 'Milky Way over Lake Powell' },
-  { src: '/photos/lake-powell.jpg', alt: 'Friends at Lake Powell' },
-  { src: '/photos/volleyball.jpg',  alt: 'Volleyball in the water' },
-  { src: '/photos/zion.jpg',        alt: 'The Narrows, Zion National Park' },
-  { src: '/photos/leeds.jpg',       alt: 'Leeds Christmas market' },
+  { src: '/photos/wife-dinner.jpg',    alt: 'Date night' },
+  { src: '/photos/wife-formal.jpg',    alt: 'Wedding reception' },
+  { src: '/photos/family-fun.jpg',     alt: 'Family' },
+  { src: '/photos/pickleball.jpg',     alt: 'Pickleball tournament podium' },
+  { src: '/photos/wife-cultural.jpg',  alt: 'Vietnamese wedding celebration' },
+  { src: '/photos/family-portrait.jpg', alt: 'Family portrait' },
+  { src: '/photos/volleyball.jpg',     alt: 'Volleyball at Lake Powell' },
+  { src: '/photos/utah-group.jpg',     alt: 'Red rocks with family' },
+  { src: '/photos/zion.jpg',           alt: 'The Narrows, Zion' },
 ];
 
 const term: React.CSSProperties = {
@@ -243,46 +246,24 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── INSTAGRAM ── */}
+        {/* ── LIFE ── */}
         <section style={{ padding: '80px 48px', borderTop: '1px solid rgba(255,255,255,0.06)', maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 10, textShadow: '0 0 6px #33ff33' }}>
             LIFE
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20, marginBottom: 24 }}>
-            <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: -0.5 }}>
-              @samuelgibby
-            </h2>
-            <a href="https://www.instagram.com/samuelgibby/" target="_blank" rel="noopener noreferrer"
-              style={{
-                padding: '10px 24px',
-                background: 'linear-gradient(135deg, rgba(131,58,180,0.2), rgba(253,29,29,0.2), rgba(252,176,69,0.2))',
-                border: '1px solid rgba(253,29,29,0.3)',
-                borderRadius: 40,
-                color: '#fda4af',
-                textDecoration: 'none',
-                fontSize: 14,
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                whiteSpace: 'nowrap',
-              }}>
-              Follow on Instagram ↗
-            </a>
-          </div>
+          <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', margin: '0 0 32px', letterSpacing: -0.5 }}>
+            Outside the office.
+          </h2>
 
           {/* Photo grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, maxWidth: 600 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
             {PHOTOS.map((photo, i) => (
-              <a
+              <div
                 key={i}
-                href="https://www.instagram.com/samuelgibby/"
-                target="_blank"
-                rel="noopener noreferrer"
                 style={{
                   aspectRatio: '1',
-                  display: 'block',
                   overflow: 'hidden',
-                  borderRadius: 4,
-                  position: 'relative',
+                  borderRadius: 8,
                 }}
               >
                 <img
@@ -304,7 +285,7 @@ export default function Home() {
                     (e.currentTarget as HTMLImageElement).style.filter = 'brightness(0.85)';
                   }}
                 />
-              </a>
+              </div>
             ))}
           </div>
         </section>
