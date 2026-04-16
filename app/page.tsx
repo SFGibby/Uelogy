@@ -30,15 +30,15 @@ const WHAT_I_DO = [
 ];
 
 const PHOTOS = [
-  { src: '/photos/wife-dinner.jpg',     alt: 'Date night' },
-  { src: '/photos/house-front.jpg',     alt: 'New house' },
-  { src: '/photos/family-fun.jpg',      alt: 'Family' },
-  { src: '/photos/pickleball.jpg',      alt: 'Pickleball tournament podium' },
-  { src: '/photos/wife-cultural.jpg',   alt: 'Vietnamese wedding celebration' },
-  { src: '/photos/hiking.jpg',          alt: 'Hiking' },
-  { src: '/photos/volleyball.jpg',      alt: 'Volleyball at Lake Powell' },
-  { src: '/photos/utah-group.jpg',      alt: 'Red rocks with family' },
-  { src: '/photos/wife-formal.jpg',     alt: 'Wedding reception' },
+  { src: '/photos/family-portrait.jpg', alt: 'Family portrait',             caption: 'Family' },
+  { src: '/photos/wife-formal.jpg',     alt: 'Wedding reception',           caption: 'My wife' },
+  { src: '/photos/lake-powell.jpg',     alt: 'Lake Powell',                 caption: 'Lake Powell' },
+  { src: '/photos/house-front.jpg',     alt: 'Our home',                    caption: 'Home' },
+  { src: '/photos/pickleball.jpg',      alt: 'Pickleball tournament',       caption: 'Pickleball' },
+  { src: '/photos/zion.jpg',            alt: 'Zion National Park',          caption: 'Zion' },
+  { src: '/photos/wife-dinner.jpg',     alt: 'Date night',                  caption: 'Date nights' },
+  { src: '/photos/hiking.jpg',          alt: 'Hiking',                      caption: 'Hiking' },
+  { src: '/photos/utah-group.jpg',      alt: 'Family at Red Rocks',         caption: 'Red Rocks' },
 ];
 
 const term: React.CSSProperties = {
@@ -251,19 +251,40 @@ export default function Home() {
           <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 10, textShadow: '0 0 6px #33ff33' }}>
             LIFE
           </div>
-          <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', margin: '0 0 32px', letterSpacing: -0.5 }}>
-            Outside the office.
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24, marginBottom: 40 }}>
+            <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: -0.5 }}>
+              Outside the office.
+            </h2>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.38)', maxWidth: 380, lineHeight: 1.7, margin: 0 }}>
+              Husband, dog dad, and Utah outdoor enthusiast. When I&apos;m not building systems at work
+              I&apos;m playing pickleball, hiking with the family, or hunting for the next card to add to the collection.
+            </p>
+          </div>
 
-          {/* Photo grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+          {/* Photo grid — first photo spans 2 rows */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'auto', gap: 8 }}>
             {PHOTOS.map((photo, i) => (
               <div
                 key={i}
                 style={{
-                  aspectRatio: '1',
+                  position: 'relative',
+                  aspectRatio: i === 0 ? undefined : '1',
+                  gridRow: i === 0 ? 'span 2' : undefined,
                   overflow: 'hidden',
-                  borderRadius: 8,
+                  borderRadius: 10,
+                  cursor: 'default',
+                }}
+                onMouseEnter={e => {
+                  const overlay = e.currentTarget.querySelector('.photo-caption') as HTMLElement | null;
+                  const img = e.currentTarget.querySelector('img') as HTMLImageElement | null;
+                  if (overlay) overlay.style.opacity = '1';
+                  if (img) { img.style.transform = 'scale(1.05)'; img.style.filter = 'brightness(0.7)'; }
+                }}
+                onMouseLeave={e => {
+                  const overlay = e.currentTarget.querySelector('.photo-caption') as HTMLElement | null;
+                  const img = e.currentTarget.querySelector('img') as HTMLImageElement | null;
+                  if (overlay) overlay.style.opacity = '0';
+                  if (img) { img.style.transform = 'scale(1)'; img.style.filter = 'brightness(0.88)'; }
                 }}
               >
                 <img
@@ -273,18 +294,28 @@ export default function Home() {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    transition: 'transform 0.3s ease, filter 0.3s ease',
-                    filter: 'brightness(0.85)',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.06)';
-                    (e.currentTarget as HTMLImageElement).style.filter = 'brightness(1)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
-                    (e.currentTarget as HTMLImageElement).style.filter = 'brightness(0.85)';
+                    display: 'block',
+                    transition: 'transform 0.35s ease, filter 0.35s ease',
+                    filter: 'brightness(0.88)',
                   }}
                 />
+                <div
+                  className="photo-caption"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    padding: '16px 14px',
+                    opacity: 0,
+                    transition: 'opacity 0.25s ease',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)',
+                  }}
+                >
+                  <span style={{ color: '#fff', fontSize: 13, fontWeight: 600, letterSpacing: '0.04em' }}>
+                    {photo.caption}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
