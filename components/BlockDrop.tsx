@@ -238,8 +238,13 @@ export default function BlockDrop({ onMilestone, onGameEnd }: BlockDropProps) {
         {!s.started&&!showLeaderboard&&(
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 gap-6">
             <div className="text-center leading-relaxed">
-              <div>BLOCK DROP</div>
-              <div className="text-[#1aaa1a] text-sm mt-1">USE ARROW KEYS</div>
+              <div className="text-sm leading-tight">
+                <div>{'  []    '}</div>
+                <div>{'[][][]  '}</div>
+                <div>{'[][][][]'}</div>
+                <div>{'  [][]  '}</div>
+              </div>
+              <div className="text-[#1aaa1a] text-sm mt-2">USE ARROW KEYS</div>
             </div>
             <button onClick={startGame} className="border border-[#33ff33] px-6 py-1 hover:bg-[#33ff33] hover:text-black transition-all">PLAY</button>
             {leaderboard.length>0&&(
