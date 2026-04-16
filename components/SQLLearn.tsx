@@ -239,15 +239,15 @@ ORDER BY total_revenue DESC;`,
 type Row = Record<string, string | number | null>;
 
 const c = {
-  bg: '#1a1a1a',
-  sidebar: '#212121',
-  border: '#2e2e2e',
-  text: '#e5e5e5',
-  muted: '#8a8a8a',
-  accent: '#7c3aed',
-  accentHover: '#6d28d9',
-  codeBg: '#141414',
-  rowAlt: '#1f1f1f',
+  bg: '#0a0906',
+  sidebar: '#0e0d0a',
+  border: '#2a2218',
+  text: '#e8e4d8',
+  muted: '#7a6e5e',
+  accent: '#d97706',
+  accentHover: '#b45309',
+  codeBg: '#070605',
+  rowAlt: '#110f0c',
   error: '#f87171',
 };
 
@@ -362,10 +362,23 @@ export default function SQLLearn() {
 
   const lesson = LESSONS[activeLesson];
 
+  const solarGridStyle: React.CSSProperties = {
+    position: 'fixed',
+    inset: 0,
+    pointerEvents: 'none',
+    zIndex: 0,
+    backgroundImage: [
+      'linear-gradient(rgba(217,119,6,0.05) 1px, transparent 1px)',
+      'linear-gradient(90deg, rgba(217,119,6,0.05) 1px, transparent 1px)',
+    ].join(', '),
+    backgroundSize: '44px 44px',
+  };
+
   if (!ready) {
     return (
-      <div style={{ minHeight: '100vh', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: c.muted, fontFamily: 'system-ui, sans-serif', fontSize: '14px' }}>Loading SQL engine…</div>
+      <div style={{ minHeight: '100vh', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div style={solarGridStyle} />
+        <div style={{ color: c.muted, fontFamily: 'system-ui, sans-serif', fontSize: '14px', position: 'relative', zIndex: 1 }}>Loading SQL engine…</div>
       </div>
     );
   }
@@ -377,7 +390,19 @@ export default function SQLLearn() {
       display: 'flex',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
       color: c.text,
+      position: 'relative',
     }}>
+      {/* Solar panel grid texture */}
+      <div style={solarGridStyle} />
+      {/* Warm corona at top */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        height: '40vh',
+        pointerEvents: 'none',
+        zIndex: 0,
+        background: 'radial-gradient(ellipse at 50% -20%, rgba(217,119,6,0.10) 0%, transparent 65%)',
+      }} />
       {/* Sidebar */}
       <div style={{
         width: '220px',
@@ -385,10 +410,12 @@ export default function SQLLearn() {
         borderRight: `1px solid ${c.border}`,
         flexShrink: 0,
         overflowY: 'auto',
+        position: 'relative',
+        zIndex: 1,
       }}>
         <div style={{ padding: '20px 16px 8px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>SQL Fundamentals</span>
-          <span style={{ color: '#4ade80', fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
+          <span style={{ color: '#d97706', fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
         </div>
         {LESSONS.map((l, i) => {
           const done = completed.includes(l.id);
@@ -402,7 +429,7 @@ export default function SQLLearn() {
                 padding: '10px 16px',
                 fontSize: '13px',
                 background: i === activeLesson ? '#2a2a2a' : 'transparent',
-                color: i === activeLesson ? c.text : done ? '#4ade80cc' : c.muted,
+                color: i === activeLesson ? c.text : done ? '#d97706cc' : c.muted,
                 border: 'none',
                 borderLeft: i === activeLesson ? `2px solid ${c.accent}` : '2px solid transparent',
                 cursor: 'pointer',
@@ -414,7 +441,7 @@ export default function SQLLearn() {
               }}
             >
               <span>{l.title}</span>
-              {done && <span style={{ fontSize: 12, color: '#4ade80', flexShrink: 0 }}>✓</span>}
+              {done && <span style={{ fontSize: 12, color: '#d97706', flexShrink: 0 }}>✓</span>}
             </button>
           );
         })}
@@ -434,7 +461,7 @@ export default function SQLLearn() {
       </div>
 
       {/* Main */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         {/* Concept */}
         <div style={{
           padding: '24px 28px',

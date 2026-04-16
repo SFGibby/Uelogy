@@ -11,11 +11,25 @@ interface Article {
   imageUrl?: string;
 }
 
+const GN = (q: string) =>
+  `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
+
 const FEEDS = {
-  solar: [
+  // General solar industry trades
+  solarTrade: [
     { url: 'https://cleantechnica.com/feed/', source: 'CleanTechnica' },
     { url: 'https://www.solarpowerworldonline.com/feed/', source: 'Solar Power World' },
     { url: 'https://www.pv-magazine-usa.com/feed/', source: 'PV Magazine' },
+    { url: 'https://electrek.co/category/solar/feed/', source: 'Electrek Solar' },
+    { url: 'https://www.utilitydive.com/feeds/solar/', source: 'Utility Dive' },
+  ],
+  // Solar business: companies, financing, M&A, bankruptcies
+  solarBusiness: [
+    { url: GN('residential solar company bankruptcy acquisition'), source: 'Google News' },
+    { url: GN('Sunrun Sunnova SunPower solar earnings'), source: 'Google News' },
+    { url: GN('LightReach GoodLeap Mosaic solar financing'), source: 'Google News' },
+    { url: GN('solar installer layoffs funding raise'), source: 'Google News' },
+    { url: GN('Freedom Forever solar'), source: 'Google News' },
   ],
   tech: [
     { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
@@ -112,9 +126,9 @@ async function fetchFeed(url: string, source: string): Promise<Article[]> {
   }
 }
 
-async function getCategory(feeds: { url: string; source: string }[]): Promise<Article[]> {
+async function getCategory(feeds: { url: string; source: string }[], limit = 4): Promise<Article[]> {
   const results = await Promise.all(feeds.map(f => fetchFeed(f.url, f.source)));
-  return results.flat().slice(0, 4);
+  return results.flat().slice(0, limit);
 }
 
 function articleRow(a: Article): string {
@@ -162,7 +176,7 @@ function sectionHeader(bgcolor: string, emoji: string, label: string): string {
     </tr>`;
 }
 
-function buildEmail(solar: Article[], tech: Article[], sales: Article[]): string {
+function buildEmail(solarTrade: Article[], solarBusiness: Article[], tech: Article[], sales: Article[]): string {
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
@@ -182,9 +196,10 @@ function buildEmail(solar: Article[], tech: Article[], sales: Article[]): string
       <div style="color:#475569;font-size:13px;margin-top:8px;">${today}</div>
       <div style="background:#1e293b;height:1px;margin:20px 32px;"></div>
       <table cellpadding="0" cellspacing="0" align="center"><tr>
-        <td style="padding:0 12px;color:#64748b;font-size:13px;">☀️ Solar</td>
-        <td style="padding:0 12px;color:#64748b;font-size:13px;">💻 Technology</td>
-        <td style="padding:0 12px;color:#64748b;font-size:13px;">📈 Sales</td>
+        <td style="padding:0 10px;color:#64748b;font-size:13px;">☀️ Solar</td>
+        <td style="padding:0 10px;color:#64748b;font-size:13px;">⚡ Solar Business</td>
+        <td style="padding:0 10px;color:#64748b;font-size:13px;">💻 Technology</td>
+        <td style="padding:0 10px;color:#64748b;font-size:13px;">📈 Sales</td>
       </tr></table>
     </td></tr>
 
@@ -193,7 +208,11 @@ function buildEmail(solar: Article[], tech: Article[], sales: Article[]): string
       <table width="100%" cellpadding="0" cellspacing="0">
 
         ${sectionHeader('#c2410c', '☀️', 'Solar Industry')}
-        ${solar.map(articleRow).join('')}
+        ${solarTrade.map(articleRow).join('')}
+        <tr><td style="height:6px;background:#f8fafc;"></td></tr>
+
+        ${sectionHeader('#92400e', '⚡', 'Solar Business & Finance')}
+        ${solarBusiness.map(articleRow).join('')}
         <tr><td style="height:6px;background:#f8fafc;"></td></tr>
 
         ${sectionHeader('#1d4ed8', '💻', 'Technology & IT')}
@@ -229,17 +248,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const [solar, tech, sales] = await Promise.all([
-      getCategory(FEEDS.solar),
-      getCategory(FEEDS.tech),
-      getCategory(FEEDS.sales),
+    const [solarTrade, solarBusiness, tech, sales] = await Promise.all([
+      getCategory(FEEDS.solarTrade, 4),
+      getCategory(FEEDS.solarBusiness, 5),
+      getCategory(FEEDS.tech, 4),
+      getCategory(FEEDS.sales, 4),
     ]);
 
-    if (solar.length + tech.length + sales.length === 0) {
+    if (solarTrade.length + solarBusiness.length + tech.length + sales.length === 0) {
       return NextResponse.json({ error: 'No articles fetched' }, { status: 500 });
     }
 
-    const html = buildEmail(solar, tech, sales);
+    const html = buildEmail(solarTrade, solarBusiness, tech, sales);
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -259,7 +279,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       success: true,
-      counts: { solar: solar.length, tech: tech.length, sales: sales.length },
+      counts: { solarTrade: solarTrade.length, solarBusiness: solarBusiness.length, tech: tech.length, sales: sales.length },
     });
   } catch (err) {
     console.error('Newsletter error:', err);
