@@ -32,7 +32,9 @@ export default function CollectionPage() {
         events: {
           onReady: (e: { target: YTPlayer }) => {
             e.target.setVolume(30);
+            e.target.playVideo();
             setReady(true);
+            setPlaying(true);
           },
         },
       });
