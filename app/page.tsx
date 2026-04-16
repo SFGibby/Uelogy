@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const BlockDrop = dynamic(() => import('../components/BlockDrop'), { ssr: false });
 
@@ -39,6 +39,20 @@ const term: React.CSSProperties = {
 export default function Home() {
   const [milestone, setMilestone] = useState(0);
   const [gameVisible, setGameVisible] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio('/tetris.mp3');
+    audio.loop = true;
+    audio.volume = 0.35;
+    audioRef.current = audio;
+    return () => { audio.pause(); audio.src = ''; };
+  }, []);
+
+  const playMusic = () => audioRef.current?.play().catch(() => {});
+  const stopMusic = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+  };
 
   const showGame = () => {
     setMilestone(0);
@@ -89,17 +103,20 @@ export default function Home() {
           )}
         </div>
 
-        <BlockDrop
-          onMilestone={level => setMilestone(prev => Math.max(prev, level))}
-          onGameEnd={() => setGameVisible(false)}
-        />
+        {gameVisible && (
+          <BlockDrop
+            audioRef={audioRef}
+            onMilestone={level => setMilestone(prev => Math.max(prev, level))}
+            onGameEnd={() => { stopMusic(); setGameVisible(false); }}
+          />
+        )}
 
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <div style={{ ...term, fontSize: 13, color: '#0d660d', textShadow: 'none', letterSpacing: '0.08em' }}>
             PLAY TO UNLOCK PROFILE ↓
           </div>
           <button
-            onClick={() => setGameVisible(false)}
+            onClick={() => { playMusic(); setGameVisible(false); }}
             style={{ background: 'none', border: 'none', ...term, fontSize: 12, color: '#1a4d1a', textShadow: 'none', letterSpacing: '0.08em', cursor: 'pointer', textDecoration: 'underline' }}
             onMouseEnter={e => (e.currentTarget.style.color = '#33ff33')}
             onMouseLeave={e => (e.currentTarget.style.color = '#1a4d1a')}
