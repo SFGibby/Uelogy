@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 const CollectionTracker = dynamic(() => import('../../components/collection/CollectionTracker'), { ssr: false });
 
 // Paste your YouTube video ID here (the part after ?v= in the URL)
-const YT_VIDEO_ID = 'REPLACE_WITH_VIDEO_ID';
+const YT_VIDEO_ID = 'mhrtIYvTKeo';
 
 export default function CollectionPage() {
   const playerRef = useRef<HTMLDivElement>(null);
