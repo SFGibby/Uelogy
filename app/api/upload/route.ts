@@ -3,12 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 
 const BUCKET = 'collection-images';
 
-const admin = createClient(
-  'https://zusoxekerqrvdlctbkcc.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: NextRequest) {
+  const admin = createClient(
+    'https://zusoxekerqrvdlctbkcc.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   try {
     const form = await req.formData();
     const file = form.get('file') as File | null;
