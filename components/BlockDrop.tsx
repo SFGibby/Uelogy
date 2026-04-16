@@ -87,6 +87,15 @@ export default function BlockDrop({ onMilestone, onGameEnd }: BlockDropProps) {
   const dropCounter = useRef(0);
   const onMilestoneRef = useRef(onMilestone);
   onMilestoneRef.current = onMilestone;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio('/tetris.mp3');
+    audio.loop = true;
+    audio.volume = 0.35;
+    audioRef.current = audio;
+    return () => { audio.pause(); audio.src = ''; };
+  }, []);
 
   useEffect(()=>{ setLeaderboard(loadLeaderboard()); },[]);
 
@@ -117,7 +126,7 @@ export default function BlockDrop({ onMilestone, onGameEnd }: BlockDropProps) {
       if(cleared===4) s.tetrises++;
       s.milestone=checkMilestones(s.score, s.tetrises, s.milestone);
       s.piece=s.next; s.next=randomPiece();
-      if(collides(s.grid,s.piece)){ s.gameOver=true; setShowNameInput(true); }
+      if(collides(s.grid,s.piece)){ s.gameOver=true; setShowNameInput(true); if(audioRef.current){audioRef.current.pause(); audioRef.current.currentTime=0;} }
     }
     tick();
   },[tick, checkMilestones]);
@@ -138,6 +147,7 @@ export default function BlockDrop({ onMilestone, onGameEnd }: BlockDropProps) {
     s.score=0; s.lines=0; s.level=1; s.tetrises=0; s.milestone=0;
     s.gameOver=false; s.started=true; s.paused=false;
     setShowNameInput(false); setNameInput(''); setShowLeaderboard(false);
+    audioRef.current?.play().catch(()=>{});
     tick();
   },[tick]);
 
@@ -155,7 +165,7 @@ export default function BlockDrop({ onMilestone, onGameEnd }: BlockDropProps) {
       const s=stateRef.current;
       if(showNameInput) return;
       if(!s.started||s.gameOver) return;
-      if(e.key==='p'||e.key==='P'){ s.paused=!s.paused; tick(); return; }
+      if(e.key==='p'||e.key==='P'){ s.paused=!s.paused; if(s.paused){audioRef.current?.pause();}else{audioRef.current?.play().catch(()=>{});} tick(); return; }
       if(s.paused) return;
       switch(e.key){
         case 'ArrowLeft': e.preventDefault(); if(!collides(s.grid,s.piece,-1))s.piece.x--; break;
