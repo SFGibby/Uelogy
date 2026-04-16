@@ -6,10 +6,30 @@ import AddItemModal from './AddItemModal';
 
 const TYPE_META: Record<string, { label: string; color: string; glow: string }> = {
   mtg:          { label: 'MTG',         color: '#f59e0b', glow: 'rgba(245,158,11,0.3)' },
-  pokemon:      { label: 'Pokémon',     color: '#ef4444', glow: 'rgba(239,68,68,0.3)' },
-  sports_card:  { label: 'Sports Card', color: '#3b82f6', glow: 'rgba(59,130,246,0.3)' },
-  memorabilia:  { label: 'Memorabilia', color: '#a78bfa', glow: 'rgba(167,139,250,0.3)' },
-  other:        { label: 'Other',       color: '#6b7280', glow: 'rgba(107,114,128,0.3)' },
+  pokemon:      { label: 'Pokémon',     color: '#fb923c', glow: 'rgba(251,146,60,0.3)' },
+  sports_card:  { label: 'Sports Card', color: '#fbbf24', glow: 'rgba(251,191,36,0.3)' },
+  memorabilia:  { label: 'Memorabilia', color: '#f97316', glow: 'rgba(249,115,22,0.3)' },
+  other:        { label: 'Other',       color: '#78716c', glow: 'rgba(120,113,108,0.3)' },
+};
+
+// Solar panel grid CSS used in multiple places
+const SOLAR_GRID_BG = {
+  backgroundImage: [
+    'linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px)',
+    'linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px)',
+  ].join(', '),
+  backgroundSize: '44px 44px',
+};
+
+const inp: React.CSSProperties = {
+  background: 'rgba(245,158,11,0.06)',
+  border: '1px solid rgba(245,158,11,0.18)',
+  borderRadius: 8,
+  padding: '8px 14px',
+  color: '#e8e4d8',
+  fontSize: 13,
+  outline: 'none',
+  backdropFilter: 'blur(8px)',
 };
 
 export default function CollectionTracker() {
@@ -75,50 +95,71 @@ export default function CollectionTracker() {
 
   const totalValue = filtered.reduce((sum, i) => sum + (i.avg_sold_price ?? i.purchase_price ?? 0) * (i.quantity ?? 1), 0);
 
-  const inp: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 8,
-    padding: '8px 14px',
-    color: '#e8e8e8',
-    fontSize: 13,
-    outline: 'none',
-    backdropFilter: 'blur(8px)',
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1a 40%, #0a0f0a 100%)',
-      color: '#e8e8e8',
+      background: '#0a0906',
+      color: '#e8e4d8',
       fontFamily: 'system-ui, -apple-system, sans-serif',
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Ambient background glow blobs */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '10%', left: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)', filter: 'blur(40px)', transform: 'translate(-50%, -50%)' }} />
-      </div>
+      {/* Solar panel grid texture + corona glow */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 0,
+        ...SOLAR_GRID_BG,
+      }} />
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '55vh',
+        pointerEvents: 'none',
+        zIndex: 0,
+        background: 'radial-gradient(ellipse at 50% -10%, rgba(245,158,11,0.13) 0%, rgba(234,88,12,0.06) 45%, transparent 70%)',
+      }} />
+      {/* Horizon line glow */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 1,
+        pointerEvents: 'none',
+        zIndex: 0,
+        background: 'linear-gradient(90deg, transparent 0%, rgba(245,158,11,0.4) 30%, rgba(245,158,11,0.6) 50%, rgba(245,158,11,0.4) 70%, transparent 100%)',
+        boxShadow: '0 0 24px 4px rgba(245,158,11,0.25)',
+      }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div style={{
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid rgba(245,158,11,0.12)',
           padding: '28px 32px',
-          background: 'rgba(255,255,255,0.02)',
-          backdropFilter: 'blur(12px)',
+          background: 'rgba(10,9,6,0.7)',
+          backdropFilter: 'blur(16px)',
         }}>
           <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.5, background: 'linear-gradient(135deg, #e8e8e8 0%, #a0a0a0 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <h1 style={{
+                margin: 0,
+                fontSize: 28,
+                fontWeight: 800,
+                letterSpacing: -0.5,
+                background: 'linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #ea580c 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>
                 The Collection
               </h1>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 5, letterSpacing: '0.02em' }}>
+              <div style={{ color: 'rgba(245,158,11,0.45)', fontSize: 13, marginTop: 5, letterSpacing: '0.04em' }}>
                 {filtered.length} item{filtered.length !== 1 ? 's' : ''}
                 {totalValue > 0 && (
-                  <span style={{ marginLeft: 16, color: '#4ade80', fontWeight: 700, fontSize: 14 }}>
+                  <span style={{ marginLeft: 16, color: '#fbbf24', fontWeight: 700, fontSize: 14 }}>
                     ≈ ${totalValue.toFixed(2)}
                   </span>
                 )}
@@ -132,14 +173,14 @@ export default function CollectionTracker() {
                 onClick={() => { setEditItem(null); setShowModal(true); }}
                 style={{
                   padding: '9px 22px',
-                  background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+                  background: 'linear-gradient(135deg, #d97706, #ea580c)',
                   color: '#fff',
-                  border: '1px solid rgba(167,139,250,0.4)',
+                  border: '1px solid rgba(245,158,11,0.4)',
                   borderRadius: 10,
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: 'pointer',
-                  boxShadow: '0 0 20px rgba(124,58,237,0.3)',
+                  boxShadow: '0 0 20px rgba(245,158,11,0.25)',
                   letterSpacing: '0.02em',
                 }}
               >
@@ -150,7 +191,7 @@ export default function CollectionTracker() {
         </div>
 
         {/* Filter bar */}
-        <div style={{ padding: '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '16px 32px', borderBottom: '1px solid rgba(245,158,11,0.08)' }}>
           <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             <input
               style={{ ...inp, minWidth: 220, flex: 1 }}
@@ -178,10 +219,10 @@ export default function CollectionTracker() {
           </div>
         </div>
 
-        {/* Wall */}
+        {/* Grid */}
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 32px 64px' }}>
           {loading ? (
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, textAlign: 'center', padding: 80 }}>
+            <div style={{ color: 'rgba(245,158,11,0.3)', fontSize: 14, textAlign: 'center', padding: 80 }}>
               Loading collection…
             </div>
           ) : filtered.length === 0 ? (
@@ -221,32 +262,29 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
   const img = item.api_image_url || item.image_url;
   const value = item.avg_sold_price ?? item.purchase_price;
   const [hovered, setHovered] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
+      onMouseLeave={() => setHovered(false)}
       style={{
         position: 'relative',
-        borderRadius: 16,
+        borderRadius: 14,
         overflow: 'hidden',
         cursor: 'pointer',
         transform: hovered ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
         boxShadow: hovered
-          ? `0 20px 60px ${meta.glow}, 0 0 0 1px ${meta.color}55, inset 0 1px 0 rgba(255,255,255,0.15)`
-          : '0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)',
+          ? `0 20px 50px ${meta.glow}, 0 0 0 1px ${meta.color}50`
+          : '0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.10)',
       }}
     >
-      {/* Glass case frame */}
       <div style={{
         background: hovered
-          ? `linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 50%, ${meta.color}18 100%)`
-          : 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
-        backdropFilter: 'blur(12px)',
-        border: `1px solid ${hovered ? meta.color + '44' : 'rgba(255,255,255,0.10)'}`,
-        borderRadius: 16,
+          ? `linear-gradient(160deg, rgba(245,158,11,0.10) 0%, rgba(10,9,6,0.95) 60%, ${meta.color}12 100%)`
+          : 'linear-gradient(160deg, rgba(245,158,11,0.05) 0%, rgba(10,9,6,0.98) 100%)',
+        border: `1px solid ${hovered ? meta.color + '40' : 'rgba(245,158,11,0.12)'}`,
+        borderRadius: 14,
         transition: 'background 0.25s ease, border-color 0.25s ease',
       }}>
 
@@ -258,7 +296,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
           justifyContent: 'center',
           padding: 16,
           position: 'relative',
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.05) 100%)',
+          background: 'rgba(0,0,0,0.25)',
         }}>
           {img ? (
             <img
@@ -269,24 +307,38 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
                 maxWidth: '100%',
                 objectFit: 'contain',
                 borderRadius: item.type === 'memorabilia' ? 8 : 6,
-                boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)`,
-                filter: hovered ? 'brightness(1.08)' : 'brightness(1)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+                filter: hovered ? 'brightness(1.08)' : 'brightness(0.95)',
                 transition: 'filter 0.25s ease',
               }}
             />
           ) : (
+            // Solar panel grid placeholder — no emojis
             <div style={{
               width: 120,
               height: 168,
-              background: `linear-gradient(135deg, ${meta.color}22, ${meta.color}08)`,
-              border: `1px solid ${meta.color}33`,
               borderRadius: 8,
+              border: `1px solid ${meta.color}30`,
+              backgroundImage: [
+                `linear-gradient(${meta.color}12 1px, transparent 1px)`,
+                `linear-gradient(90deg, ${meta.color}12 1px, transparent 1px)`,
+                `linear-gradient(135deg, ${meta.color}08 0%, transparent 60%)`,
+              ].join(', '),
+              backgroundSize: '24px 24px, 24px 24px, 100% 100%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 48,
             }}>
-              {item.type === 'memorabilia' ? '🏆' : item.type === 'sports_card' ? '🏅' : '🃏'}
+              <span style={{
+                color: meta.color,
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: '0.12em',
+                opacity: 0.6,
+                textTransform: 'uppercase',
+              }}>
+                {meta.label}
+              </span>
             </div>
           )}
 
@@ -296,14 +348,13 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
             top: 10,
             left: 10,
             background: meta.color + 'cc',
-            color: '#fff',
+            color: '#0a0906',
             fontSize: 9,
             fontWeight: 800,
             padding: '3px 8px',
             borderRadius: 20,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            boxShadow: `0 2px 8px ${meta.glow}`,
           }}>
             {meta.label}
           </div>
@@ -312,44 +363,38 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
           <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
             {item.is_foil && (
               <div style={{ background: 'linear-gradient(135deg, #ffd700, #ff8c00)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
-                ✨ FOIL
+                FOIL
               </div>
             )}
             {item.is_rookie && (
-              <div style={{ background: 'rgba(74,222,128,0.85)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
+              <div style={{ background: 'rgba(245,158,11,0.85)', color: '#0a0906', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
                 RC
               </div>
             )}
             {item.is_autographed && (
-              <div style={{ background: 'rgba(251,191,36,0.85)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
+              <div style={{ background: 'rgba(251,191,36,0.85)', color: '#0a0906', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
                 AUTO
               </div>
             )}
             {item.grade && (
-              <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>
+              <div style={{ background: 'rgba(245,158,11,0.15)', backdropFilter: 'blur(8px)', color: '#fbbf24', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, border: '1px solid rgba(245,158,11,0.3)', letterSpacing: '0.05em' }}>
                 {item.grade}
               </div>
             )}
           </div>
 
-          {/* Hover menu */}
+          {/* Hover actions */}
           {hovered && (
-            <div style={{
-              position: 'absolute',
-              bottom: 10,
-              right: 10,
-              display: 'flex',
-              gap: 6,
-            }}>
+            <div style={{ position: 'absolute', bottom: 10, right: 10, display: 'flex', gap: 6 }}>
               <button
                 onClick={e => { e.stopPropagation(); onEdit(); }}
                 style={{
                   padding: '5px 12px',
-                  background: 'rgba(255,255,255,0.12)',
+                  background: 'rgba(245,158,11,0.15)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(245,158,11,0.3)',
                   borderRadius: 20,
-                  color: '#fff',
+                  color: '#fbbf24',
                   fontSize: 11,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -361,9 +406,9 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
                 onClick={e => { e.stopPropagation(); onDelete(); }}
                 style={{
                   padding: '5px 10px',
-                  background: 'rgba(239,68,68,0.2)',
+                  background: 'rgba(239,68,68,0.15)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(239,68,68,0.3)',
+                  border: '1px solid rgba(239,68,68,0.25)',
                   borderRadius: 20,
                   color: '#fca5a5',
                   fontSize: 11,
@@ -379,15 +424,14 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
         {/* Info panel */}
         <div style={{
           padding: '12px 14px 14px',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(0,0,0,0.2)',
+          borderTop: '1px solid rgba(245,158,11,0.08)',
+          background: 'rgba(0,0,0,0.3)',
         }}>
           <div style={{
             fontSize: 13,
             fontWeight: 700,
-            color: '#f0f0f0',
+            color: '#f0ebe0',
             lineHeight: 1.3,
-            wordBreak: 'break-word',
             marginBottom: 4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -398,7 +442,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
           {(item.set_name || item.player || item.team) && (
             <div style={{
               fontSize: 11,
-              color: 'rgba(255,255,255,0.4)',
+              color: 'rgba(245,158,11,0.4)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -408,7 +452,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
             </div>
           )}
           {(item.condition || item.year) && (
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'rgba(245,158,11,0.25)', marginTop: 2 }}>
               {[item.condition, item.year].filter(Boolean).join(' · ')}
             </div>
           )}
@@ -416,9 +460,9 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
             <div style={{
               fontSize: 16,
               fontWeight: 800,
-              color: '#4ade80',
+              color: '#fbbf24',
               marginTop: 8,
-              textShadow: '0 0 20px rgba(74,222,128,0.4)',
+              textShadow: '0 0 16px rgba(251,191,36,0.4)',
             }}>
               ${value.toFixed(2)}
             </div>
@@ -432,42 +476,39 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
 function EmptyState({ hasItems, onAdd }: { hasItems: boolean; onAdd: () => void }) {
   return (
     <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+      {/* CSS sun — no emoji */}
       <div style={{
-        width: 120,
-        height: 120,
-        margin: '0 auto 24px',
-        background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.10))',
-        border: '1px solid rgba(124,58,237,0.2)',
-        borderRadius: 24,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 52,
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 8px 40px rgba(124,58,237,0.15)',
-      }}>
-        🏛️
-      </div>
-      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, marginBottom: 8 }}>
+        width: 72,
+        height: 72,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, #fde68a 0%, #f59e0b 50%, #d97706 100%)',
+        margin: '0 auto 32px',
+        boxShadow: [
+          '0 0 0 12px rgba(245,158,11,0.08)',
+          '0 0 0 24px rgba(245,158,11,0.04)',
+          '0 0 60px rgba(245,158,11,0.3)',
+        ].join(', '),
+      }} />
+      <div style={{ color: 'rgba(245,158,11,0.5)', fontSize: 16, marginBottom: 8 }}>
         {hasItems ? 'No items match your filters.' : 'The wall is empty.'}
       </div>
       {!hasItems && (
         <>
-          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, marginBottom: 28 }}>
+          <div style={{ color: 'rgba(245,158,11,0.25)', fontSize: 13, marginBottom: 28 }}>
             Add your first piece to start your collection.
           </div>
           <button
             onClick={onAdd}
             style={{
               padding: '11px 28px',
-              background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
+              background: 'linear-gradient(135deg, #d97706, #ea580c)',
               color: '#fff',
-              border: '1px solid rgba(167,139,250,0.4)',
+              border: '1px solid rgba(245,158,11,0.4)',
               borderRadius: 12,
               fontSize: 14,
               fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 0 30px rgba(124,58,237,0.4)',
+              boxShadow: '0 0 30px rgba(245,158,11,0.25)',
             }}
           >
             Add First Item
