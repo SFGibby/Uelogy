@@ -36,6 +36,7 @@ const term: React.CSSProperties = {
 export default function Home() {
   const [milestone, setMilestone] = useState(0);
   const [gameVisible, setGameVisible] = useState(true);
+  const [musicPlaying, setMusicPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -46,10 +47,13 @@ export default function Home() {
     return () => { audio.pause(); audio.src = ''; };
   }, []);
 
-  const playMusic = () => audioRef.current?.play().catch(() => {});
+  const playMusic = () => { audioRef.current?.play().catch(() => {}); setMusicPlaying(true); };
   const stopMusic = () => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    setMusicPlaying(false);
   };
+
+  const toggleMusic = () => musicPlaying ? stopMusic() : playMusic();
 
   const showGame = () => {
     setMilestone(0);
@@ -125,6 +129,37 @@ export default function Home() {
 
       {/* ──────────── FULL PAGE ──────────── */}
       <div style={{ background: '#080810', color: '#e8e8e8', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+
+        {/* MUSIC — fixed bottom-left */}
+        <button
+          onClick={toggleMusic}
+          title={musicPlaying ? 'Pause music' : 'Play music'}
+          style={{
+            position: 'fixed',
+            bottom: 28,
+            left: 28,
+            zIndex: 50,
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: musicPlaying ? 'rgba(51,255,51,0.1)' : 'rgba(0,0,0,0.5)',
+            border: `1px solid ${musicPlaying ? 'rgba(51,255,51,0.5)' : 'rgba(51,255,51,0.2)'}`,
+            color: musicPlaying ? '#33ff33' : 'rgba(51,255,51,0.3)',
+            fontSize: 16,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(12px)',
+            transition: 'opacity 0.6s ease 0.8s, transform 0.6s ease 0.8s, color 0.2s, border-color 0.2s, background 0.2s',
+            opacity: gameVisible ? 0 : 1,
+            transform: gameVisible ? 'translateY(8px)' : 'translateY(0)',
+            pointerEvents: gameVisible ? 'none' : 'all',
+            fontFamily: 'inherit',
+          }}
+        >
+          ♪
+        </button>
 
         {/* NEW GAME — fixed bottom-right */}
         <div style={{
