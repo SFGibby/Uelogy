@@ -441,7 +441,7 @@ export default function SQLLearn() {
               }}
             >
               <span>{l.title}</span>
-              {done && <span style={{ fontSize: 12, color: '#d97706', flexShrink: 0 }}>✓</span>}
+              {done && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706', flexShrink: 0, display: 'inline-block' }} />}
             </button>
           );
         })}

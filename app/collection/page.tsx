@@ -89,7 +89,7 @@ export default function CollectionPage() {
           opacity: ready ? 1 : 0.4,
         }}
       >
-        {playing ? '⏸' : '♪'}
+        ♪
       </button>
     </>
   );

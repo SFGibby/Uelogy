@@ -278,15 +278,20 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
             <div style={{
               width: 120,
               height: 168,
-              background: `linear-gradient(135deg, ${meta.color}22, ${meta.color}08)`,
-              border: `1px solid ${meta.color}33`,
               borderRadius: 8,
+              border: `1px solid ${meta.color}30`,
+              backgroundImage: [
+                `linear-gradient(${meta.color}10 1px, transparent 1px)`,
+                `linear-gradient(90deg, ${meta.color}10 1px, transparent 1px)`,
+              ].join(', '),
+              backgroundSize: '20px 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 48,
             }}>
-              {item.type === 'memorabilia' ? '🏆' : item.type === 'sports_card' ? '🏅' : '🃏'}
+              <span style={{ color: meta.color, fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', opacity: 0.5 }}>
+                {meta.label.toUpperCase()}
+              </span>
             </div>
           )}
 
@@ -312,7 +317,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
           <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
             {item.is_foil && (
               <div style={{ background: 'linear-gradient(135deg, #ffd700, #ff8c00)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
-                ✨ FOIL
+                FOIL
               </div>
             )}
             {item.is_rookie && (
@@ -433,21 +438,14 @@ function EmptyState({ hasItems, onAdd }: { hasItems: boolean; onAdd: () => void 
   return (
     <div style={{ textAlign: 'center', padding: '100px 20px' }}>
       <div style={{
-        width: 120,
-        height: 120,
-        margin: '0 auto 24px',
-        background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(59,130,246,0.10))',
+        width: 80,
+        height: 80,
+        margin: '0 auto 28px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.05) 70%)',
         border: '1px solid rgba(124,58,237,0.2)',
-        borderRadius: 24,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 52,
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 8px 40px rgba(124,58,237,0.15)',
-      }}>
-        🏛️
-      </div>
+        boxShadow: '0 0 40px rgba(124,58,237,0.12)',
+      }} />
       <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, marginBottom: 8 }}>
         {hasItems ? 'No items match your filters.' : 'The wall is empty.'}
       </div>

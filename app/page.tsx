@@ -13,17 +13,14 @@ const SOCIALS = [
 
 const WHAT_I_DO = [
   {
-    icon: '⚙️',
     title: 'IT Leadership',
     desc: 'Director of IT & Business Systems at SunPower. Managing infrastructure, teams, and the technology that keeps operations running.',
   },
   {
-    icon: '🔁',
     title: 'Systems & Automation',
     desc: 'Building workflows and integrations that eliminate busywork — connecting business tools so they actually talk to each other.',
   },
   {
-    icon: '☀️',
     title: 'Solar Industry',
     desc: 'Working at the intersection of clean energy and enterprise tech. SunPower is one of the most recognized names in residential solar.',
   },
@@ -206,7 +203,7 @@ export default function Home() {
                   (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.03)';
                 }}
               >
-                <div style={{ fontSize: 30, marginBottom: 14 }}>{card.icon}</div>
+                <div style={{ width: 28, height: 2, background: 'rgba(51,255,51,0.5)', borderRadius: 2, marginBottom: 18 }} />
                 <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 10 }}>{card.title}</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.7 }}>{card.desc}</div>
               </div>
@@ -243,10 +240,10 @@ export default function Home() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             {[
-              { label: 'MTG', color: '#f59e0b', icon: '⚔️', desc: 'Magic: The Gathering' },
-              { label: 'Pokémon', color: '#ef4444', icon: '⚡', desc: 'TCG cards' },
-              { label: 'Sports', color: '#3b82f6', icon: '🏅', desc: 'Cards & rookie pulls' },
-              { label: 'Memorabilia', color: '#a78bfa', icon: '🏆', desc: 'Signed shoes, balls & more' },
+              { label: 'MTG', color: '#f59e0b', desc: 'Magic: The Gathering' },
+              { label: 'Pokémon', color: '#ef4444', desc: 'TCG cards' },
+              { label: 'Sports', color: '#3b82f6', desc: 'Cards & rookie pulls' },
+              { label: 'Memorabilia', color: '#a78bfa', desc: 'Signed shoes, balls & more' },
             ].map(cat => (
               <div key={cat.label} style={{
                 background: cat.color + '0d',
@@ -254,7 +251,7 @@ export default function Home() {
                 borderRadius: 12,
                 padding: '18px 16px',
               }}>
-                <div style={{ fontSize: 26, marginBottom: 8 }}>{cat.icon}</div>
+                <div style={{ width: 24, height: 2, background: cat.color, borderRadius: 2, marginBottom: 12 }} />
                 <div style={{ fontSize: 15, fontWeight: 700, color: cat.color }}>{cat.label}</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{cat.desc}</div>
               </div>
