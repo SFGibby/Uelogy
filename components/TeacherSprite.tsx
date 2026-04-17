@@ -1,52 +1,80 @@
 'use client';
 
-// Sea of Stars style teacher character
-// 12 wide × 18 tall at PX=3 → 36×54px
+// Sea of Stars inspired teacher sprite — Prof. Uel
+// 16 wide × 32 tall pixel grid, rendered at PX=4 → 64×128
+// Taller proportions than classic 8-bit, 3+ tones per region, soft burgundy outline
 
-const PX = 3;
+const PX = 4;
 
-const C: Record<number, string> = {
-  1: '#2d1b0e', // dark hair
-  2: '#c07d52', // warm skin
-  3: '#1a4875', // blazer dark
-  4: '#2a6499', // blazer mid
-  5: '#f0ead8', // white shirt / collar
-  6: '#0d1927', // dark detail (eyes, pants)
-  7: '#7b5015', // glasses frame
-  8: '#ffd166', // gold pin
-  9: '#2d1606', // shoes
+const C: Record<string, string> = {
+  o: '#2a1820', // soft dark outline (burgundy-brown, not black)
+  H: '#a87a48', // hair highlight (warm brown)
+  h: '#5a3620', // hair mid
+  d: '#32180c', // hair shadow
+  s: '#fbd9b4', // skin highlight
+  n: '#e8b088', // skin mid
+  k: '#a06040', // skin shadow
+  e: '#1a1828', // eye
+  f: '#3a2818', // glasses frame
+  l: '#cfe4eb', // glass tint
+  w: '#f2ecde', // shirt white
+  W: '#bdb49a', // shirt shadow
+  t: '#a02a2c', // tie highlight (burgundy)
+  T: '#5a1418', // tie deep
+  b: '#1e3a5e', // blazer mid (navy)
+  B: '#0c1e3c', // blazer shadow
+  L: '#3a5680', // blazer highlight
+  p: '#3a2e1e', // pants mid (khaki-brown)
+  P: '#1a140a', // pants shadow
+  x: '#2a180a', // shoe mid
+  X: '#5a3a20', // shoe highlight
+  '.': '',      // transparent
 };
 
-// Big head (~39% of height), teacher blazer with lapels, gold pin, glasses
-const SPRITE: number[][] = [
-  [0,0,1,1,1,1,1,1,0,0,0,0], //  0 hair top
-  [0,1,1,1,1,1,1,1,1,0,0,0], //  1 hair
-  [0,1,1,2,2,2,2,1,1,0,0,0], //  2 face + hair sides
-  [0,1,2,2,2,2,2,2,1,0,0,0], //  3 face
-  [0,1,2,7,6,2,6,7,1,0,0,0], //  4 glasses
-  [0,1,2,7,2,2,2,7,1,0,0,0], //  5 glasses lower frame
-  [0,1,2,2,2,6,2,2,1,0,0,0], //  6 smile
-  [0,3,3,5,5,5,3,3,3,0,0,0], //  7 shoulders + white collar
-  [0,3,5,5,5,5,5,3,0,0,0,0], //  8 shirt
-  [0,3,5,3,3,3,5,3,0,0,0,0], //  9 blazer lapels open
-  [0,3,3,3,8,3,3,3,0,0,0,0], // 10 blazer body + gold pin
-  [0,3,3,3,3,3,3,3,0,0,0,0], // 11 blazer lower
-  [0,6,6,6,6,6,6,6,0,0,0,0], // 12 dark pants waist
-  [0,0,6,6,0,6,6,0,0,0,0,0], // 13 legs
-  [0,0,6,6,0,6,6,0,0,0,0,0], // 14 legs
-  [0,0,6,6,0,6,6,0,0,0,0,0], // 15 legs lower
-  [0,0,9,9,0,9,9,0,0,0,0,0], // 16 shoes
-  [0,9,9,9,0,9,9,9,0,0,0,0], // 17 shoe tips
+// 16 wide × 32 tall. Each char = 1 pixel.
+const SPRITE: string[] = [
+  '....oooooooo....', //  0 hair top
+  '...oHHhhhhhho...', //  1 hair highlight
+  '..oHhhhhhhhddo..', //  2 hair with dark side
+  '..ohhsnnnnshhdo.', //  3 forehead + skin highlight
+  '..ohnssnnnsnkho.', //  4 face top
+  '..ohnffooffneho.', //  5 glasses frame top
+  '..ohnfleelfnkho.', //  6 lens + eye
+  '..ohnffooffnkho.', //  7 glasses lower
+  '..ohnsnnnnnnsho.', //  8 cheeks
+  '...onnnntnnnko..', //  9 tiny mouth
+  '...oonnnnnnoo...', // 10 chin
+  '.....onnnno.....', // 11 neck
+  '...oBLwwwwLBo...', // 12 collar + shoulders
+  '..oBLwwWWwwwLBo.', // 13 collar open
+  '..oBLLwwTwwbLBo.', // 14 lapels + tie start
+  '..oBbLwTtTwbbBo.', // 15
+  '..oBbbwTtTwbbBo.', // 16
+  '..oBbbwTtTwbbBo.', // 17
+  '..oBbbwTtTwbbBo.', // 18
+  '..oBbbbbTbbbbBo.', // 19 blazer closes over tie
+  '..oBbbbbbbbbbBo.', // 20
+  '..oBBbbbbbbbBBo.', // 21
+  '...oBBBbbbBBBo..', // 22 blazer hem
+  '....oppppppo....', // 23 pants waist
+  '...opPppppPpo...', // 24
+  '...opPppppPpo...', // 25
+  '...opPppppPpo...', // 26
+  '...opPppppPpo...', // 27
+  '...opPpoopPpo...', // 28 legs separate
+  '...opPpo.oPpo...', // 29
+  '..oxxxxo.oxxxxo.', // 30 shoes
+  '.oxXXxxo.oxXXxxo', // 31 shoe tips
 ];
 
 const W = SPRITE[0].length * PX;
 const H = SPRITE.length * PX;
 
-// Small star sparkles that pulse around the character (Sea of Stars feel)
+// Soft sparkles (Sea of Stars signature twinkle)
 const SPARKLES = [
-  { cx: W + 6, cy: 10, delay: '0s',    dur: '2.4s' },
-  { cx: -6,   cy: 24, delay: '1.2s',   dur: '2.4s' },
-  { cx: W + 2, cy: 40, delay: '0.6s',  dur: '3.0s' },
+  { cx: W + 8,  cy: 16, delay: '0s',   dur: '2.6s' },
+  { cx: -8,     cy: 40, delay: '1.3s', dur: '2.8s' },
+  { cx: W + 4,  cy: 72, delay: '0.7s', dur: '3.2s' },
 ];
 
 export default function TeacherSprite() {
@@ -55,50 +83,56 @@ export default function TeacherSprite() {
       <style>{`
         @keyframes teacherFloat {
           0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-4px); }
+          50%      { transform: translateY(-3px); }
         }
         @keyframes sparkleIn {
           0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
           40%, 60% { opacity: 1; transform: scale(1) rotate(45deg); }
         }
         .teacher-body {
-          animation: teacherFloat 2.6s ease-in-out infinite;
+          animation: teacherFloat 3.2s ease-in-out infinite;
           transform-origin: bottom center;
           image-rendering: pixelated;
-          filter: drop-shadow(0 4px 8px rgba(78,205,196,0.15));
+          filter: drop-shadow(0 6px 4px rgba(10,10,20,0.35));
         }
         .teacher-sparkle {
-          animation: sparkleIn 2.4s ease-in-out infinite;
+          animation: sparkleIn 2.6s ease-in-out infinite;
+          transform-origin: center;
         }
       `}</style>
 
-      <div style={{ position: 'relative', width: W + 16, height: H + 8 }}>
-        {/* Sparkle stars */}
+      <div style={{ position: 'relative', width: W + 24, height: H + 12 }}>
         <svg
-          width={W + 16}
-          height={H + 8}
-          viewBox={`-8 0 ${W + 16} ${H + 8}`}
+          width={W + 24}
+          height={H + 12}
+          viewBox={`-12 0 ${W + 24} ${H + 12}`}
           style={{ position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' }}
         >
+          {/* Ground shadow ellipse under feet */}
+          <ellipse cx={W / 2} cy={H + 4} rx={W / 2.6} ry={4} fill="rgba(10,14,28,0.28)" />
+
+          {/* Sparkle stars */}
           {SPARKLES.map((s, i) => (
-            <g key={i} className="teacher-sparkle" style={{ animationDelay: s.delay, animationDuration: s.dur }}>
-              <line x1={s.cx} y1={s.cy - 4} x2={s.cx} y2={s.cy + 4} stroke="#ffd166" strokeWidth="1.5" />
-              <line x1={s.cx - 4} y1={s.cy} x2={s.cx + 4} y2={s.cy} stroke="#ffd166" strokeWidth="1.5" />
+            <g key={i} className="teacher-sparkle" style={{ animationDelay: s.delay, animationDuration: s.dur, transformOrigin: `${s.cx}px ${s.cy}px` }}>
+              <line x1={s.cx} y1={s.cy - 5} x2={s.cx} y2={s.cy + 5} stroke="#ffd166" strokeWidth="1.6" strokeLinecap="round" />
+              <line x1={s.cx - 5} y1={s.cy} x2={s.cx + 5} y2={s.cy} stroke="#ffd166" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx={s.cx} cy={s.cy} r="1.2" fill="#fff6d6" />
             </g>
           ))}
         </svg>
 
-        {/* Sprite body */}
-        <div className="teacher-body" style={{ position: 'absolute', left: 8, top: 0, width: W, height: H }}>
+        <div className="teacher-body" style={{ position: 'absolute', left: 12, top: 0, width: W, height: H }}>
           <svg
             width={W}
             height={H}
             viewBox={`0 0 ${W} ${H}`}
             style={{ display: 'block', imageRendering: 'pixelated' }}
+            shapeRendering="crispEdges"
           >
             {SPRITE.map((row, ri) =>
-              row.map((cell, ci) => {
-                if (!cell) return null;
+              row.split('').map((ch, ci) => {
+                const fill = C[ch];
+                if (!fill) return null;
                 return (
                   <rect
                     key={`${ri}-${ci}`}
@@ -106,7 +140,7 @@ export default function TeacherSprite() {
                     y={ri * PX}
                     width={PX}
                     height={PX}
-                    fill={C[cell]}
+                    fill={fill}
                   />
                 );
               })
