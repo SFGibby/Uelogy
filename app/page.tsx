@@ -38,6 +38,7 @@ export default function Home() {
   const [milestone, setMilestone] = useState(0);
   const [gameVisible, setGameVisible] = useState(true);
   const [musicPlaying, setMusicPlaying] = useState(false);
+  const [gameLevel, setGameLevel] = useState(1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -50,14 +51,24 @@ export default function Home() {
 
   const playMusic = () => { audioRef.current?.play().catch(() => {}); setMusicPlaying(true); };
   const stopMusic = () => {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; audioRef.current.playbackRate = 1; }
     setMusicPlaying(false);
   };
 
   const toggleMusic = () => musicPlaying ? stopMusic() : playMusic();
 
+  const handleLevelChange = (level: number) => {
+    setGameLevel(level);
+    if (audioRef.current) {
+      // Speed up music gently — cap at 1.5× so it doesn't sound absurd
+      audioRef.current.playbackRate = Math.min(1.5, 1 + (level - 1) * 0.07);
+    }
+  };
+
   const showGame = () => {
     setMilestone(0);
+    setGameLevel(1);
+    if (audioRef.current) audioRef.current.playbackRate = 1;
     setGameVisible(true);
   };
 
@@ -108,12 +119,13 @@ export default function Home() {
         {gameVisible && (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20 }}>
             <div style={{ paddingBottom: 8 }}>
-              <SamSprite />
+              <SamSprite level={gameLevel} />
             </div>
             <BlockDrop
               audioRef={audioRef}
               onMilestone={level => setMilestone(prev => Math.max(prev, level))}
               onGameEnd={() => { stopMusic(); setGameVisible(false); }}
+              onLevelChange={handleLevelChange}
             />
           </div>
         )}

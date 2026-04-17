@@ -36,7 +36,13 @@ const SPRITE: number[][] = [
 const W = SPRITE[0].length * PX;
 const H = SPRITE.length * PX;
 
-export default function SamSprite() {
+// Same drop-speed formula as BlockDrop: max(100, 800 - (level-1)*70) ms
+function bounceDuration(level: number): number {
+  return Math.max(100, 800 - (level - 1) * 70);
+}
+
+export default function SamSprite({ level = 1 }: { level?: number }) {
+  const duration = bounceDuration(level);
   return (
     <>
       <style>{`
@@ -55,7 +61,10 @@ export default function SamSprite() {
         }
       `}</style>
 
-      <div className="sam-sprite-body" style={{ width: W, height: H, position: 'relative' }}>
+      <div
+        className="sam-sprite-body"
+        style={{ width: W, height: H, position: 'relative', animationDuration: `${duration}ms` }}
+      >
         <svg
           width={W}
           height={H}

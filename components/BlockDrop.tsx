@@ -70,9 +70,10 @@ interface BlockDropProps {
   onMilestone?: (level: number) => void;
   onGameEnd?: () => void;
   audioRef?: React.RefObject<HTMLAudioElement | null>;
+  onLevelChange?: (level: number) => void;
 }
 
-export default function BlockDrop({ onMilestone, onGameEnd, audioRef }: BlockDropProps) {
+export default function BlockDrop({ onMilestone, onGameEnd, audioRef, onLevelChange }: BlockDropProps) {
   const stateRef = useRef({
     grid: createGrid(), piece: randomPiece(), next: randomPiece(),
     score:0, lines:0, level:1, tetrises:0, milestone:0,
@@ -88,6 +89,8 @@ export default function BlockDrop({ onMilestone, onGameEnd, audioRef }: BlockDro
   const dropCounter = useRef(0);
   const onMilestoneRef = useRef(onMilestone);
   onMilestoneRef.current = onMilestone;
+  const onLevelChangeRef = useRef(onLevelChange);
+  onLevelChangeRef.current = onLevelChange;
 
   useEffect(()=>{ setLeaderboard(loadLeaderboard()); },[]);
 
@@ -114,7 +117,9 @@ export default function BlockDrop({ onMilestone, onGameEnd, audioRef }: BlockDro
       const {grid,cleared}=clearLines(s.grid); s.grid=grid;
       s.lines+=cleared;
       s.score+=[0,100,300,500,800][cleared]*s.level;
+      const prevLevel = s.level;
       s.level=Math.floor(s.lines/10)+1;
+      if(s.level !== prevLevel) onLevelChangeRef.current?.(s.level);
       if(cleared===4) s.tetrises++;
       s.milestone=checkMilestones(s.score, s.tetrises, s.milestone);
       s.piece=s.next; s.next=randomPiece();
@@ -139,6 +144,7 @@ export default function BlockDrop({ onMilestone, onGameEnd, audioRef }: BlockDro
     s.score=0; s.lines=0; s.level=1; s.tetrises=0; s.milestone=0;
     s.gameOver=false; s.started=true; s.paused=false;
     setShowNameInput(false); setNameInput(''); setShowLeaderboard(false);
+    onLevelChangeRef.current?.(1);
     audioRef?.current?.play().catch(()=>{});
     tick();
   },[tick]);
