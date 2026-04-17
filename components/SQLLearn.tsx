@@ -474,13 +474,11 @@ export default function SQLLearn() {
 
       {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-        {/* Village banner */}
+        {/* Village banner — natural 2:1 aspect so full bg is visible */}
         <div style={{
           borderBottom: `1px solid ${c.border}`,
-          background: '#080e1c',
+          background: '#0a1220',
           position: 'relative',
-          maxHeight: 320,
-          overflow: 'hidden',
         }}>
           <SolarVillage />
         </div>
