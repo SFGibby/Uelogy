@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 
 const BlockDrop = dynamic(() => import('../components/BlockDrop'), { ssr: false });
+const SamSprite = dynamic(() => import('../components/SamSprite'), { ssr: false });
 
 const SOCIALS = [
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/samuelfgibson/' },
@@ -189,26 +190,42 @@ export default function Home() {
         </div>
 
         {/* ── HERO ── */}
-        <section style={{ minHeight: '90vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '100px 48px 80px', maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 20, textShadow: '0 0 6px #33ff33' }}>
-            DIRECTOR OF IT &amp; BUSINESS SYSTEMS · SUNPOWER · UTAH
+        <section style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '100px 48px 80px', maxWidth: 1000, margin: '0 auto', gap: 40 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 20, textShadow: '0 0 6px #33ff33' }}>
+              DIRECTOR OF IT &amp; BUSINESS SYSTEMS · SUNPOWER · UTAH
+            </div>
+            <h1 style={{ fontSize: 'clamp(52px, 9vw, 104px)', fontWeight: 900, margin: 0, lineHeight: 1, letterSpacing: -3, color: '#fff' }}>
+              Samuel<br />Gibson.
+            </h1>
+            <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', maxWidth: 540, lineHeight: 1.7, margin: '28px 0 0' }}>
+              I run IT and business systems at SunPower — building the infrastructure and automations
+              that keep a solar company operating at scale. Outside of work: cards, memorabilia, and the occasional Tetris session.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 40 }}>
+              {SOCIALS.map(s => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                  style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'none', fontSize: 13, letterSpacing: '0.1em', fontWeight: 700, transition: 'color 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
+                  {s.label.toUpperCase()} ↗
+                </a>
+              ))}
+            </div>
           </div>
-          <h1 style={{ fontSize: 'clamp(52px, 9vw, 104px)', fontWeight: 900, margin: 0, lineHeight: 1, letterSpacing: -3, color: '#fff' }}>
-            Samuel<br />Gibson.
-          </h1>
-          <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', maxWidth: 540, lineHeight: 1.7, margin: '28px 0 0' }}>
-            I run IT and business systems at SunPower — building the infrastructure and automations
-            that keep a solar company operating at scale. Outside of work: cards, memorabilia, and the occasional Tetris session.
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 40 }}>
-            {SOCIALS.map(s => (
-              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-                style={{ color: 'rgba(255,255,255,0.35)', textDecoration: 'none', fontSize: 13, letterSpacing: '0.1em', fontWeight: 700, transition: 'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
-                {s.label.toUpperCase()} ↗
-              </a>
-            ))}
+
+          {/* 8-bit Sam */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, paddingTop: 40 }}>
+            <SamSprite />
+            {/* Shadow */}
+            <div style={{
+              width: 50,
+              height: 6,
+              borderRadius: '50%',
+              background: 'rgba(51,255,51,0.15)',
+              marginTop: -2,
+              filter: 'blur(3px)',
+            }} />
           </div>
         </section>
 
