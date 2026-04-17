@@ -479,6 +479,8 @@ export default function SQLLearn() {
           borderBottom: `1px solid ${c.border}`,
           background: '#080e1c',
           position: 'relative',
+          maxHeight: 320,
+          overflow: 'hidden',
         }}>
           <SolarVillage />
         </div>
