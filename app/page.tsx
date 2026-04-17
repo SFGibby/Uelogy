@@ -106,11 +106,16 @@ export default function Home() {
         </div>
 
         {gameVisible && (
-          <BlockDrop
-            audioRef={audioRef}
-            onMilestone={level => setMilestone(prev => Math.max(prev, level))}
-            onGameEnd={() => { stopMusic(); setGameVisible(false); }}
-          />
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20 }}>
+            <div style={{ paddingBottom: 8 }}>
+              <SamSprite />
+            </div>
+            <BlockDrop
+              audioRef={audioRef}
+              onMilestone={level => setMilestone(prev => Math.max(prev, level))}
+              onGameEnd={() => { stopMusic(); setGameVisible(false); }}
+            />
+          </div>
         )}
 
         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -216,15 +221,16 @@ export default function Home() {
 
           {/* 8-bit Sam */}
           <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, paddingTop: 40 }}>
-            <SamSprite />
+            <div style={{ transform: 'scale(2)', transformOrigin: 'bottom center', marginBottom: 16 }}>
+              <SamSprite />
+            </div>
             {/* Shadow */}
             <div style={{
-              width: 50,
-              height: 6,
+              width: 72,
+              height: 8,
               borderRadius: '50%',
-              background: 'rgba(51,255,51,0.15)',
-              marginTop: -2,
-              filter: 'blur(3px)',
+              background: 'rgba(51,255,51,0.12)',
+              filter: 'blur(4px)',
             }} />
           </div>
         </section>
