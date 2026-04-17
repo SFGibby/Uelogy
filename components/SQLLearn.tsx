@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import TeacherSprite from './TeacherSprite';
+import SolarVillage from './SolarVillage';
 
 const PROGRESS_KEY = 'sql_learn_progress';
 
@@ -238,17 +240,20 @@ ORDER BY total_revenue DESC;`,
 
 type Row = Record<string, string | number | null>;
 
+// Sea of Stars palette — deep night sky with amber window glow
 const c = {
-  bg: '#0a0906',
-  sidebar: '#0e0d0a',
-  border: '#2a2218',
-  text: '#e8e4d8',
-  muted: '#7a6e5e',
-  accent: '#d97706',
-  accentHover: '#b45309',
-  codeBg: '#070605',
-  rowAlt: '#110f0c',
+  bg: '#080e1c',
+  sidebar: '#0b1427',
+  border: '#1c2e50',
+  borderHL: '#243a62',
+  text: '#f0ead8',
+  muted: '#7a8aa8',
+  accent: '#ffb830',
+  accentHover: '#ffd166',
+  codeBg: '#060a15',
+  rowAlt: '#0d1628',
   error: '#f87171',
+  panelBg: '#0e2240',
 };
 
 export default function SQLLearn() {
@@ -362,22 +367,29 @@ export default function SQLLearn() {
 
   const lesson = LESSONS[activeLesson];
 
-  const solarGridStyle: React.CSSProperties = {
+  // Starfield — small glowing dots, sparse and soft
+  const starfieldStyle: React.CSSProperties = {
     position: 'fixed',
     inset: 0,
     pointerEvents: 'none',
     zIndex: 0,
     backgroundImage: [
-      'linear-gradient(rgba(217,119,6,0.05) 1px, transparent 1px)',
-      'linear-gradient(90deg, rgba(217,119,6,0.05) 1px, transparent 1px)',
+      'radial-gradient(1px 1px at 12% 18%, rgba(212,232,248,0.75), transparent 50%)',
+      'radial-gradient(1px 1px at 28% 62%, rgba(212,232,248,0.55), transparent 50%)',
+      'radial-gradient(1.5px 1.5px at 44% 28%, rgba(255,209,102,0.55), transparent 50%)',
+      'radial-gradient(1px 1px at 62% 72%, rgba(212,232,248,0.65), transparent 50%)',
+      'radial-gradient(1px 1px at 78% 34%, rgba(212,232,248,0.45), transparent 50%)',
+      'radial-gradient(1.5px 1.5px at 88% 82%, rgba(255,209,102,0.5), transparent 50%)',
+      'radial-gradient(1px 1px at 8% 88%, rgba(212,232,248,0.55), transparent 50%)',
+      'radial-gradient(1px 1px at 54% 8%, rgba(212,232,248,0.6), transparent 50%)',
     ].join(', '),
-    backgroundSize: '44px 44px',
+    backgroundSize: '100% 100%',
   };
 
   if (!ready) {
     return (
       <div style={{ minHeight: '100vh', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <div style={solarGridStyle} />
+        <div style={starfieldStyle} />
         <div style={{ color: c.muted, fontFamily: 'system-ui, sans-serif', fontSize: '14px', position: 'relative', zIndex: 1 }}>Loading SQL engine…</div>
       </div>
     );
@@ -392,16 +404,16 @@ export default function SQLLearn() {
       color: c.text,
       position: 'relative',
     }}>
-      {/* Solar panel grid texture */}
-      <div style={solarGridStyle} />
-      {/* Warm corona at top */}
+      {/* Starfield */}
+      <div style={starfieldStyle} />
+      {/* Moonlight glow from top-right */}
       <div style={{
         position: 'fixed',
         top: 0, left: 0, right: 0,
-        height: '40vh',
+        height: '50vh',
         pointerEvents: 'none',
         zIndex: 0,
-        background: 'radial-gradient(ellipse at 50% -20%, rgba(217,119,6,0.10) 0%, transparent 65%)',
+        background: 'radial-gradient(ellipse at 82% -10%, rgba(200,223,240,0.08) 0%, transparent 55%), radial-gradient(ellipse at 20% -10%, rgba(255,184,48,0.06) 0%, transparent 60%)',
       }} />
       {/* Sidebar */}
       <div style={{
@@ -415,7 +427,7 @@ export default function SQLLearn() {
       }}>
         <div style={{ padding: '20px 16px 8px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>SQL Fundamentals</span>
-          <span style={{ color: '#d97706', fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
+          <span style={{ color: c.accent, fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
         </div>
         {LESSONS.map((l, i) => {
           const done = completed.includes(l.id);
@@ -428,8 +440,8 @@ export default function SQLLearn() {
                 textAlign: 'left',
                 padding: '10px 16px',
                 fontSize: '13px',
-                background: i === activeLesson ? '#2a2a2a' : 'transparent',
-                color: i === activeLesson ? c.text : done ? '#d97706cc' : c.muted,
+                background: i === activeLesson ? c.panelBg : 'transparent',
+                color: i === activeLesson ? c.text : done ? c.accent : c.muted,
                 border: 'none',
                 borderLeft: i === activeLesson ? `2px solid ${c.accent}` : '2px solid transparent',
                 cursor: 'pointer',
@@ -441,7 +453,7 @@ export default function SQLLearn() {
               }}
             >
               <span>{l.title}</span>
-              {done && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d97706', flexShrink: 0, display: 'inline-block' }} />}
+              {done && <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.accent, flexShrink: 0, display: 'inline-block', boxShadow: `0 0 6px ${c.accent}` }} />}
             </button>
           );
         })}
@@ -462,25 +474,74 @@ export default function SQLLearn() {
 
       {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-        {/* Concept */}
+        {/* Village banner */}
+        <div style={{
+          borderBottom: `1px solid ${c.border}`,
+          background: '#080e1c',
+          position: 'relative',
+        }}>
+          <SolarVillage />
+        </div>
+
+        {/* Concept with teacher */}
         <div style={{
           padding: '24px 28px',
           borderBottom: `1px solid ${c.border}`,
           background: c.bg,
+          display: 'flex',
+          gap: '24px',
+          alignItems: 'flex-start',
         }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', marginBottom: '12px' }}>
-            Concept
+          {/* Teacher sprite + speech-bubble tail */}
+          <div style={{ flexShrink: 0, paddingTop: '4px' }}>
+            <TeacherSprite />
           </div>
-          <pre style={{
-            fontSize: '14px',
-            lineHeight: '1.7',
-            color: c.text,
-            fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-            whiteSpace: 'pre-wrap',
-            margin: 0,
+
+          {/* Speech bubble */}
+          <div style={{
+            flex: 1,
+            position: 'relative',
+            background: c.panelBg,
+            border: `1px solid ${c.borderHL}`,
+            borderRadius: '4px',
+            padding: '18px 22px',
+            boxShadow: `0 0 0 2px ${c.bg}, 0 0 0 3px ${c.border}`,
           }}>
-            {lesson.concept}
-          </pre>
+            {/* Bubble tail pointing to teacher */}
+            <div style={{
+              position: 'absolute',
+              left: '-10px',
+              top: '28px',
+              width: 0,
+              height: 0,
+              borderTop: '8px solid transparent',
+              borderBottom: '8px solid transparent',
+              borderRight: `10px solid ${c.borderHL}`,
+            }} />
+            <div style={{
+              position: 'absolute',
+              left: '-8px',
+              top: '29px',
+              width: 0,
+              height: 0,
+              borderTop: '7px solid transparent',
+              borderBottom: '7px solid transparent',
+              borderRight: `9px solid ${c.panelBg}`,
+            }} />
+            <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.accent, textTransform: 'uppercase', marginBottom: '10px' }}>
+              Prof. Uel
+            </div>
+            <pre style={{
+              fontSize: '14px',
+              lineHeight: '1.7',
+              color: c.text,
+              fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+              whiteSpace: 'pre-wrap',
+              margin: 0,
+            }}>
+              {lesson.concept}
+            </pre>
+          </div>
         </div>
 
         {/* Query editor */}
