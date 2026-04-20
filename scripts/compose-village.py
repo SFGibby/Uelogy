@@ -1,104 +1,156 @@
 #!/usr/bin/env python3
-"""Compose a Stardew-style solar cottage village from Sprout Lands tiles.
+"""Compose a Stardew-style solar cottage village.
 
-Tiles: Sprout Lands Basic pack by Cup Nooble (non-commercial, credited).
+Cottages are hand-drawn pixel art (proper shape + solar panels baked in).
+Ground/trees/bushes use Sprout Lands Basic pack by Cup Nooble (non-commercial, credited).
 Output: /public/sprites/village-scene.png
 """
 from PIL import Image, ImageDraw
 from pathlib import Path
-import random
-
-random.seed(11)
 
 PACK = Path("/tmp/sprout-lands/Sprout Lands - Sprites - Basic pack")
 OUT  = Path("/Users/gibson/Developer/samuel-gibson-site/public/sprites/village-scene.png")
 
-W, H = 480, 160
+W, H = 480, 128
 TILE = 16
 
 def load(*parts):
     return Image.open(PACK.joinpath(*parts)).convert("RGBA")
 
-grass      = load("Tilesets", "Grass.png")
-wood_house = load("Tilesets", "Wooden House.png")
-biom       = load("Objects", "Basic_Grass_Biom_things.png")
-
-# The leftmost cottage in Wooden House.png is a pre-rendered 2×5-tile house:
-# brick window on top, wood walls with door below.
-cottage = wood_house.crop((0, 0, 32, 80))
+grass = load("Tilesets", "Grass.png")
+biom  = load("Objects", "Basic_Grass_Biom_things.png")
 
 canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 
-# Ground: uniform Stardew grass interior tile
 grass_tile = grass.crop((5*TILE, 2*TILE, 6*TILE, 3*TILE))
 for x in range(0, W, TILE):
     for y in range(0, H, TILE):
         canvas.paste(grass_tile, (x, y), grass_tile)
 
-def add_solar_panels_to_roof(sprite):
-    """Overlay a dark blue solar panel array on the brick window area
-    (the top 'roof' portion of the pre-rendered cottage)."""
-    d = ImageDraw.Draw(sprite)
-    panel_fill = (26, 56, 118, 235)
-    panel_edge = (100, 160, 220, 255)
-    x0, y0 = 4, 12
-    pw, ph = 7, 8
-    cols, rows = 3, 2
-    gap = 1
-    for r in range(rows):
-        for c in range(cols):
-            px = x0 + c * (pw + gap)
-            py = y0 + r * (ph + gap)
-            d.rectangle([px, py, px + pw - 1, py + ph - 1],
-                        fill=panel_fill, outline=panel_edge)
-            d.line([px + pw//2, py + 1, px + pw//2, py + ph - 2], fill=panel_edge)
-    return sprite
+WALL_LIGHT = (221, 185, 134)
+WALL_DARK  = (163, 119, 77)
+WALL_TRIM  = (108, 68, 52)
+ROOF_BASE  = (192, 108, 74)
+ROOF_SHADE = (140, 70, 54)
+ROOF_EDGE  = (92, 46, 38)
+DOOR_BODY  = (110, 66, 44)
+DOOR_DARK  = (72, 40, 26)
+DOOR_KNOB  = (230, 190, 90)
+WIN_FRAME  = (108, 68, 52)
+WIN_GLASS  = (184, 220, 232)
+WIN_HIGH   = (232, 244, 248)
+PANEL_FILL = (28, 58, 124)
+PANEL_EDGE = (118, 176, 232)
+PANEL_DARK = (14, 28, 72)
 
-solar_cottage = add_solar_panels_to_roof(cottage.copy())
+def draw_cottage():
+    w, h = 56, 52
+    s = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(s)
+
+    body_x0, body_y0 = 4, 20
+    body_x1, body_y1 = w - 5, h - 2
+    d.rectangle([body_x0, body_y0, body_x1, body_y1], fill=WALL_LIGHT, outline=WALL_TRIM)
+    for yy in range(body_y0 + 3, body_y1, 3):
+        d.line([body_x0 + 1, yy, body_x1 - 1, yy], fill=WALL_DARK)
+
+    for wx in (body_x0 + 4, body_x1 - 11):
+        wy = body_y0 + 4
+        d.rectangle([wx, wy, wx + 6, wy + 6], fill=WIN_GLASS, outline=WIN_FRAME)
+        d.line([wx + 3, wy, wx + 3, wy + 6], fill=WIN_FRAME)
+        d.line([wx, wy + 3, wx + 6, wy + 3], fill=WIN_FRAME)
+        d.point([wx + 1, wy + 1], fill=WIN_HIGH)
+        d.point([wx + 4, wy + 1], fill=WIN_HIGH)
+
+    door_w, door_h = 10, 14
+    dx0 = (w - door_w) // 2
+    dy0 = body_y1 - door_h
+    d.rectangle([dx0, dy0, dx0 + door_w, dy0 + door_h], fill=DOOR_BODY, outline=DOOR_DARK)
+    d.line([dx0 + door_w // 2, dy0 + 1, dx0 + door_w // 2, dy0 + door_h - 1], fill=DOOR_DARK)
+    d.point([dx0 + door_w - 3, dy0 + door_h // 2], fill=DOOR_KNOB)
+
+    peak_y = 0
+    eave_y = 20
+    roof_left, roof_right = 0, w - 1
+    for yy in range(peak_y, eave_y):
+        inset = (eave_y - yy) * (w // 2 - 2) // max(1, eave_y - peak_y)
+        x0 = roof_left + inset
+        x1 = roof_right - inset
+        color = ROOF_BASE if (yy % 2 == 0) else ROOF_SHADE
+        d.line([x0, yy, x1, yy], fill=color)
+        d.point([x0, yy], fill=ROOF_EDGE)
+        d.point([x1, yy], fill=ROOF_EDGE)
+    d.line([roof_left, eave_y, roof_right, eave_y], fill=ROOF_EDGE)
+    d.line([roof_left, eave_y + 1, roof_right, eave_y + 1], fill=ROOF_SHADE)
+
+    panel_top_y = 6
+    panel_bot_y = 17
+    panel_left = 12
+    panel_right = w - 13
+    d.rectangle([panel_left - 1, panel_top_y - 1, panel_right + 1, panel_bot_y + 1], fill=PANEL_DARK)
+    cols = 4
+    cell_w = (panel_right - panel_left + 1) // cols
+    for c in range(cols):
+        px0 = panel_left + c * cell_w
+        px1 = px0 + cell_w - 2
+        d.rectangle([px0, panel_top_y, px1, panel_bot_y], fill=PANEL_FILL, outline=PANEL_EDGE)
+        d.line([px0, panel_top_y + 5, px1, panel_top_y + 5], fill=PANEL_EDGE)
+        d.line([(px0 + px1) // 2, panel_top_y + 1, (px0 + px1) // 2, panel_bot_y - 1], fill=PANEL_EDGE)
+
+    chim_x = body_x1 - 10
+    chim_top = 2
+    chim_bot = 10
+    d.rectangle([chim_x, chim_top, chim_x + 4, chim_bot], fill=WALL_TRIM, outline=(50, 24, 18))
+
+    return s
+
+cottage = draw_cottage()
 
 def paste_with_shadow(dst, sprite, x, y):
     sw, sh = sprite.size
-    shadow = Image.new("RGBA", (sw + 8, 6), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", (sw + 10, 7), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
-    sd.ellipse([0, 0, sw + 7, 5], fill=(0, 0, 0, 90))
-    dst.paste(shadow, (x - 4, y + sh - 3), shadow)
+    sd.ellipse([0, 0, sw + 9, 6], fill=(0, 0, 0, 95))
+    dst.paste(shadow, (x - 5, y + sh - 3), shadow)
     dst.paste(sprite, (x, y), sprite)
 
-cottage_top_y = H - 80 - 16  # cottage baseline is 16px above bottom
-for cx in [52, 224, 396]:
-    paste_with_shadow(canvas, solar_cottage, cx, cottage_top_y)
+cw, ch = cottage.size
+cottage_y = H - ch - 16
+positions_x = [40, 212, 384]
+for cx in positions_x:
+    paste_with_shadow(canvas, cottage, cx, cottage_y)
 
-# Trees (2×3 sprite from biom top row)
 tree        = biom.crop((0, 0, 2*TILE, 3*TILE))
 tree2       = biom.crop((2*TILE, 0, 4*TILE, 3*TILE))
 tree_fruit  = biom.crop((4*TILE, 0, 6*TILE, 3*TILE))
-for (src, x, y) in [
-    (tree,       4, 86),
-    (tree2,    104, 82),
-    (tree_fruit,160, 86),
-    (tree,     276, 82),
-    (tree2,    332, 86),
-    (tree_fruit,448, 82),
+tree_row_y = cottage_y + 8
+for (src, x) in [
+    (tree, 4),
+    (tree_fruit, 112),
+    (tree2, 180),
+    (tree, 284),
+    (tree_fruit, 352),
+    (tree2, 452),
 ]:
-    canvas.paste(src, (x, y), src)
+    canvas.paste(src, (x, tree_row_y), src)
 
-# Bushes & flowers along the front grass
 bush        = biom.crop((0, 3*TILE, TILE, 4*TILE))
 bush_berry  = biom.crop((0, 2*TILE, TILE, 3*TILE))
 tiny_flower = biom.crop((2*TILE, 2*TILE, 3*TILE, 3*TILE))
-for (src, x, y) in [
-    (bush,         16, 142),
-    (bush_berry,   92, 144),
-    (tiny_flower, 128, 146),
-    (bush,        176, 144),
-    (tiny_flower, 212, 146),
-    (bush_berry,  256, 142),
-    (bush,        308, 144),
-    (tiny_flower, 348, 146),
-    (bush_berry,  384, 144),
-    (bush,        440, 142),
+front_y = H - TILE - 2
+for (src, x) in [
+    (bush, 24),
+    (tiny_flower, 72),
+    (bush_berry, 104),
+    (bush, 160),
+    (tiny_flower, 200),
+    (bush_berry, 240),
+    (bush, 296),
+    (tiny_flower, 336),
+    (bush_berry, 376),
+    (bush, 432),
 ]:
-    canvas.paste(src, (x, y), src)
+    canvas.paste(src, (x, front_y), src)
 
 canvas.save(OUT)
-print(f"Wrote {OUT} ({W}×{H})")
+print(f"Wrote {OUT} ({W}x{H})")
