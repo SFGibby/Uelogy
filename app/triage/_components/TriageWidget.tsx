@@ -14,6 +14,19 @@ interface Msg {
   image_url?: string | null;
 }
 
+function renderInline(text: string) {
+  return text.split(/(\*[^*\n]+\*)/g).map((part, i) => {
+    if (part.length > 2 && part.startsWith('*') && part.endsWith('*')) {
+      return (
+        <em key={i} style={{ fontStyle: 'italic', opacity: 0.8 }}>
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 const MODES: {
   id: Mode;
   label: string;
@@ -576,7 +589,7 @@ export default function TriageWidget() {
                           />
                         </a>
                       )}
-                      {m.content}
+                      {renderInline(m.content)}
                     </div>
                   </div>
                 ))}
