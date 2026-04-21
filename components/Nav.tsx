@@ -5,6 +5,7 @@ const LINKS = [
   { href: '/', label: 'HOME' },
   { href: '/learning', label: 'LEARNING' },
   { href: '/collection', label: 'COLLECTION' },
+  { href: '/sales', label: 'SALES BOT' },
 ];
 
 export default function Nav() {
