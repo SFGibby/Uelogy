@@ -17,7 +17,7 @@ const MODES: {
   id: Mode;
   label: string;
   sub: string;
-  opener: string;
+  placeholder: string;
   accent: string;
   severity: string;
 }[] = [
@@ -25,7 +25,7 @@ const MODES: {
     id: 'in_appt',
     label: 'In Appointment!!!',
     sub: 'The customer is right here. Fast answer, no fluff.',
-    opener: "I've got you. What's the question?",
+    placeholder: "What's the question?",
     accent: 'var(--sp-danger)',
     severity: '!!!',
   },
@@ -33,7 +33,7 @@ const MODES: {
     id: 'about_to',
     label: 'About to be in an Appointment!!',
     sub: 'Minutes out. Two shots to get you ready.',
-    opener: "Walk me through what you're walking into.",
+    placeholder: "Walk me through what you're walking into.",
     accent: 'var(--sp-warn)',
     severity: '!!',
   },
@@ -41,7 +41,7 @@ const MODES: {
     id: 'prepping',
     label: 'Prepping for an Appointment!',
     sub: "You've got time. I'll go deep.",
-    opener: "Take your time. What are we working on?",
+    placeholder: "Take your time — what are we working on?",
     accent: 'var(--sp-calm)',
     severity: '!',
   },
@@ -49,7 +49,7 @@ const MODES: {
     id: 'router',
     label: 'Help, I need somebody, not just anybody.',
     sub: 'Wayfinding — who owns what, where to find things.',
-    opener: "Hit me with it. Who or what are you trying to find?",
+    placeholder: "Who or what are you trying to find?",
     accent: 'var(--sp-router)',
     severity: '·',
   },
@@ -71,6 +71,10 @@ export default function TriagePage() {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showResolvedToast, setShowResolvedToast] = useState(false);
+  const [timeoutFired, setTimeoutFired] = useState(false);
+  const [emailFallback, setEmailFallback] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -152,6 +156,28 @@ export default function TriagePage() {
     return subscribe(sessionId);
   }, [sessionId, subscribe]);
 
+  // 90-second takeover timeout: after escalation, if no human takes over, let rep choose.
+  useEffect(() => {
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (status === 'escalated' && !timeoutFired) {
+      timeoutRef.current = window.setTimeout(() => {
+        setTimeoutFired(true);
+      }, 90_000);
+    }
+    if (status === 'taken_over') {
+      setTimeoutFired(false);
+    }
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [status, timeoutFired]);
+
   function pickMode(m: Mode) {
     if (m === 'in_appt') {
       setShowPledge(true);
@@ -161,11 +187,10 @@ export default function TriagePage() {
   }
 
   function startSession(m: Mode, pledgeConfirmed: boolean) {
-    const selected = MODES.find((x) => x.id === m)!;
     pledgeRef.current = pledgeConfirmed;
     setMode(m);
     setShowPledge(false);
-    setMessages([{ role: 'assistant', content: selected.opener }]);
+    setMessages([]);
     setTimeout(() => {
       document.getElementById('chat-panel')?.scrollIntoView({ behavior: 'smooth' });
     }, 30);
@@ -400,7 +425,16 @@ export default function TriagePage() {
                   flexWrap: 'wrap',
                 }}
               >
-                <AgentBadge active={status !== 'taken_over'} />
+                <AgentBadge
+                  active={status !== 'taken_over'}
+                  heliosStatus={
+                    loading
+                      ? 'thinking'
+                      : status === 'escalated'
+                        ? 'transferring'
+                        : 'waiting'
+                  }
+                />
                 <span
                   style={{
                     width: 1,
@@ -547,9 +581,93 @@ export default function TriagePage() {
                     </div>
                   </div>
                 ))}
-                {loading && (
-                  <div style={{ color: 'var(--sp-text-lo)', fontSize: 13, margin: '8px 4px' }}>
-                    thinking…
+                {timeoutFired && status === 'escalated' && !emailSent && (
+                  <div
+                    className="sp-card"
+                    style={{
+                      padding: 16,
+                      margin: '12px 0',
+                      borderColor: 'var(--sp-warn)',
+                    }}
+                  >
+                    <div className="sp-eyebrow" style={{ color: 'var(--sp-warn)' }}>
+                      Still waiting on a human
+                    </div>
+                    <p
+                      className="sp-body"
+                      style={{ marginTop: 6, marginBottom: 12, color: 'var(--sp-text-hi)' }}
+                    >
+                      No one&apos;s picked this up in 90 seconds. What works better — keep
+                      going with Helios, or leave an email and we&apos;ll follow up?
+                    </p>
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <button
+                        className="sp-btn sp-btn-ghost"
+                        onClick={() => {
+                          setTimeoutFired(false);
+                          setStatus('bot');
+                          inputRef.current?.focus();
+                        }}
+                      >
+                        Keep going with Helios
+                      </button>
+                      <input
+                        value={emailFallback}
+                        onChange={(e) => setEmailFallback(e.target.value)}
+                        placeholder="you@yourcompany.com"
+                        type="email"
+                        style={{
+                          flex: 1,
+                          minWidth: 180,
+                          padding: '10px 12px',
+                          background: 'var(--sp-ink-2)',
+                          border: '1px solid var(--sp-ink-4)',
+                          color: 'var(--sp-text-hi)',
+                          borderRadius: 8,
+                          fontSize: 15,
+                          fontFamily: 'inherit',
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        className="sp-btn"
+                        disabled={!emailFallback.includes('@') || !sessionId}
+                        onClick={async () => {
+                          try {
+                            await fetch('/api/triage/followup', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ sessionId, email: emailFallback }),
+                            });
+                          } catch {
+                            /* ignore */
+                          }
+                          setEmailSent(true);
+                        }}
+                      >
+                        Send via email
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {emailSent && (
+                  <div
+                    className="sp-body"
+                    style={{
+                      textAlign: 'center',
+                      padding: 12,
+                      color: '#9fd89f',
+                      fontSize: 13,
+                    }}
+                  >
+                    Got it — we&apos;ll reply at {emailFallback}.
                   </div>
                 )}
               </div>
@@ -623,13 +741,42 @@ export default function TriagePage() {
                     disabled={uploading || loading}
                     aria-label="Attach image"
                     className="sp-btn sp-btn-ghost"
-                    style={{ padding: '0 12px', minWidth: 44 }}
+                    style={{
+                      width: 46,
+                      height: 46,
+                      padding: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
                   >
-                    {uploading ? '…' : '+'}
+                    {uploading ? (
+                      <span style={{ fontSize: 18, lineHeight: 1 }}>…</span>
+                    ) : (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M8 2V14M2 8H14"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    )}
                   </button>
                   <input
                     ref={inputRef}
-                    placeholder={pendingImage ? 'Add a note (optional)…' : 'Talk to me.'}
+                    placeholder={
+                      pendingImage
+                        ? 'Add a note (optional)…'
+                        : activeMode!.placeholder
+                    }
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -856,26 +1003,39 @@ function AgentAvatar({ role }: { role: 'assistant' | 'human' }) {
   );
 }
 
-function AgentBadge({ active }: { active: boolean }) {
+function AgentBadge({
+  active,
+  heliosStatus,
+}: {
+  active: boolean;
+  heliosStatus: 'waiting' | 'thinking' | 'transferring';
+}) {
+  const statusColor =
+    heliosStatus === 'thinking'
+      ? 'var(--sp-blue-soft)'
+      : heliosStatus === 'transferring'
+        ? 'var(--sp-warn)'
+        : 'var(--sp-text-lo)';
   return (
     <div
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 10,
       }}
     >
       <div
         style={{
-          width: 26,
-          height: 26,
-          borderRadius: active ? 7 : 26,
+          width: 28,
+          height: 28,
+          borderRadius: active ? 7 : 28,
           background: active
             ? 'linear-gradient(135deg, var(--sp-blue) 0%, #1a6ed0 100%)'
             : 'linear-gradient(135deg, #3a6b3a 0%, #4a8a4a 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          flexShrink: 0,
         }}
       >
         <img
@@ -888,7 +1048,7 @@ function AgentBadge({ active }: { active: boolean }) {
           }}
         />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
         <span
           style={{
             fontSize: 14,
@@ -900,14 +1060,15 @@ function AgentBadge({ active }: { active: boolean }) {
         </span>
         <span
           style={{
-            fontSize: 10,
-            color: 'var(--sp-text-lo)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            fontWeight: 600,
+            fontSize: 11,
+            color: statusColor,
+            letterSpacing: '0.06em',
+            textTransform: 'lowercase',
+            fontWeight: 500,
+            fontFeatureSettings: '"ss01"',
           }}
         >
-          {active ? 'AI · responding' : 'Human · in the chat'}
+          {active ? heliosStatus : 'human · in the chat'}
         </span>
       </div>
     </div>
