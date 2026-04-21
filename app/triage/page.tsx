@@ -23,7 +23,7 @@ const MODES: {
 }[] = [
   {
     id: 'in_appt',
-    label: 'In Appointment',
+    label: 'In Appointment!!!',
     sub: 'The customer is right here. Fast answer, no fluff.',
     placeholder: "What's the question?",
     accent: 'var(--sp-danger)',
@@ -31,7 +31,7 @@ const MODES: {
   },
   {
     id: 'about_to',
-    label: 'About to be in an Appointment',
+    label: 'About to be in an Appointment!!',
     sub: 'Minutes out. Two shots to get you ready.',
     placeholder: "Walk me through what you're walking into.",
     accent: 'var(--sp-warn)',
@@ -39,7 +39,7 @@ const MODES: {
   },
   {
     id: 'prepping',
-    label: 'Prepping for an Appointment',
+    label: 'Prepping for an Appointment!',
     sub: "You've got time. I'll go deep.",
     placeholder: "Take your time — what are we working on?",
     accent: 'var(--sp-calm)',
@@ -47,7 +47,7 @@ const MODES: {
   },
   {
     id: 'router',
-    label: 'Help, I need somebody, not just anybody',
+    label: 'Help, I need somebody, not just anybody.',
     sub: 'Wayfinding — who owns what, where to find things.',
     placeholder: "Who or what are you trying to find?",
     accent: 'var(--sp-router)',
@@ -941,17 +941,6 @@ function LaneCard({
       >
         ?
       </span>
-      <div
-        style={{
-          fontSize: 12,
-          fontWeight: 700,
-          color: mode.accent,
-          letterSpacing: '0.06em',
-          marginBottom: 8,
-        }}
-      >
-        {mode.severity}
-      </div>
       <div className="sp-lane-title">{mode.label}</div>
       {tipOpen && (
         <div
