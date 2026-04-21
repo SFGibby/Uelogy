@@ -68,8 +68,16 @@ export default function TriagePage() {
   const [status, setStatus] = useState<'bot' | 'escalated' | 'taken_over'>('bot');
   const [showPledge, setShowPledge] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const supabaseRef = useRef<SupabaseClient | null>(null);
   const pledgeRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (mode) {
+      const t = window.setTimeout(() => inputRef.current?.focus(), 150);
+      return () => window.clearTimeout(t);
+    }
+  }, [mode]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -270,91 +278,19 @@ export default function TriagePage() {
           </h1>
           <p className="sp-lead">
             Pick a lane. The bot matches tempo, answers from the knowledge base, and
-            loops Sam in if it doesn&apos;t have the answer — no forms, no friction.
+            hands off to a human when it&apos;s stuck — no forms, no friction.
           </p>
 
           <div
+            className="sp-lane-grid"
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: 14,
-              marginTop: 36,
+              marginTop: 32,
               position: 'relative',
               zIndex: 3,
             }}
           >
             {MODES.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => pickMode(m.id)}
-                className="sp-card"
-                style={{
-                  textAlign: 'left',
-                  padding: '20px 20px 22px',
-                  cursor: 'pointer',
-                  borderLeft: `3px solid ${m.accent}`,
-                  color: 'inherit',
-                  fontFamily: 'inherit',
-                  transition: 'transform 0.12s, border-color 0.15s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 10,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: m.accent,
-                      letterSpacing: '0.1em',
-                    }}
-                  >
-                    {m.severity}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: 'var(--sp-text-lo)',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      fontWeight: 600,
-                    }}
-                  >
-                    lane
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontSize: 17,
-                    fontWeight: 700,
-                    color: 'var(--sp-text-hi)',
-                    lineHeight: 1.25,
-                  }}
-                >
-                  {m.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 13.5,
-                    color: 'var(--sp-text-md)',
-                    marginTop: 8,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  {m.sub}
-                </div>
-              </button>
+              <LaneCard key={m.id} mode={m} onClick={() => pickMode(m.id)} />
             ))}
           </div>
         </div>
@@ -527,6 +463,7 @@ export default function TriagePage() {
                 }}
               >
                 <input
+                  ref={inputRef}
                   placeholder="Talk to me."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -537,6 +474,7 @@ export default function TriagePage() {
                     }
                   }}
                   disabled={loading}
+                  autoFocus
                   style={{
                     flex: 1,
                     padding: '12px 14px',
@@ -544,9 +482,10 @@ export default function TriagePage() {
                     border: '1px solid var(--sp-ink-4)',
                     color: 'var(--sp-text-hi)',
                     borderRadius: 8,
-                    fontSize: 15,
+                    fontSize: 16,
                     fontFamily: 'inherit',
                     outline: 'none',
+                    WebkitAppearance: 'none',
                   }}
                 />
                 <button
@@ -599,6 +538,101 @@ export default function TriagePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function LaneCard({
+  mode,
+  onClick,
+}: {
+  mode: (typeof MODES)[number];
+  onClick: () => void;
+}) {
+  const [tipOpen, setTipOpen] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  const cancelHold = () => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (!tipOpen) return;
+    const close = (e: Event) => {
+      if (
+        e.target instanceof Element &&
+        e.target.closest(`[data-tip-for="${mode.id}"]`)
+      )
+        return;
+      setTipOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [tipOpen, mode.id]);
+
+  const startHold = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    cancelHold();
+    timerRef.current = window.setTimeout(() => setTipOpen(true), 450);
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className="sp-card sp-lane-card"
+      style={{
+        borderLeft: `3px solid ${mode.accent}`,
+      }}
+    >
+      <div className="sp-lane-row">
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: mode.accent,
+            letterSpacing: '0.06em',
+          }}
+        >
+          {mode.severity}
+        </span>
+        <span
+          data-tip-for={mode.id}
+          onMouseEnter={() => setTipOpen(true)}
+          onMouseLeave={() => setTipOpen(false)}
+          onTouchStart={startHold}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            cancelHold();
+          }}
+          onTouchCancel={(e) => {
+            e.stopPropagation();
+            cancelHold();
+          }}
+          onTouchMove={(e) => {
+            e.stopPropagation();
+            cancelHold();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="sp-tip-trigger"
+          role="button"
+          aria-label="What does this lane mean?"
+        >
+          ?
+        </span>
+      </div>
+      <div className="sp-lane-title">{mode.label}</div>
+      {tipOpen && (
+        <div
+          data-tip-for={mode.id}
+          className="sp-tip-bubble"
+          role="tooltip"
+        >
+          {mode.sub}
+        </div>
+      )}
+    </button>
   );
 }
 
