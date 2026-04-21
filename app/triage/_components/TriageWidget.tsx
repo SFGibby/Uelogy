@@ -21,10 +21,10 @@ const MODES: {
   accent: string;
   severity: string;
 }[] = [
-  { id: 'in_appt', label: 'In Appointment', placeholder: "What's the question?", accent: 'var(--sp-danger)', severity: '!!!' },
-  { id: 'about_to', label: 'About to be', placeholder: "What are you walking into?", accent: 'var(--sp-warn)', severity: '!!' },
-  { id: 'prepping', label: 'Prepping', placeholder: "What are we working on?", accent: 'var(--sp-calm)', severity: '!' },
-  { id: 'router', label: 'Need somebody', placeholder: "Who or what are you trying to find?", accent: 'var(--sp-router)', severity: '·' },
+  { id: 'in_appt', label: 'In Appointment!!!', placeholder: "What's the question?", accent: 'var(--sp-danger)', severity: '!!!' },
+  { id: 'about_to', label: 'About to be!!', placeholder: "What are you walking into?", accent: 'var(--sp-warn)', severity: '!!' },
+  { id: 'prepping', label: 'Prepping!', placeholder: "What are we working on?", accent: 'var(--sp-calm)', severity: '!' },
+  { id: 'router', label: 'Need somebody.', placeholder: "Who or what are you trying to find?", accent: 'var(--sp-router)', severity: '·' },
 ];
 
 const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
@@ -387,7 +387,7 @@ export default function TriageWidget() {
           <img
             src="/sunpower/helios-plane.svg"
             alt=""
-            style={{ width: 28, height: 16, filter: 'brightness(0) invert(1)' }}
+            style={{ width: 38, height: 22, filter: 'brightness(0) invert(1)' }}
           />
           {status === 'escalated' && <span className="sp-widget-dot" />}
         </button>
@@ -415,8 +415,8 @@ export default function TriageWidget() {
                   src={isBot ? '/sunpower/helios-plane.svg' : '/sunpower/person.svg'}
                   alt=""
                   style={{
-                    width: isBot ? 18 : 14,
-                    height: isBot ? 18 : 14,
+                    width: isBot ? 22 : 14,
+                    height: isBot ? 22 : 14,
                     filter: 'brightness(0) invert(1)',
                   }}
                 />
@@ -497,16 +497,6 @@ export default function TriageWidget() {
                       gap: 10,
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: m.accent,
-                        minWidth: 22,
-                      }}
-                    >
-                      {m.severity}
-                    </span>
                     <span style={{ fontSize: 13.5, fontWeight: 600 }}>
                       {m.label}
                     </span>

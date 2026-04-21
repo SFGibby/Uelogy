@@ -982,8 +982,8 @@ function AgentAvatar({ role }: { role: 'assistant' | 'human' }) {
         src={isBot ? '/sunpower/helios-plane.svg' : '/sunpower/person.svg'}
         alt=""
         style={{
-          width: isBot ? 26 : 20,
-          height: isBot ? 26 : 20,
+          width: isBot ? 30 : 20,
+          height: isBot ? 30 : 20,
           color: '#fff',
           filter: 'brightness(0) invert(1)',
         }}
@@ -1031,8 +1031,8 @@ function AgentBadge({
           src={active ? '/sunpower/helios-plane.svg' : '/sunpower/person.svg'}
           alt=""
           style={{
-            width: active ? 20 : 15,
-            height: active ? 20 : 15,
+            width: active ? 24 : 18,
+            height: active ? 24 : 18,
             filter: 'brightness(0) invert(1)',
           }}
         />
