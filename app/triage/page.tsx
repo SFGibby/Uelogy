@@ -10,6 +10,7 @@ interface Msg {
   id?: string;
   role: MessageRole;
   content: string;
+  image_url?: string | null;
 }
 
 const MODES: {
@@ -67,8 +68,12 @@ export default function TriagePage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<'bot' | 'escalated' | 'taken_over'>('bot');
   const [showPledge, setShowPledge] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [showResolvedToast, setShowResolvedToast] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const supabaseRef = useRef<SupabaseClient | null>(null);
   const pledgeRef = useRef<boolean>(false);
 
@@ -102,10 +107,18 @@ export default function TriagePage() {
           filter: `session_id=eq.${id}`,
         },
         (payload) => {
-          const m = payload.new as { id: string; role: MessageRole; content: string };
+          const m = payload.new as {
+            id: string;
+            role: MessageRole;
+            content: string;
+            image_url?: string | null;
+          };
           setMessages((prev) => {
             if (prev.some((p) => p.id === m.id)) return prev;
-            return [...prev, { id: m.id, role: m.role, content: m.content }];
+            return [
+              ...prev,
+              { id: m.id, role: m.role, content: m.content, image_url: m.image_url ?? null },
+            ];
           });
         }
       )
@@ -158,11 +171,58 @@ export default function TriagePage() {
     }, 30);
   }
 
+  async function uploadImage(file: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/triage/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'upload failed');
+      setPendingImage(data.url);
+    } catch (err) {
+      alert(`Upload failed: ${err instanceof Error ? err.message : 'unknown'}`);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function markResolved() {
+    if (!sessionId || loading) return;
+    try {
+      await fetch('/api/triage/takeover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          action: 'rep_resolved',
+          heliosSolved: status !== 'taken_over',
+        }),
+      });
+    } catch {
+      /* ignore */
+    }
+    setShowResolvedToast(true);
+    setTimeout(() => {
+      setMode(null);
+      setSessionId(null);
+      setMessages([]);
+      setStatus('bot');
+      setPendingImage(null);
+      setShowResolvedToast(false);
+    }, 1200);
+  }
+
   async function send() {
     const text = input.trim();
-    if (!text || loading || !mode) return;
-    setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    if ((!text && !pendingImage) || loading || !mode) return;
+    const imgToSend = pendingImage;
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: text, image_url: imgToSend },
+    ]);
     setInput('');
+    setPendingImage(null);
     setLoading(true);
 
     try {
@@ -174,6 +234,7 @@ export default function TriagePage() {
           mode: sessionId ? undefined : mode,
           pledgeConfirmed: sessionId ? undefined : pledgeRef.current,
           message: text,
+          imageUrl: imgToSend,
         }),
       });
       const data = await res.json();
@@ -206,6 +267,27 @@ export default function TriagePage() {
 
   return (
     <main>
+      {showResolvedToast && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(26, 42, 26, 0.96)',
+            border: '1px solid #2f4a2f',
+            padding: '18px 24px',
+            borderRadius: 12,
+            color: '#9fd89f',
+            fontWeight: 600,
+            zIndex: 200,
+            backdropFilter: 'blur(6px)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+          }}
+        >
+          Resolved. Pick a new lane when ready.
+        </div>
+      )}
       {showPledge && (
         <div
           style={{
@@ -442,6 +524,25 @@ export default function TriagePage() {
                           {m.role === 'human' ? 'Sam · Human' : 'Helios'}
                         </div>
                       )}
+                      {m.image_url && (
+                        <a
+                          href={m.image_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ display: 'block', marginBottom: m.content ? 8 : 0 }}
+                        >
+                          <img
+                            src={m.image_url}
+                            alt="upload"
+                            style={{
+                              maxWidth: '100%',
+                              maxHeight: 240,
+                              borderRadius: 8,
+                              display: 'block',
+                            }}
+                          />
+                        </a>
+                      )}
                       {m.content}
                     </div>
                   </div>
@@ -456,48 +557,131 @@ export default function TriagePage() {
               <div
                 style={{
                   borderTop: '1px solid var(--sp-ink-3)',
-                  padding: '14px 16px',
+                  padding: '12px 14px',
                   background: 'rgba(5, 7, 12, 0.6)',
                   display: 'flex',
+                  flexDirection: 'column',
                   gap: 8,
                 }}
               >
-                <input
-                  ref={inputRef}
-                  placeholder="Talk to me."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    }
-                  }}
-                  disabled={loading}
-                  autoFocus
-                  style={{
-                    flex: 1,
-                    padding: '12px 14px',
-                    background: 'var(--sp-ink-2)',
-                    border: '1px solid var(--sp-ink-4)',
-                    color: 'var(--sp-text-hi)',
-                    borderRadius: 8,
-                    fontSize: 16,
-                    fontFamily: 'inherit',
-                    outline: 'none',
-                    WebkitAppearance: 'none',
-                  }}
-                />
-                <button
-                  onClick={send}
-                  disabled={loading || !input.trim()}
-                  className="sp-btn"
-                  style={{
-                    opacity: loading || !input.trim() ? 0.5 : 1,
-                  }}
-                >
-                  Send
-                </button>
+                {pendingImage && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 8px',
+                      background: 'var(--sp-ink-2)',
+                      border: '1px solid var(--sp-ink-4)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <img
+                      src={pendingImage}
+                      alt="preview"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        objectFit: 'cover',
+                        borderRadius: 6,
+                      }}
+                    />
+                    <span style={{ fontSize: 12, color: 'var(--sp-text-md)' }}>
+                      Image attached
+                    </span>
+                    <button
+                      onClick={() => setPendingImage(null)}
+                      style={{
+                        marginLeft: 'auto',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--sp-text-lo)',
+                        cursor: 'pointer',
+                        fontSize: 16,
+                        fontWeight: 700,
+                        padding: '4px 8px',
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploadImage(f);
+                      if (fileRef.current) fileRef.current.value = '';
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading || loading}
+                    aria-label="Attach image"
+                    className="sp-btn sp-btn-ghost"
+                    style={{ padding: '0 12px', minWidth: 44 }}
+                  >
+                    {uploading ? '…' : '+'}
+                  </button>
+                  <input
+                    ref={inputRef}
+                    placeholder={pendingImage ? 'Add a note (optional)…' : 'Talk to me.'}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        send();
+                      }
+                    }}
+                    disabled={loading}
+                    autoFocus
+                    style={{
+                      flex: 1,
+                      padding: '12px 14px',
+                      background: 'var(--sp-ink-2)',
+                      border: '1px solid var(--sp-ink-4)',
+                      color: 'var(--sp-text-hi)',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      fontFamily: 'inherit',
+                      outline: 'none',
+                      WebkitAppearance: 'none',
+                      minWidth: 0,
+                    }}
+                  />
+                  <button
+                    onClick={send}
+                    disabled={loading || (!input.trim() && !pendingImage)}
+                    className="sp-btn"
+                    style={{
+                      opacity: loading || (!input.trim() && !pendingImage) ? 0.5 : 1,
+                    }}
+                  >
+                    Send
+                  </button>
+                  <button
+                    onClick={markResolved}
+                    disabled={loading || !sessionId}
+                    aria-label="Mark chat resolved"
+                    className="sp-btn"
+                    title="Mark this chat resolved"
+                    style={{
+                      background: 'rgba(74, 138, 74, 0.2)',
+                      color: '#9fd89f',
+                      border: '1px solid rgba(74, 138, 74, 0.4)',
+                      padding: '0 12px',
+                      minWidth: 44,
+                      opacity: loading || !sessionId ? 0.5 : 1,
+                    }}
+                  >
+                    ✓
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -586,41 +770,40 @@ function LaneCard({
         borderLeft: `3px solid ${mode.accent}`,
       }}
     >
-      <div className="sp-lane-row">
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: mode.accent,
-            letterSpacing: '0.06em',
-          }}
-        >
-          {mode.severity}
-        </span>
-        <span
-          data-tip-for={mode.id}
-          onMouseEnter={() => setTipOpen(true)}
-          onMouseLeave={() => setTipOpen(false)}
-          onTouchStart={startHold}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            cancelHold();
-          }}
-          onTouchCancel={(e) => {
-            e.stopPropagation();
-            cancelHold();
-          }}
-          onTouchMove={(e) => {
-            e.stopPropagation();
-            cancelHold();
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className="sp-tip-trigger"
-          role="button"
-          aria-label="What does this lane mean?"
-        >
-          ?
-        </span>
+      <span
+        data-tip-for={mode.id}
+        onMouseEnter={() => setTipOpen(true)}
+        onMouseLeave={() => setTipOpen(false)}
+        onTouchStart={startHold}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          cancelHold();
+        }}
+        onTouchCancel={(e) => {
+          e.stopPropagation();
+          cancelHold();
+        }}
+        onTouchMove={(e) => {
+          e.stopPropagation();
+          cancelHold();
+        }}
+        onClick={(e) => e.stopPropagation()}
+        className="sp-tip-trigger sp-tip-corner"
+        role="button"
+        aria-label="What does this lane mean?"
+      >
+        ?
+      </span>
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: mode.accent,
+          letterSpacing: '0.06em',
+          marginBottom: 8,
+        }}
+      >
+        {mode.severity}
       </div>
       <div className="sp-lane-title">{mode.label}</div>
       {tipOpen && (

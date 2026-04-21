@@ -8,6 +8,7 @@ interface Msg {
   id: string;
   role: MessageRole;
   content: string;
+  image_url?: string | null;
   created_at: string;
 }
 interface Session {
@@ -303,6 +304,15 @@ export default function TakeOverPage({
                 )}
                 {m.role === 'user' ? 'Rep' : m.role === 'human' ? 'You' : 'Helios'}
               </div>
+              {m.image_url && (
+                <a href={m.image_url} target="_blank" rel="noreferrer" style={{ display: 'block', marginBottom: m.content ? 8 : 0 }}>
+                  <img
+                    src={m.image_url}
+                    alt="upload"
+                    style={{ maxWidth: '100%', maxHeight: 260, borderRadius: 8, display: 'block' }}
+                  />
+                </a>
+              )}
               {m.content}
             </div>
           </div>

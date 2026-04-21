@@ -6,9 +6,10 @@ export const dynamic = 'force-dynamic';
 
 interface Body {
   sessionId: string;
-  token: string;
-  action: 'take_over' | 'reply' | 'close';
+  token?: string;
+  action: 'take_over' | 'reply' | 'close' | 'mark_resolved' | 'rep_resolved';
   content?: string;
+  heliosSolved?: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -18,9 +19,16 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
-  const { sessionId, token, action, content } = body;
-  if (!sessionId || !token || !verifyToken(sessionId, token))
-    return NextResponse.json({ error: 'invalid token' }, { status: 401 });
+  const { sessionId, token, action, content, heliosSolved } = body;
+  if (!sessionId)
+    return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
+
+  // Rep can mark their own session resolved without a token; all other actions need the HMAC.
+  const isRepAction = action === 'rep_resolved';
+  if (!isRepAction) {
+    if (!token || !verifyToken(sessionId, token))
+      return NextResponse.json({ error: 'invalid token' }, { status: 401 });
+  }
 
   const sb = adminClient();
 
@@ -57,6 +65,29 @@ export async function POST(req: NextRequest) {
     await sb
       .from('triage_sessions')
       .update({ status: 'closed', updated_at: new Date().toISOString() })
+      .eq('id', sessionId);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'mark_resolved' || action === 'rep_resolved') {
+    const { data: session } = await sb
+      .from('triage_sessions')
+      .select('status')
+      .eq('id', sessionId)
+      .single();
+    const wasBotOnly =
+      session?.status === 'bot' || session?.status === 'escalated';
+    const solved =
+      typeof heliosSolved === 'boolean' ? heliosSolved : wasBotOnly;
+    await sb
+      .from('triage_sessions')
+      .update({
+        resolved: true,
+        resolved_at: new Date().toISOString(),
+        helios_solved: solved,
+        status: 'closed',
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', sessionId);
     return NextResponse.json({ ok: true });
   }

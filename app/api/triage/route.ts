@@ -39,23 +39,36 @@ interface RequestBody {
   mode?: Mode;
   pledgeConfirmed?: boolean;
   message: string;
+  imageUrl?: string;
 }
 
 interface ClassifierResult {
   isWorkRelated: boolean;
   botCanAnswer: 'confident' | 'needs_clarification' | 'unknown';
-  bucket: Bucket;
+  categories: Bucket[];
+  primaryBucket: Bucket;
   bucketReason: string;
+  detectedRepName?: string | null;
 }
+
+const ALL_BUCKETS: Bucket[] = [
+  'SALES-OPS',
+  'DIRECT-SALES',
+  'EPC',
+  'PIP',
+  'TECH-SUPPORT',
+  'ONBOARDING',
+  'SALES-ONBOARDING',
+  'COMMISSIONS',
+];
 
 async function classify(
   client: Anthropic,
   latestUserMessage: string,
   draftReply: string,
-  mode: Mode,
-  attempts: number
+  mode: Mode
 ): Promise<ClassifierResult> {
-  const prompt = `MODE: ${MODE_CONFIG[mode].label} (attempts already made this session: ${attempts})
+  const prompt = `MODE: ${MODE_CONFIG[mode].label}
 
 REP'S LATEST MESSAGE:
 ${latestUserMessage}
@@ -67,19 +80,21 @@ Classify.`;
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 300,
-    system: `You evaluate a sales-triage exchange. Output the classify tool.
+    max_tokens: 400,
+    system: `You evaluate a sales-triage exchange.
 
-isWorkRelated: true unless the rep's message is clearly non-work (personal trivia, creative writing prompts, coding help unrelated to SunPower tools, relationship advice, etc.). If the message could plausibly relate to SunPower sales/ops/tools, set true.
+isWorkRelated: true unless the rep's message is clearly non-work (personal trivia, creative writing, unrelated coding help). If it could plausibly relate to SunPower sales/ops/tools, set true.
 
 botCanAnswer:
-  - "confident": draft reply fully answers the question with facts from the knowledge base.
-  - "needs_clarification": draft reply asks a clarifying question because one specific detail is missing.
-  - "unknown": draft reply admits it doesn't know, or hedges, or the draft is a placeholder escalation message.
+  - confident: draft fully answers with facts from the KB.
+  - needs_clarification: draft asks a clarifying question because one specific detail is missing.
+  - unknown: draft admits it doesn't know or is a placeholder escalation line.
 
-bucket: route destination if this eventually escalates. Pick from:
-SALES-OPS, DIRECT-SALES, EPC, PIP, TECH-SUPPORT, ONBOARDING, SALES-ONBOARDING, COMMISSIONS, NONE.
-Use NONE only if no escalation needed. When unsure between buckets, prefer SALES-OPS.`,
+categories: ARRAY of 1-3 departments the issue touches. Pick multiple only when genuinely ambiguous. Available: SALES-OPS, DIRECT-SALES, EPC, PIP, TECH-SUPPORT, ONBOARDING, SALES-ONBOARDING, COMMISSIONS. When unsure, include SALES-OPS so Sam can manually triage.
+
+primaryBucket: single best pick from the categories array (used for the escalation-email subject).
+
+detectedRepName: if the rep introduced themselves in the message ("hey it's Tanner", "this is Marisol", etc.), return the first name; otherwise null. Never guess.`,
     tools: [
       {
         name: 'classify',
@@ -92,23 +107,23 @@ Use NONE only if no escalation needed. When unsure between buckets, prefer SALES
               type: 'string',
               enum: ['confident', 'needs_clarification', 'unknown'],
             },
-            bucket: {
-              type: 'string',
-              enum: [
-                'SALES-OPS',
-                'DIRECT-SALES',
-                'EPC',
-                'PIP',
-                'TECH-SUPPORT',
-                'ONBOARDING',
-                'SALES-ONBOARDING',
-                'COMMISSIONS',
-                'NONE',
-              ],
+            categories: {
+              type: 'array',
+              items: { type: 'string', enum: ALL_BUCKETS },
+              minItems: 1,
+              maxItems: 4,
             },
+            primaryBucket: { type: 'string', enum: ALL_BUCKETS },
             bucketReason: { type: 'string' },
+            detectedRepName: { type: ['string', 'null'] },
           },
-          required: ['isWorkRelated', 'botCanAnswer', 'bucket', 'bucketReason'],
+          required: [
+            'isWorkRelated',
+            'botCanAnswer',
+            'categories',
+            'primaryBucket',
+            'bucketReason',
+          ],
         },
       },
     ],
@@ -121,16 +136,27 @@ Use NONE only if no escalation needed. When unsure between buckets, prefer SALES
     return {
       isWorkRelated: true,
       botCanAnswer: 'unknown',
-      bucket: 'SALES-OPS',
+      categories: ['SALES-OPS'],
+      primaryBucket: 'SALES-OPS',
       bucketReason: 'classifier fallback',
     };
   }
   return toolUse.input as ClassifierResult;
 }
 
+type ClaudeMsg = {
+  role: 'user' | 'assistant';
+  content:
+    | string
+    | Array<
+        | { type: 'text'; text: string }
+        | { type: 'image'; source: { type: 'url'; url: string } }
+      >;
+};
+
 async function generateReply(
   client: Anthropic,
-  history: { role: 'user' | 'assistant'; content: string }[],
+  history: Array<{ role: 'user' | 'assistant'; content: string; image_url?: string | null }>,
   mode: Mode
 ): Promise<string> {
   const cfg = MODE_CONFIG[mode];
@@ -144,6 +170,7 @@ UNIVERSAL RULES:
 - Never ask more than one question per turn.
 - No markdown, no lists, no headers.
 - Address the rep as "you".
+- If the rep has attached an image, reference what you see in it directly.
 
 When you genuinely don't have the answer and the lane says escalate, use these exact handoff phrases:
 - In Appointment lane: "${COPY.IN_APPT_ESCALATION}"
@@ -156,16 +183,51 @@ DOCS:
 ${loadDocs()}
 ---`;
 
+  const messages: ClaudeMsg[] = history.map((m) => {
+    if (m.role !== 'user' || !m.image_url) {
+      return { role: m.role, content: m.content };
+    }
+    const blocks: ClaudeMsg['content'] = [
+      { type: 'image', source: { type: 'url', url: m.image_url } },
+    ];
+    if (m.content && m.content.trim()) {
+      (blocks as Array<{ type: 'text'; text: string }>).push({
+        type: 'text',
+        text: m.content,
+      });
+    }
+    return { role: 'user', content: blocks };
+  });
+
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 400,
+    max_tokens: 500,
     system,
-    messages: history,
+    messages: messages as Anthropic.MessageParam[],
   });
   const textBlock = response.content.find((b) => b.type === 'text');
   return textBlock && textBlock.type === 'text'
     ? textBlock.text
     : '(no response)';
+}
+
+async function generateSummary(
+  client: Anthropic,
+  transcript: string
+): Promise<string> {
+  try {
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 120,
+      system:
+        'Summarize this sales-triage conversation in ONE or TWO short sentences. Focus on what the rep needed and what happened. No preamble.',
+      messages: [{ role: 'user', content: transcript }],
+    });
+    const textBlock = response.content.find((b) => b.type === 'text');
+    return textBlock && textBlock.type === 'text' ? textBlock.text.trim() : '';
+  } catch {
+    return '';
+  }
 }
 
 function shouldEscalate(
@@ -190,8 +252,10 @@ async function emailEscalation(
   sessionId: string,
   mode: Mode,
   bucket: Bucket,
+  categories: Bucket[],
   bucketReason: string,
-  transcript: string
+  transcript: string,
+  repName: string | null
 ) {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
@@ -202,13 +266,16 @@ async function emailEscalation(
   });
   const cfg = MODE_CONFIG[mode];
   const bkt = bucket === 'NONE' ? 'SALES-OPS' : bucket;
-  const subject = `[${bkt}] [${cfg.severityMark}] Triage escalation`;
+  const repTag = repName ? ` — ${repName}` : '';
+  const subject = `[${bkt}] [${cfg.severityMark}] Triage escalation${repTag}`;
   const token = signToken(sessionId);
   const takeoverUrl = `${siteBaseUrl()}/triage/take-over/${sessionId}?token=${token}`;
 
   const body = `Bucket: ${bkt}
+Categories: ${categories.join(', ')}
 Lane: ${cfg.label} (${cfg.severityMark})
 Urgency: ${cfg.urgency}
+Rep: ${repName ?? 'unknown'}
 Classifier reason: ${bucketReason}
 
 TAKE OVER: ${takeoverUrl}
@@ -216,12 +283,7 @@ TAKE OVER: ${takeoverUrl}
 --- Transcript ---
 ${transcript}
 `;
-  await transporter.sendMail({
-    from: user,
-    to: 'samuel.gibson@sunpower.com',
-    subject,
-    text: body,
-  });
+  await transporter.sendMail({ from: user, to: 'samuel.gibson@sunpower.com', subject, text: body });
   return true;
 }
 
@@ -239,8 +301,10 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
-  if (!body.message || typeof body.message !== 'string' || !body.message.trim())
-    return NextResponse.json({ error: 'message required' }, { status: 400 });
+  const hasMessage = body.message && typeof body.message === 'string' && body.message.trim();
+  const hasImage = body.imageUrl && typeof body.imageUrl === 'string';
+  if (!hasMessage && !hasImage)
+    return NextResponse.json({ error: 'message or imageUrl required' }, { status: 400 });
 
   const sb = adminClient();
   let sessionId = body.sessionId;
@@ -283,27 +347,43 @@ export async function POST(req: NextRequest) {
         { error: 'Session taken over by human; rep messages go through realtime only' },
         { status: 409 }
       );
+    if (session.resolved)
+      return NextResponse.json(
+        { error: 'Session already resolved' },
+        { status: 409 }
+      );
     mode = session.mode as Mode;
   }
 
-  const userMsg = body.message.trim();
-  await sb
-    .from('triage_messages')
-    .insert({ session_id: sessionId, role: 'user', content: userMsg });
+  const userMsg = (body.message || '').trim();
+  const imageUrl = body.imageUrl || null;
+  await sb.from('triage_messages').insert({
+    session_id: sessionId,
+    role: 'user',
+    content: userMsg,
+    image_url: imageUrl,
+  });
 
   const { data: msgs } = await sb
     .from('triage_messages')
-    .select('role, content')
+    .select('role, content, image_url')
     .eq('session_id', sessionId)
     .order('created_at', { ascending: true });
   const history = (msgs ?? []).map((m) => ({
     role: m.role === 'human' ? ('assistant' as const) : (m.role as 'user' | 'assistant'),
     content: m.content,
+    image_url: m.image_url,
   }));
 
   const client = new Anthropic({ apiKey });
+  const effectiveMessageForClassifier = userMsg || '[image uploaded]';
   const draftReply = await generateReply(client, history, mode);
-  const classifier = await classify(client, userMsg, draftReply, mode, 0);
+  const classifier = await classify(
+    client,
+    effectiveMessageForClassifier,
+    draftReply,
+    mode
+  );
 
   let finalReply = draftReply;
   let botRejected = false;
@@ -314,7 +394,7 @@ export async function POST(req: NextRequest) {
 
   const { data: sessionRow } = await sb
     .from('triage_sessions')
-    .select('attempts')
+    .select('attempts, categories, rep_name')
     .eq('id', sessionId)
     .single();
   const attemptsBefore = sessionRow?.attempts ?? 0;
@@ -324,22 +404,34 @@ export async function POST(req: NextRequest) {
       classifier.botCanAnswer === 'unknown');
   const attemptsAfter = thisCountsAsAttempt ? attemptsBefore + 1 : attemptsBefore;
 
+  const existingCategories: Bucket[] = Array.isArray(sessionRow?.categories)
+    ? (sessionRow!.categories as Bucket[])
+    : [];
+  const mergedCategories = Array.from(
+    new Set<Bucket>([...existingCategories, ...classifier.categories])
+  );
+
   const escalate =
     !botRejected && shouldEscalate(mode, classifier.botCanAnswer, attemptsAfter);
 
-  await sb
-    .from('triage_messages')
-    .insert({ session_id: sessionId, role: 'assistant', content: finalReply });
+  await sb.from('triage_messages').insert({
+    session_id: sessionId,
+    role: 'assistant',
+    content: finalReply,
+  });
 
   const cfg = MODE_CONFIG[mode];
   const sessionUpdate: Record<string, unknown> = {
     attempts: attemptsAfter,
+    categories: mergedCategories,
     updated_at: new Date().toISOString(),
   };
+  if (classifier.detectedRepName && !sessionRow?.rep_name) {
+    sessionUpdate.rep_name = classifier.detectedRepName;
+  }
   if (escalate) {
     sessionUpdate.status = 'escalated';
-    sessionUpdate.bucket =
-      classifier.bucket === 'NONE' ? 'SALES-OPS' : classifier.bucket;
+    sessionUpdate.bucket = classifier.primaryBucket;
     sessionUpdate.urgency = cfg.urgency;
   }
   await sb.from('triage_sessions').update(sessionUpdate).eq('id', sessionId);
@@ -348,23 +440,31 @@ export async function POST(req: NextRequest) {
   if (escalate) {
     const { data: fullMsgs } = await sb
       .from('triage_messages')
-      .select('role, content')
+      .select('role, content, image_url')
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true });
     const transcript = (fullMsgs ?? [])
       .map(
         (m) =>
-          `${m.role === 'user' ? 'REP' : m.role === 'human' ? 'HUMAN' : 'BOT'}: ${m.content}`
+          `${m.role === 'user' ? 'REP' : m.role === 'human' ? 'HUMAN' : 'HELIOS'}: ${m.content}${
+            m.image_url ? ` [image: ${m.image_url}]` : ''
+          }`
       )
       .join('\n\n');
     try {
       escalated = await emailEscalation(
         sessionId,
         mode,
-        classifier.bucket,
+        classifier.primaryBucket,
+        mergedCategories,
         classifier.bucketReason,
-        transcript
+        transcript,
+        classifier.detectedRepName || sessionRow?.rep_name || null
       );
+      const summary = await generateSummary(client, transcript);
+      if (summary) {
+        await sb.from('triage_sessions').update({ summary }).eq('id', sessionId);
+      }
     } catch (err) {
       console.error('[triage] escalation email failed', err);
     }
@@ -374,6 +474,7 @@ export async function POST(req: NextRequest) {
     sessionId,
     reply: finalReply,
     escalated,
+    categories: mergedCategories,
     status: escalate ? 'escalated' : 'bot',
   });
 }
