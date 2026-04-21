@@ -5,39 +5,31 @@ const PX = 4;
 
 // Color map
 const C: Record<number, string> = {
-  1: '#0d0603',  // hair dark
-  2: '#2d1a0b',  // hair highlight
-  3: '#d19068',  // skin mid
-  4: '#a5663f',  // skin shadow
-  5: '#5a3010',  // boots
-  6: '#0a0502',  // dark detail (eyes, beard)
-  7: '#e4d8be',  // shirt cream
-  8: '#a89a7c',  // shirt shadow
-  9: '#3a6a9f',  // jeans
-  10: '#2b1508', // boot sole / dark
+  1: '#1a0c03', // dark hair
+  2: '#c8855a', // skin
+  3: '#e4d8be', // cream shirt
+  4: '#3a6a9f', // blue jeans
+  5: '#5a3010', // brown boots
+  6: '#3a1d0a', // warm dark brown (eyes, beard, moustache — not pure black)
 };
 
-// Mario-proportioned Sam — 12 wide × 19 tall with shading
+// OG Mario proportions with arms added — 10 wide × 15 tall
 const SPRITE: number[][] = [
-  [0,0,0,1,1,1,1,1,1,0,0,0], //  0 hair crown
-  [0,0,1,1,2,2,2,2,1,1,0,0], //  1 hair with highlight
-  [0,1,1,2,2,2,2,2,2,1,1,0], //  2 hair widens
-  [0,1,2,3,3,3,3,3,3,2,1,0], //  3 hair sides → forehead
-  [1,2,3,3,3,3,3,3,3,3,2,1], //  4 face widest (temples)
-  [1,2,3,6,3,3,3,3,6,3,2,1], //  5 eyes
-  [1,2,3,3,3,4,4,3,3,3,2,1], //  6 nose shadow
-  [0,1,2,3,6,6,6,6,3,2,1,0], //  7 moustache line
-  [0,1,2,6,6,6,6,6,6,2,1,0], //  8 beard body
-  [0,0,1,6,6,6,6,6,6,1,0,0], //  9 beard narrows
-  [0,0,0,1,6,6,6,6,1,0,0,0], // 10 chin beard
-  [0,0,0,7,7,7,7,7,7,0,0,0], // 11 collar
-  [0,7,7,7,7,8,8,7,7,7,7,0], // 12 shoulders widen
-  [7,7,7,7,7,7,7,7,7,7,7,7], // 13 arms fill full width
-  [7,7,8,7,7,7,7,7,7,8,7,7], // 14 armpit shadow seam
-  [7,7,7,9,9,9,9,9,9,7,7,7], // 15 sleeves flanking jeans waist
-  [3,3,3,9,9,0,0,9,9,3,3,3], // 16 hands (3-wide) beside legs split
-  [0,0,0,5,5,0,0,5,5,0,0,0], // 17 boots
-  [0,0,5,10,5,0,0,5,10,5,0,0], // 18 boot widen with sole
+  [0,0,1,1,1,1,1,1,0,0], //  0 hair top
+  [0,1,1,1,1,1,1,1,1,0], //  1 hair
+  [1,1,1,2,2,2,2,1,1,0], //  2 face + hair sides
+  [1,1,2,2,2,2,2,2,1,0], //  3 face
+  [1,1,2,6,2,2,6,2,1,0], //  4 eyes
+  [1,1,2,2,6,6,2,2,1,0], //  5 moustache
+  [1,1,6,6,2,2,6,6,1,0], //  6 chin beard
+  [0,3,3,3,3,3,3,3,0,0], //  7 shoulders
+  [3,3,3,3,3,3,3,3,3,0], //  8 arms extend to full width
+  [3,0,3,3,3,3,3,0,3,0], //  9 arms separated from torso
+  [3,0,4,4,4,4,4,0,3,0], // 10 arms + jeans waist
+  [2,0,4,4,0,4,4,0,2,0], // 11 hands beside legs split
+  [0,0,4,4,0,4,4,0,0,0], // 12 jeans lower
+  [0,0,5,5,0,5,5,0,0,0], // 13 boots
+  [0,5,5,5,0,5,5,5,0,0], // 14 boot tips (wider)
 ];
 
 const W = SPRITE[0].length * PX;
