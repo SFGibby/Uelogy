@@ -15,7 +15,7 @@ const SOCIALS = [
 const WHAT_I_DO = [
   {
     title: 'IT Leadership',
-    desc: 'Director of IT & Business Systems at SunPower. Managing infrastructure, teams, and the technology that keeps operations running.',
+    desc: 'Managing infrastructure, teams, and the technology that keeps a solar company running.',
   },
   {
     title: 'Systems & Automation',
@@ -95,13 +95,8 @@ export default function Home() {
         <div style={{ textAlign: 'center', marginBottom: 20, ...term }}>
           <div style={{ fontSize: 32, letterSpacing: '0.1em' }}>SAMUEL GIBSON</div>
           {milestone >= 1 && (
-            <div className="reveal" style={{ fontSize: 16, color: '#1aaa1a', textShadow: 'none', marginTop: 4 }}>
-              DIRECTOR OF IT &amp; BUSINESS SYSTEMS
-            </div>
-          )}
-          {milestone >= 2 && (
             <div className="reveal" style={{ fontSize: 14, color: '#0d660d', textShadow: 'none', marginTop: 4 }}>
-              SUNPOWER · SOLAR · AUTOMATION
+              SOLAR · AUTOMATION · CARDS
             </div>
           )}
           {milestone >= 3 && (
@@ -210,14 +205,14 @@ export default function Home() {
         <section style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '100px 48px 80px', maxWidth: 1000, margin: '0 auto', gap: 40 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 20, textShadow: '0 0 6px #33ff33' }}>
-              DIRECTOR OF IT &amp; BUSINESS SYSTEMS · SUNPOWER · UTAH
+              SOLAR · AUTOMATION · UTAH
             </div>
             <h1 style={{ fontSize: 'clamp(52px, 9vw, 104px)', fontWeight: 900, margin: 0, lineHeight: 1, letterSpacing: -3, color: '#fff' }}>
               Samuel<br />Gibson.
             </h1>
             <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', maxWidth: 540, lineHeight: 1.7, margin: '28px 0 0' }}>
-              I run IT and business systems at SunPower — building the infrastructure and automations
-              that keep a solar company operating at scale. Outside of work: cards, memorabilia, and the occasional Tetris session.
+              I build infrastructure and automations that keep a solar company operating at scale.
+              Outside of work: cards, memorabilia, and the occasional Tetris session.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 40 }}>
               {SOCIALS.map(s => (
