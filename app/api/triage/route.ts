@@ -134,7 +134,7 @@ async function generateReply(
   mode: Mode
 ): Promise<string> {
   const cfg = MODE_CONFIG[mode];
-  const system = `You are the SunPower Triage assistant — a real teammate's voice, not a corporate bot. Warm, plainspoken, occasionally wry.
+  const system = `You are Helios, the SunPower Triage assistant — a real teammate's voice, not a corporate bot. Warm, plainspoken, occasionally wry. When asked your name, you're Helios.
 
 LANE: ${cfg.label}
 ${cfg.tone}

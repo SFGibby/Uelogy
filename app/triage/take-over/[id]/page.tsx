@@ -277,12 +277,31 @@ export default function TakeOverPage({
               <div
                 style={{
                   fontSize: 11,
-                  color: '#666',
+                  color: m.role === 'assistant' ? '#9ecbff' : '#888',
                   marginBottom: 3,
-                  letterSpacing: '0.04em',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
                 }}
               >
-                {m.role === 'user' ? 'REP' : m.role === 'human' ? 'YOU' : 'BOT'}
+                {m.role === 'assistant' && (
+                  <img
+                    src="/sunpower/helios-plane.svg"
+                    alt=""
+                    style={{ width: 16, height: 9, filter: 'brightness(0) invert(0.85)' }}
+                  />
+                )}
+                {m.role === 'human' && (
+                  <img
+                    src="/sunpower/person.svg"
+                    alt=""
+                    style={{ width: 10, height: 10, filter: 'brightness(0) invert(0.7)' }}
+                  />
+                )}
+                {m.role === 'user' ? 'Rep' : m.role === 'human' ? 'You' : 'Helios'}
               </div>
               {m.content}
             </div>

@@ -382,6 +382,15 @@ export default function TriagePage() {
                   flexWrap: 'wrap',
                 }}
               >
+                <AgentBadge active={status !== 'taken_over'} />
+                <span
+                  style={{
+                    width: 1,
+                    height: 18,
+                    background: 'var(--sp-ink-4)',
+                    margin: '0 4px',
+                  }}
+                />
                 <span
                   style={{
                     width: 10,
@@ -457,6 +466,7 @@ export default function TriagePage() {
                       margin: '10px 0',
                     }}
                   >
+                    {m.role !== 'user' && <AgentAvatar role={m.role} />}
                     <div
                       style={{
                         maxWidth: '82%',
@@ -481,18 +491,19 @@ export default function TriagePage() {
                         whiteSpace: 'pre-wrap',
                       }}
                     >
-                      {m.role === 'human' && (
+                      {m.role !== 'user' && (
                         <div
                           style={{
                             fontSize: 11,
-                            color: '#9fd89f',
-                            marginBottom: 3,
+                            color:
+                              m.role === 'human' ? '#9fd89f' : 'var(--sp-blue-soft)',
+                            marginBottom: 4,
                             letterSpacing: '0.08em',
                             textTransform: 'uppercase',
-                            fontWeight: 600,
+                            fontWeight: 700,
                           }}
                         >
-                          Sam
+                          {m.role === 'human' ? 'Sam · Human' : 'Helios'}
                         </div>
                       )}
                       {m.content}
@@ -588,6 +599,101 @@ export default function TriagePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function AgentAvatar({ role }: { role: 'assistant' | 'human' }) {
+  const isBot = role === 'assistant';
+  return (
+    <div
+      style={{
+        flexShrink: 0,
+        width: 34,
+        height: 34,
+        borderRadius: isBot ? 10 : 34,
+        background: isBot
+          ? 'linear-gradient(135deg, var(--sp-blue) 0%, #1a6ed0 100%)'
+          : 'linear-gradient(135deg, #3a6b3a 0%, #4a8a4a 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+        marginTop: 2,
+        boxShadow: isBot
+          ? '0 0 16px rgba(0, 86, 184, 0.35)'
+          : '0 0 12px rgba(74, 138, 74, 0.3)',
+      }}
+      aria-label={isBot ? 'Helios' : 'Sam'}
+    >
+      <img
+        src={isBot ? '/sunpower/helios-plane.svg' : '/sunpower/person.svg'}
+        alt=""
+        style={{
+          width: isBot ? 26 : 20,
+          height: isBot ? 26 : 20,
+          color: '#fff',
+          filter: 'brightness(0) invert(1)',
+        }}
+      />
+    </div>
+  );
+}
+
+function AgentBadge({ active }: { active: boolean }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+      }}
+    >
+      <div
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: active ? 7 : 26,
+          background: active
+            ? 'linear-gradient(135deg, var(--sp-blue) 0%, #1a6ed0 100%)'
+            : 'linear-gradient(135deg, #3a6b3a 0%, #4a8a4a 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <img
+          src={active ? '/sunpower/helios-plane.svg' : '/sunpower/person.svg'}
+          alt=""
+          style={{
+            width: active ? 20 : 15,
+            height: active ? 20 : 15,
+            filter: 'brightness(0) invert(1)',
+          }}
+        />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: 'var(--sp-text-hi)',
+          }}
+        >
+          {active ? 'Helios' : 'Sam'}
+        </span>
+        <span
+          style={{
+            fontSize: 10,
+            color: 'var(--sp-text-lo)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            fontWeight: 600,
+          }}
+        >
+          {active ? 'AI · responding' : 'Human · in the chat'}
+        </span>
+      </div>
+    </div>
   );
 }
 
