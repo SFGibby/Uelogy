@@ -7,6 +7,7 @@ const SUBNAV = [
   { href: '/triage/faq', label: 'FAQ' },
   { href: '/triage/directory', label: 'Directory' },
   { href: '/triage/reference', label: 'Reference' },
+  { href: '/triage/brainstorm', label: 'Brain Storm' },
 ];
 
 export default function TriageHeader() {

@@ -53,7 +53,9 @@ interface StoredState {
 export default function TriageWidget() {
   const pathname = usePathname();
   const hiddenRoute =
-    pathname === '/triage' || pathname.startsWith('/triage/take-over');
+    pathname === '/triage' ||
+    pathname.startsWith('/triage/take-over') ||
+    pathname.startsWith('/triage/brainstorm');
 
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode | null>(null);
