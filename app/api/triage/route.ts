@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import {
+  GoogleGenerativeAI,
+  SchemaType,
+  type Content,
+  type Part,
+} from '@google/generative-ai';
 import nodemailer from 'nodemailer';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -96,8 +101,22 @@ const ALL_BUCKETS: Bucket[] = [
   'COMMISSIONS',
 ];
 
+const MODEL_ID = 'gemini-2.0-flash';
+
+async function fetchImagePart(url: string): Promise<Part | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const mimeType = res.headers.get('content-type') || 'image/jpeg';
+    const buf = Buffer.from(await res.arrayBuffer());
+    return { inlineData: { mimeType, data: buf.toString('base64') } };
+  } catch {
+    return null;
+  }
+}
+
 async function classify(
-  client: Anthropic,
+  client: GoogleGenerativeAI,
   latestUserMessage: string,
   draftReply: string,
   mode: Mode
@@ -112,10 +131,7 @@ ${draftReply}
 
 Classify.`;
 
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 400,
-    system: `You evaluate a sales-triage exchange.
+  const systemInstruction = `You evaluate a sales-triage exchange.
 
 isWorkRelated: true unless the rep's message is clearly non-work (personal trivia, creative writing, unrelated coding help). If it could plausibly relate to SunPower sales/ops/tools, set true.
 
@@ -128,73 +144,90 @@ categories: ARRAY of 1-3 departments the issue touches. Pick multiple only when 
 
 primaryBucket: single best pick from the categories array (used for the escalation-email subject).
 
-detectedRepName: if the rep introduced themselves in the message ("hey it's Tanner", "this is Marisol", etc.), return the first name; otherwise null. Never guess.`,
+detectedRepName: if the rep introduced themselves in the message ("hey it's Tanner", "this is Marisol", etc.), return the first name; otherwise null. Never guess.
+
+You MUST call the classify function with your answer.`;
+
+  const model = client.getGenerativeModel({
+    model: MODEL_ID,
+    systemInstruction,
     tools: [
       {
-        name: 'classify',
-        description: 'Classify the triage exchange',
-        input_schema: {
-          type: 'object',
-          properties: {
-            isWorkRelated: { type: 'boolean' },
-            botCanAnswer: {
-              type: 'string',
-              enum: ['confident', 'needs_clarification', 'unknown'],
+        functionDeclarations: [
+          {
+            name: 'classify',
+            description: 'Classify the triage exchange',
+            parameters: {
+              type: SchemaType.OBJECT,
+              properties: {
+                isWorkRelated: { type: SchemaType.BOOLEAN },
+                botCanAnswer: {
+                  type: SchemaType.STRING,
+                  format: 'enum',
+                  enum: ['confident', 'needs_clarification', 'unknown'],
+                },
+                categories: {
+                  type: SchemaType.ARRAY,
+                  items: {
+                    type: SchemaType.STRING,
+                    format: 'enum',
+                    enum: ALL_BUCKETS as string[],
+                  },
+                },
+                primaryBucket: {
+                  type: SchemaType.STRING,
+                  format: 'enum',
+                  enum: ALL_BUCKETS as string[],
+                },
+                bucketReason: { type: SchemaType.STRING },
+                detectedRepName: { type: SchemaType.STRING, nullable: true },
+              },
+              required: [
+                'isWorkRelated',
+                'botCanAnswer',
+                'categories',
+                'primaryBucket',
+                'bucketReason',
+              ],
             },
-            categories: {
-              type: 'array',
-              items: { type: 'string', enum: ALL_BUCKETS },
-              minItems: 1,
-              maxItems: 4,
-            },
-            primaryBucket: { type: 'string', enum: ALL_BUCKETS },
-            bucketReason: { type: 'string' },
-            detectedRepName: { type: ['string', 'null'] },
           },
-          required: [
-            'isWorkRelated',
-            'botCanAnswer',
-            'categories',
-            'primaryBucket',
-            'bucketReason',
-          ],
-        },
+        ],
       },
     ],
-    tool_choice: { type: 'tool', name: 'classify' },
-    messages: [{ role: 'user', content: prompt }],
+    toolConfig: {
+      functionCallingConfig: {
+        mode: 'ANY' as never,
+        allowedFunctionNames: ['classify'],
+      },
+    },
   });
 
-  const toolUse = response.content.find((b) => b.type === 'tool_use');
-  if (!toolUse || toolUse.type !== 'tool_use') {
-    return {
-      isWorkRelated: true,
-      botCanAnswer: 'unknown',
-      categories: ['SALES-OPS'],
-      primaryBucket: 'SALES-OPS',
-      bucketReason: 'classifier fallback',
-    };
+  try {
+    const result = await model.generateContent(prompt);
+    const calls = result.response.functionCalls();
+    const call = calls && calls[0];
+    if (call && call.name === 'classify' && call.args) {
+      return call.args as unknown as ClassifierResult;
+    }
+  } catch (err) {
+    console.error('[triage] classify failed', err);
   }
-  return toolUse.input as ClassifierResult;
+  return {
+    isWorkRelated: true,
+    botCanAnswer: 'unknown',
+    categories: ['SALES-OPS'],
+    primaryBucket: 'SALES-OPS',
+    bucketReason: 'classifier fallback',
+  };
 }
 
-type ClaudeMsg = {
-  role: 'user' | 'assistant';
-  content:
-    | string
-    | Array<
-        | { type: 'text'; text: string }
-        | { type: 'image'; source: { type: 'url'; url: string } }
-      >;
-};
-
 async function generateReply(
-  client: Anthropic,
+  client: GoogleGenerativeAI,
   history: Array<{ role: 'user' | 'assistant'; content: string; image_url?: string | null }>,
   mode: Mode
 ): Promise<string> {
   const cfg = MODE_CONFIG[mode];
-  const system = `You are Helios, the SunPower Triage assistant — a real teammate's voice, not a corporate bot. Warm, plainspoken, occasionally wry. When asked your name, you're Helios.
+  const systemInstruction = `You are Helios, the SunPower Triage assistant — a real teammate's voice, not a corporate bot. Warm, plainspoken, occasionally wry. When asked your name, you're Helios.
 
 LANE: ${cfg.label}
 ${cfg.tone}
@@ -223,48 +256,52 @@ DOCS:
 ${loadDocs()}
 ---`;
 
-  const messages: ClaudeMsg[] = history.map((m) => {
-    if (m.role !== 'user' || !m.image_url) {
-      return { role: m.role, content: m.content };
+  const contents: Content[] = [];
+  for (const m of history) {
+    const parts: Part[] = [];
+    if (m.role === 'user' && m.image_url) {
+      const img = await fetchImagePart(m.image_url);
+      if (img) parts.push(img);
     }
-    const blocks: ClaudeMsg['content'] = [
-      { type: 'image', source: { type: 'url', url: m.image_url } },
-    ];
     if (m.content && m.content.trim()) {
-      (blocks as Array<{ type: 'text'; text: string }>).push({
-        type: 'text',
-        text: m.content,
-      });
+      parts.push({ text: m.content });
     }
-    return { role: 'user', content: blocks };
+    if (parts.length === 0) continue;
+    contents.push({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts,
+    });
+  }
+
+  const model = client.getGenerativeModel({
+    model: MODEL_ID,
+    systemInstruction,
+    generationConfig: { maxOutputTokens: 500 },
   });
 
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 500,
-    system,
-    messages: messages as Anthropic.MessageParam[],
-  });
-  const textBlock = response.content.find((b) => b.type === 'text');
-  return textBlock && textBlock.type === 'text'
-    ? textBlock.text
-    : '(no response)';
+  try {
+    const result = await model.generateContent({ contents });
+    const text = result.response.text();
+    return text && text.trim() ? text : '(no response)';
+  } catch (err) {
+    console.error('[triage] generateReply failed', err);
+    return '(no response)';
+  }
 }
 
 async function generateSummary(
-  client: Anthropic,
+  client: GoogleGenerativeAI,
   transcript: string
 ): Promise<string> {
   try {
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 120,
-      system:
+    const model = client.getGenerativeModel({
+      model: MODEL_ID,
+      systemInstruction:
         'Summarize this sales-triage conversation in ONE or TWO short sentences. Focus on what the rep needed and what happened. No preamble.',
-      messages: [{ role: 'user', content: transcript }],
+      generationConfig: { maxOutputTokens: 120 },
     });
-    const textBlock = response.content.find((b) => b.type === 'text');
-    return textBlock && textBlock.type === 'text' ? textBlock.text.trim() : '';
+    const result = await model.generateContent(transcript);
+    return result.response.text().trim();
   } catch {
     return '';
   }
@@ -328,10 +365,10 @@ ${transcript}
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey)
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY not configured' },
+      { error: 'GOOGLE_API_KEY not configured' },
       { status: 500 }
     );
 
@@ -415,7 +452,7 @@ export async function POST(req: NextRequest) {
     image_url: m.image_url,
   }));
 
-  const client = new Anthropic({ apiKey });
+  const client = new GoogleGenerativeAI(apiKey);
   const effectiveMessageForClassifier = userMsg || '[image uploaded]';
   const draftReply = await generateReply(client, history, mode);
   const classifier = await classify(
