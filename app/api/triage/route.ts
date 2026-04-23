@@ -38,15 +38,23 @@ function safeRead(p: string): string {
   }
 }
 
+// Compact index of brain entries — title + slug + seen count only.
+// Full entries total ~16k tokens, blowing Groq free-tier TPM. Bot can
+// point reps at /triage/faq#<slug> for the detailed resolution.
 function loadBrain(): string {
   const files = collectBrainFiles(BRAIN_DIR);
   if (files.length === 0) return '(no brain entries yet)';
-  return files
-    .map((abs) => {
-      const rel = relative(TRIAGE_DIR, abs);
-      return `### ${rel}\n${safeRead(abs)}`;
-    })
-    .join('\n\n');
+  const lines = files.map((abs) => {
+    const rel = relative(TRIAGE_DIR, abs);
+    const slug = abs.split('/').pop()!.replace(/\.md$/, '');
+    const text = safeRead(abs);
+    const titleMatch = text.match(/^title:\s*(.+?)\s*$/m);
+    const systemsMatch = text.match(/^systems:\s*\[(.*?)\]/m);
+    const title = titleMatch ? titleMatch[1] : slug;
+    const systems = systemsMatch ? systemsMatch[1] : '';
+    return `- [${slug}] ${title}${systems ? ` (${systems})` : ''}  — ${rel}`;
+  });
+  return `Index of FAQ entries at /triage/faq (each has Symptom / Likely Cause / Resolution / Related). When relevant, point reps at the slug: "/triage/faq#<slug>".\n\n${lines.join('\n')}`;
 }
 
 function collectBrainFiles(root: string): string[] {
@@ -303,6 +311,7 @@ async function emailEscalation(
   transcript: string,
   repName: string | null
 ) {
+  if (process.env.HELIOS_ESCALATION_MUTE === '1') return false;
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
   if (!user || !pass) return false;
