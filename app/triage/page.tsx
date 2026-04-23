@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
+import { SUPABASE_URL, friendlyApiError } from '../../lib/triage';
 
 type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router' | 'extra_support';
 type MessageRole = 'user' | 'assistant' | 'human';
@@ -79,8 +80,6 @@ const MODES: {
 const PLEDGE_TEXT =
   'Are you actually in the home with the client? If not and we find out all your future requests will be de-prioritized.';
 
-const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
-
 export default function TriagePage() {
   const [mode, setMode] = useState<Mode | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -101,6 +100,7 @@ export default function TriagePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const supabaseRef = useRef<SupabaseClient | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const pledgeRef = useRef<boolean>(false);
 
   useEffect(() => {
@@ -116,6 +116,13 @@ export default function TriagePage() {
       behavior: 'smooth',
     });
   }, [messages, loading]);
+
+  // Abort any in-flight /api/triage request if the component unmounts.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!mode) return;
@@ -275,6 +282,28 @@ export default function TriagePage() {
     }, 30);
   }
 
+  // Clears every piece of session state. Used by "Change lane", the
+  // Extra Support toggle off-branch, and the resolved-toast auto-timer.
+  // Keep this in sync with all state added to TriagePage.
+  function resetSession() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setMode(null);
+    setSessionId(null);
+    setMessages([]);
+    setStatus('bot');
+    setShowPledge(false);
+    setPendingImage(null);
+    setUploading(false);
+    setDragOver(false);
+    setTimeoutFired(false);
+    setEmailFallback('');
+    setEmailSent(false);
+    setInput('');
+    setLoading(false);
+    pledgeRef.current = false;
+  }
+
   async function uploadImage(file: File) {
     setUploading(true);
     try {
@@ -308,11 +337,7 @@ export default function TriagePage() {
     }
     setShowResolvedToast(true);
     setTimeout(() => {
-      setMode(null);
-      setSessionId(null);
-      setMessages([]);
-      setStatus('bot');
-      setPendingImage(null);
+      resetSession();
       setShowResolvedToast(false);
     }, 1200);
   }
@@ -329,11 +354,15 @@ export default function TriagePage() {
     setPendingImage(null);
     setLoading(true);
     const loadingStartedAt = Date.now();
+    const controller = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = controller;
 
     try {
       const res = await fetch('/api/triage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           sessionId,
           mode: sessionId ? undefined : mode,
@@ -344,11 +373,13 @@ export default function TriagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        const rawError = String(data.error || '');
+        console.error('[triage] /api/triage failed:', rawError, data.detail);
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: `Something broke: ${data.error || 'unknown'}`,
+            content: friendlyApiError(rawError),
           },
         ]);
       } else {
@@ -356,14 +387,22 @@ export default function TriagePage() {
         if (data.escalated) setStatus('escalated');
       }
     } catch (err) {
+      // Aborts from resetSession() aren't real errors — swallow silently.
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      console.error('[triage] network error:', err);
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `Network error: ${err instanceof Error ? err.message : 'unknown'}`,
+          content: friendlyApiError(
+            err instanceof Error ? err.message : 'network error'
+          ),
         },
       ]);
     } finally {
+      abortRef.current = null;
       const elapsed = Date.now() - loadingStartedAt;
       const MIN_THINKING_MS = 700;
       if (elapsed < MIN_THINKING_MS) {
@@ -501,14 +540,8 @@ export default function TriagePage() {
               return (
                 <button
                   onClick={() => {
-                    if (isActive) {
-                      setMode(null);
-                      setSessionId(null);
-                      setMessages([]);
-                      setStatus('bot');
-                    } else {
-                      pickMode('extra_support');
-                    }
+                    if (isActive) resetSession();
+                    else pickMode('extra_support');
                   }}
                   className="sp-card"
                   title={xs.sub}
@@ -688,12 +721,7 @@ export default function TriagePage() {
                   </span>
                 )}
                 <button
-                  onClick={() => {
-                    setMode(null);
-                    setSessionId(null);
-                    setMessages([]);
-                    setStatus('bot');
-                  }}
+                  onClick={resetSession}
                   className="sp-btn sp-btn-ghost"
                   style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 12 }}
                 >

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, friendlyApiError } from '../../../lib/triage';
 
 type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router';
 type MessageRole = 'user' | 'assistant' | 'human';
@@ -40,7 +41,6 @@ const MODES: {
   { id: 'router', label: 'Need somebody.', placeholder: "Who or what are you trying to find?", accent: 'var(--sp-router)', severity: '·' },
 ];
 
-const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
 const PLEDGE_TEXT =
   'Are you actually in the home with the client? If not and we find out all your future requests will be de-prioritized.';
 const STORAGE_KEY = 'triage_widget_session_v1';
@@ -249,7 +249,11 @@ export default function TriageWidget() {
     setMode(null);
     setMessages([]);
     setStatus('bot');
+    setShowPledge(false);
     setPendingImage(null);
+    setUploading(false);
+    setInput('');
+    pledgeRef.current = false;
     try {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -333,11 +337,12 @@ export default function TriageWidget() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error('[triage-widget] /api/triage failed:', data.error, data.detail);
         setMessages((prev) => [
           ...prev,
           {
             role: 'assistant',
-            content: `Something broke: ${data.error || 'unknown'}`,
+            content: friendlyApiError(String(data.error || '')),
           },
         ]);
       } else {
@@ -345,11 +350,14 @@ export default function TriageWidget() {
         if (data.escalated) setStatus('escalated');
       }
     } catch (err) {
+      console.error('[triage-widget] network error:', err);
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `Network error: ${err instanceof Error ? err.message : 'unknown'}`,
+          content: friendlyApiError(
+            err instanceof Error ? err.message : 'network error'
+          ),
         },
       ]);
     } finally {

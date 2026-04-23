@@ -36,7 +36,37 @@ export interface Message {
   created_at: string;
 }
 
-const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
+export const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
+
+// Map API error strings to rep-facing messages. Never surface model or
+// provider specifics; keep the raw text for console logging.
+export function friendlyApiError(raw: string): string {
+  const r = (raw || '').toLowerCase();
+  if (
+    r.includes('rate_limit') ||
+    r.includes('too many requests') ||
+    r.includes('tokens per minute')
+  ) {
+    return 'Helios is at capacity right now — try again in a few seconds.';
+  }
+  if (r.includes('timeout') || r.includes('timed out')) {
+    return 'That took too long — try asking again.';
+  }
+  if (
+    r.includes('api_key') ||
+    r.includes('not configured') ||
+    r.includes('unauthorized')
+  ) {
+    return "Helios isn't configured — tell Sam.";
+  }
+  if (
+    r.includes('session create failed') ||
+    r.includes('session not found')
+  ) {
+    return "Lost the thread on my end — pick a lane again and we'll restart.";
+  }
+  return 'Something broke on my end — try again, and ping Sam if it keeps happening.';
+}
 
 export function adminClient(): SupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
