@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# triage brain — raw source chat transcripts (internal, may contain PII)
+/app/triage/brain/_source/
+!/app/triage/brain/_source/.gitkeep
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

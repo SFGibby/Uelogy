@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import nodemailer from 'nodemailer';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import {
   adminClient,
   Mode,
@@ -17,13 +17,17 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const KB_PATH = join(process.cwd(), 'app', 'triage', 'knowledge-base.md');
-const DIR_PATH = join(process.cwd(), 'app', 'triage', 'directory.md');
+const TRIAGE_DIR = join(process.cwd(), 'app', 'triage');
+const KB_PATH = join(TRIAGE_DIR, 'knowledge-base.md');
+const DIR_PATH = join(TRIAGE_DIR, 'directory.md');
+const BRAIN_DIR = join(TRIAGE_DIR, 'brain');
+const BRAIN_SKIP = new Set(['_template.md', 'README.md']);
 
 function loadDocs(): string {
   const kb = safeRead(KB_PATH);
   const dir = safeRead(DIR_PATH);
-  return `## Knowledge Base\n${kb}\n\n## Directory\n${dir}`;
+  const brain = loadBrain();
+  return `## Knowledge Base\n${kb}\n\n## Directory\n${dir}\n\n## Brain\n${brain}`;
 }
 
 function safeRead(p: string): string {
@@ -32,6 +36,36 @@ function safeRead(p: string): string {
   } catch {
     return '(file missing)';
   }
+}
+
+function loadBrain(): string {
+  const files = collectBrainFiles(BRAIN_DIR);
+  if (files.length === 0) return '(no brain entries yet)';
+  return files
+    .map((abs) => {
+      const rel = relative(TRIAGE_DIR, abs);
+      return `### ${rel}\n${safeRead(abs)}`;
+    })
+    .join('\n\n');
+}
+
+function collectBrainFiles(root: string): string[] {
+  const out: string[] = [];
+  let entries;
+  try {
+    entries = readdirSync(root, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const abs = join(root, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...collectBrainFiles(abs));
+    } else if (entry.isFile() && entry.name.endsWith('.md') && !BRAIN_SKIP.has(entry.name)) {
+      out.push(abs);
+    }
+  }
+  return out.sort();
 }
 
 interface RequestBody {

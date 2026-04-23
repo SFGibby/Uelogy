@@ -204,6 +204,31 @@ export default function TriageWidget() {
     });
   }, [messages, loading]);
 
+  useEffect(() => {
+    if (!open || !mode) return;
+    const handler = (e: ClipboardEvent) => {
+      if (uploading) return;
+      const target = e.target as HTMLElement | null;
+      if (target && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'file') {
+        return;
+      }
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const it of items) {
+        if (it.kind === 'file' && it.type.startsWith('image/')) {
+          const file = it.getAsFile();
+          if (file) {
+            e.preventDefault();
+            uploadImage(file);
+            return;
+          }
+        }
+      }
+    };
+    window.addEventListener('paste', handler);
+    return () => window.removeEventListener('paste', handler);
+  }, [open, mode, uploading]);
+
   function clearSession() {
     setSessionId(null);
     setMode(null);
