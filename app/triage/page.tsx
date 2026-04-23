@@ -83,6 +83,7 @@ export default function TriagePage() {
   const [showPledge, setShowPledge] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [showResolvedToast, setShowResolvedToast] = useState(false);
   const [timeoutFired, setTimeoutFired] = useState(false);
   const [emailFallback, setEmailFallback] = useState('');
@@ -107,6 +108,43 @@ export default function TriagePage() {
       behavior: 'smooth',
     });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (!mode) return;
+    const handler = (e: ClipboardEvent) => {
+      if (uploading) return;
+      const cd = e.clipboardData;
+      if (!cd) return;
+      let picked: File | null = null;
+      if (cd.files && cd.files.length > 0) {
+        for (let i = 0; i < cd.files.length; i++) {
+          const f = cd.files.item(i);
+          if (f && f.type.startsWith('image/')) {
+            picked = f;
+            break;
+          }
+        }
+      }
+      if (!picked && cd.items) {
+        for (let i = 0; i < cd.items.length; i++) {
+          const it = cd.items[i];
+          if (it.kind === 'file' && it.type.startsWith('image/')) {
+            const f = it.getAsFile();
+            if (f) {
+              picked = f;
+              break;
+            }
+          }
+        }
+      }
+      if (picked) {
+        e.preventDefault();
+        uploadImage(picked);
+      }
+    };
+    window.addEventListener('paste', handler);
+    return () => window.removeEventListener('paste', handler);
+  }, [mode, uploading]);
 
   const subscribe = useCallback((id: string) => {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -421,13 +459,66 @@ export default function TriagePage() {
           <div className="sp-container">
             <div
               className="sp-card"
+              onDragEnter={(e) => {
+                if (e.dataTransfer?.types.includes('Files')) {
+                  e.preventDefault();
+                  setDragOver(true);
+                }
+              }}
+              onDragOver={(e) => {
+                if (e.dataTransfer?.types.includes('Files')) {
+                  e.preventDefault();
+                  setDragOver(true);
+                }
+              }}
+              onDragLeave={(e) => {
+                if (e.currentTarget === e.target) setDragOver(false);
+              }}
+              onDrop={(e) => {
+                setDragOver(false);
+                const files = e.dataTransfer?.files;
+                if (!files || files.length === 0) return;
+                for (let i = 0; i < files.length; i++) {
+                  const f = files.item(i);
+                  if (f && f.type.startsWith('image/')) {
+                    e.preventDefault();
+                    uploadImage(f);
+                    return;
+                  }
+                }
+              }}
               style={{
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: 480,
+                position: 'relative',
+                outline: dragOver ? '2px dashed var(--sp-blue)' : undefined,
+                outlineOffset: dragOver ? '-6px' : undefined,
+                transition: 'outline-color 0.15s',
               }}
             >
+              {dragOver && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(0, 86, 184, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pointerEvents: 'none',
+                    zIndex: 10,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--sp-blue-soft)',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Drop image to attach
+                </div>
+              )}
               <div
                 style={{
                   padding: '14px 20px',
