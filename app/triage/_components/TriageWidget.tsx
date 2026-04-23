@@ -205,29 +205,44 @@ export default function TriageWidget() {
   }, [messages, loading]);
 
   useEffect(() => {
-    if (!open || !mode) return;
+    if (!open) return;
     const handler = (e: ClipboardEvent) => {
       if (uploading) return;
-      const target = e.target as HTMLElement | null;
-      if (target && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'file') {
-        return;
-      }
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      for (const it of items) {
-        if (it.kind === 'file' && it.type.startsWith('image/')) {
-          const file = it.getAsFile();
-          if (file) {
-            e.preventDefault();
-            uploadImage(file);
-            return;
+      const cd = e.clipboardData;
+      if (!cd) return;
+
+      let picked: File | null = null;
+      const files = cd.files;
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          const f = files.item(i);
+          if (f && f.type.startsWith('image/')) {
+            picked = f;
+            break;
           }
         }
+      }
+      if (!picked && cd.items) {
+        for (let i = 0; i < cd.items.length; i++) {
+          const it = cd.items[i];
+          if (it.kind === 'file' && it.type.startsWith('image/')) {
+            const f = it.getAsFile();
+            if (f) {
+              picked = f;
+              break;
+            }
+          }
+        }
+      }
+
+      if (picked) {
+        e.preventDefault();
+        uploadImage(picked);
       }
     };
     window.addEventListener('paste', handler);
     return () => window.removeEventListener('paste', handler);
-  }, [open, mode, uploading]);
+  }, [open, uploading]);
 
   function clearSession() {
     setSessionId(null);
