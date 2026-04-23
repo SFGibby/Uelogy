@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-export type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router';
+export type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router' | 'extra_support';
 export type Status = 'bot' | 'escalated' | 'taken_over' | 'closed';
 export type MessageRole = 'user' | 'assistant' | 'human';
 export type Bucket =
@@ -100,6 +100,18 @@ export const MODE_CONFIG: Record<
 - Ask one narrowing question if the request is vague.
 - If the directory has the answer, give it. If it doesn't, say: "I don't have the right contact — handing you to Sam to route."
 - Do not attempt product-technical answers in this lane.`,
+  },
+  extra_support: {
+    label: 'Extra Support',
+    urgency: 'LOW',
+    maxAttempts: null,
+    severityMark: '·',
+    tone: `You are supporting ops / internal support staff, not a rep. The user is triaging an incoming rep request and wants pattern-match help from prior cases.
+- Lead with the closest matching brain entry (or two). Cite the slug and the dates it was seen: "Closest match: goodleap-tpo-ca-failures, seen 2025-11-18, 2025-12-12, 2026-01-17."
+- Summarize the resolution steps that worked previously. Quote relevant specifics when the transcript captured them.
+- If two or more entries are close, compare them and flag how to tell which applies.
+- If nothing in the brain matches well, say so plainly — don't fabricate. Suggest tags/keywords to search or ask one clarifying detail.
+- Ops-colleague register: direct, analytical, no hand-holding, markdown-free prose, but you may use short inline lists when comparing cases. No escalation language — ops IS the escalation tier.`,
   },
 };
 

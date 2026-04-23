@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 
-type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router';
+type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router' | 'extra_support';
 type MessageRole = 'user' | 'assistant' | 'human';
 
 interface Msg {
@@ -64,6 +64,14 @@ const MODES: {
     sub: 'Wayfinding — who owns what, where to find things.',
     placeholder: "Who or what are you trying to find?",
     accent: 'var(--sp-router)',
+    severity: '·',
+  },
+  {
+    id: 'extra_support',
+    label: 'Extra Support',
+    sub: 'For ops/internal. Paste a rep request; I match it against prior cases in the brain.',
+    placeholder: 'Paste the rep request or describe the issue…',
+    accent: 'var(--sp-gold)',
     severity: '·',
   },
 ];
@@ -473,9 +481,73 @@ export default function TriagePage() {
               zIndex: 3,
             }}
           >
-            {MODES.map((m) => (
+            {MODES.filter((m) => m.id !== 'extra_support').map((m) => (
               <LaneCard key={m.id} mode={m} onClick={() => pickMode(m.id)} />
             ))}
+          </div>
+
+          <div
+            style={{
+              marginTop: 18,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              position: 'relative',
+              zIndex: 3,
+            }}
+          >
+            {(() => {
+              const xs = MODES.find((m) => m.id === 'extra_support')!;
+              const isActive = mode === 'extra_support';
+              return (
+                <button
+                  onClick={() => {
+                    if (isActive) {
+                      setMode(null);
+                      setSessionId(null);
+                      setMessages([]);
+                      setStatus('bot');
+                    } else {
+                      pickMode('extra_support');
+                    }
+                  }}
+                  className="sp-card"
+                  title={xs.sub}
+                  style={{
+                    padding: '8px 14px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    color: isActive ? 'var(--sp-gold)' : 'var(--sp-text-md)',
+                    borderColor: isActive
+                      ? 'var(--sp-gold)'
+                      : 'var(--sp-ink-3)',
+                    background: isActive
+                      ? 'rgba(255, 213, 74, 0.08)'
+                      : 'transparent',
+                    transition:
+                      'color 0.15s, border-color 0.15s, background 0.15s',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 8,
+                      background: isActive
+                        ? 'var(--sp-gold)'
+                        : 'var(--sp-ink-4)',
+                      boxShadow: isActive
+                        ? '0 0 10px var(--sp-gold)'
+                        : 'none',
+                    }}
+                  />
+                  Extra Support {isActive ? '· on' : '· off'}
+                </button>
+              );
+            })()}
           </div>
         </div>
       </section>

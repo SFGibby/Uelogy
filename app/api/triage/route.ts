@@ -23,11 +23,22 @@ const DIR_PATH = join(TRIAGE_DIR, 'directory.md');
 const BRAIN_DIR = join(TRIAGE_DIR, 'brain');
 const BRAIN_SKIP = new Set(['_template.md', 'README.md']);
 
-function loadDocs(): string {
+function loadDocs(mode: Mode = 'prepping'): string {
   const kb = safeRead(KB_PATH);
   const dir = safeRead(DIR_PATH);
-  const brain = loadBrain();
+  // Extra Support lane needs full brain bodies (past resolutions + seen_in
+  // dates). Other lanes take the compact slug index to fit Groq free-tier
+  // TPM on llama-3.3-70b. Extra Support runs on the larger-TPM model.
+  const brain = mode === 'extra_support' ? loadBrainFull() : loadBrain();
   return `## Knowledge Base\n${kb}\n\n## Directory\n${dir}\n\n## Brain\n${brain}`;
+}
+
+function loadBrainFull(): string {
+  const files = collectBrainFiles(BRAIN_DIR);
+  if (files.length === 0) return '(no brain entries yet)';
+  return files
+    .map((abs) => `### ${relative(TRIAGE_DIR, abs)}\n${safeRead(abs)}`)
+    .join('\n\n');
 }
 
 function safeRead(p: string): string {
@@ -106,6 +117,8 @@ const ALL_BUCKETS: Bucket[] = [
 
 const CHAT_MODEL = 'llama-3.3-70b-versatile';
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+// Larger-TPM model for Extra Support lane (full brain ~16K tokens).
+const EXTRA_SUPPORT_MODEL = 'openai/gpt-oss-120b';
 
 async function classify(
   client: Groq,
@@ -235,7 +248,7 @@ When you genuinely don't have the answer and the lane says escalate, use these e
 
 DOCS:
 ---
-${loadDocs()}
+${loadDocs(mode)}
 ---`;
 
   type ContentPart =
@@ -262,10 +275,17 @@ ${loadDocs()}
     }
   }
 
+  const model =
+    mode === 'extra_support'
+      ? EXTRA_SUPPORT_MODEL
+      : hasImage
+        ? VISION_MODEL
+        : CHAT_MODEL;
+
   try {
     const response = await client.chat.completions.create({
-      model: hasImage ? VISION_MODEL : CHAT_MODEL,
-      max_tokens: 500,
+      model,
+      max_tokens: mode === 'extra_support' ? 800 : 500,
       messages: messages as Parameters<
         typeof client.chat.completions.create
       >[0]['messages'],
@@ -306,6 +326,8 @@ function shouldEscalate(
   botCanAnswer: ClassifierResult['botCanAnswer'],
   attemptsAfterThis: number
 ): boolean {
+  // Extra Support is the ops lane — ops IS the escalation tier.
+  if (mode === 'extra_support') return false;
   const cfg = MODE_CONFIG[mode];
   if (mode === 'in_appt') return botCanAnswer !== 'confident';
   if (mode === 'about_to') {
