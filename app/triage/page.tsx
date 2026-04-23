@@ -320,6 +320,7 @@ export default function TriagePage() {
     setInput('');
     setPendingImage(null);
     setLoading(true);
+    const loadingStartedAt = Date.now();
 
     try {
       const res = await fetch('/api/triage', {
@@ -355,6 +356,11 @@ export default function TriagePage() {
         },
       ]);
     } finally {
+      const elapsed = Date.now() - loadingStartedAt;
+      const MIN_THINKING_MS = 700;
+      if (elapsed < MIN_THINKING_MS) {
+        await new Promise((r) => setTimeout(r, MIN_THINKING_MS - elapsed));
+      }
       setLoading(false);
     }
   }
@@ -850,6 +856,29 @@ export default function TriagePage() {
                   gap: 8,
                 }}
               >
+                {loading && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 10px',
+                      background: 'rgba(0, 86, 184, 0.14)',
+                      border: '1px solid rgba(0, 86, 184, 0.4)',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: 'var(--sp-blue-soft)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <span className="sp-typing">
+                      <span>·</span>
+                      <span>·</span>
+                      <span>·</span>
+                    </span>
+                    <span>Helios is thinking…</span>
+                  </div>
+                )}
                 {pendingImage && (
                   <div
                     style={{
