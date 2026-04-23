@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  GoogleGenerativeAI,
-  SchemaType,
-  type Content,
-  type Part,
-} from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import nodemailer from 'nodemailer';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -101,22 +96,10 @@ const ALL_BUCKETS: Bucket[] = [
   'COMMISSIONS',
 ];
 
-const MODEL_ID = 'gemini-2.0-flash';
-
-async function fetchImagePart(url: string): Promise<Part | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const mimeType = res.headers.get('content-type') || 'image/jpeg';
-    const buf = Buffer.from(await res.arrayBuffer());
-    return { inlineData: { mimeType, data: buf.toString('base64') } };
-  } catch {
-    return null;
-  }
-}
+const CHAT_MODEL = 'llama-3.3-70b-versatile';
 
 async function classify(
-  client: GoogleGenerativeAI,
+  client: Groq,
   latestUserMessage: string,
   draftReply: string,
   mode: Mode
@@ -131,7 +114,7 @@ ${draftReply}
 
 Classify.`;
 
-  const systemInstruction = `You evaluate a sales-triage exchange.
+  const systemPrompt = `You evaluate a sales-triage exchange.
 
 isWorkRelated: true unless the rep's message is clearly non-work (personal trivia, creative writing, unrelated coding help). If it could plausibly relate to SunPower sales/ops/tools, set true.
 
@@ -148,39 +131,37 @@ detectedRepName: if the rep introduced themselves in the message ("hey it's Tann
 
 You MUST call the classify function with your answer.`;
 
-  const model = client.getGenerativeModel({
-    model: MODEL_ID,
-    systemInstruction,
-    tools: [
-      {
-        functionDeclarations: [
-          {
+  try {
+    const response = await client.chat.completions.create({
+      model: CHAT_MODEL,
+      max_tokens: 400,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
             name: 'classify',
             description: 'Classify the triage exchange',
             parameters: {
-              type: SchemaType.OBJECT,
+              type: 'object',
               properties: {
-                isWorkRelated: { type: SchemaType.BOOLEAN },
+                isWorkRelated: { type: 'boolean' },
                 botCanAnswer: {
-                  type: SchemaType.STRING,
-                  format: 'enum',
+                  type: 'string',
                   enum: ['confident', 'needs_clarification', 'unknown'],
                 },
                 categories: {
-                  type: SchemaType.ARRAY,
-                  items: {
-                    type: SchemaType.STRING,
-                    format: 'enum',
-                    enum: ALL_BUCKETS as string[],
-                  },
+                  type: 'array',
+                  items: { type: 'string', enum: ALL_BUCKETS },
+                  minItems: 1,
+                  maxItems: 4,
                 },
-                primaryBucket: {
-                  type: SchemaType.STRING,
-                  format: 'enum',
-                  enum: ALL_BUCKETS as string[],
-                },
-                bucketReason: { type: SchemaType.STRING },
-                detectedRepName: { type: SchemaType.STRING, nullable: true },
+                primaryBucket: { type: 'string', enum: ALL_BUCKETS },
+                bucketReason: { type: 'string' },
+                detectedRepName: { type: ['string', 'null'] },
               },
               required: [
                 'isWorkRelated',
@@ -191,23 +172,14 @@ You MUST call the classify function with your answer.`;
               ],
             },
           },
-        ],
-      },
-    ],
-    toolConfig: {
-      functionCallingConfig: {
-        mode: 'ANY' as never,
-        allowedFunctionNames: ['classify'],
-      },
-    },
-  });
+        },
+      ],
+      tool_choice: { type: 'function', function: { name: 'classify' } },
+    });
 
-  try {
-    const result = await model.generateContent(prompt);
-    const calls = result.response.functionCalls();
-    const call = calls && calls[0];
-    if (call && call.name === 'classify' && call.args) {
-      return call.args as unknown as ClassifierResult;
+    const call = response.choices[0]?.message?.tool_calls?.[0];
+    if (call && call.function?.name === 'classify' && call.function.arguments) {
+      return JSON.parse(call.function.arguments) as ClassifierResult;
     }
   } catch (err) {
     console.error('[triage] classify failed', err);
@@ -222,12 +194,12 @@ You MUST call the classify function with your answer.`;
 }
 
 async function generateReply(
-  client: GoogleGenerativeAI,
+  client: Groq,
   history: Array<{ role: 'user' | 'assistant'; content: string; image_url?: string | null }>,
   mode: Mode
 ): Promise<string> {
   const cfg = MODE_CONFIG[mode];
-  const systemInstruction = `You are Helios, the SunPower Triage assistant — a real teammate's voice, not a corporate bot. Warm, plainspoken, occasionally wry. When asked your name, you're Helios.
+  const system = `You are Helios, the SunPower Triage assistant — a real teammate's voice, not a corporate bot. Warm, plainspoken, occasionally wry. When asked your name, you're Helios.
 
 LANE: ${cfg.label}
 ${cfg.tone}
@@ -256,33 +228,25 @@ DOCS:
 ${loadDocs()}
 ---`;
 
-  const contents: Content[] = [];
+  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+    { role: 'system', content: system },
+  ];
   for (const m of history) {
-    const parts: Part[] = [];
-    if (m.role === 'user' && m.image_url) {
-      const img = await fetchImagePart(m.image_url);
-      if (img) parts.push(img);
-    }
-    if (m.content && m.content.trim()) {
-      parts.push({ text: m.content });
-    }
-    if (parts.length === 0) continue;
-    contents.push({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts,
-    });
+    const text = (m.content || '').trim();
+    const prefix = m.role === 'user' && m.image_url ? `[rep attached an image: ${m.image_url}]\n` : '';
+    const body = prefix + text;
+    if (!body) continue;
+    messages.push({ role: m.role, content: body });
   }
 
-  const model = client.getGenerativeModel({
-    model: MODEL_ID,
-    systemInstruction,
-    generationConfig: { maxOutputTokens: 500 },
-  });
-
   try {
-    const result = await model.generateContent({ contents });
-    const text = result.response.text();
-    return text && text.trim() ? text : '(no response)';
+    const response = await client.chat.completions.create({
+      model: CHAT_MODEL,
+      max_tokens: 500,
+      messages,
+    });
+    const text = response.choices[0]?.message?.content?.trim();
+    return text && text.length > 0 ? text : '(no response)';
   } catch (err) {
     console.error('[triage] generateReply failed', err);
     return '(no response)';
@@ -290,18 +254,23 @@ ${loadDocs()}
 }
 
 async function generateSummary(
-  client: GoogleGenerativeAI,
+  client: Groq,
   transcript: string
 ): Promise<string> {
   try {
-    const model = client.getGenerativeModel({
-      model: MODEL_ID,
-      systemInstruction:
-        'Summarize this sales-triage conversation in ONE or TWO short sentences. Focus on what the rep needed and what happened. No preamble.',
-      generationConfig: { maxOutputTokens: 120 },
+    const response = await client.chat.completions.create({
+      model: CHAT_MODEL,
+      max_tokens: 120,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Summarize this sales-triage conversation in ONE or TWO short sentences. Focus on what the rep needed and what happened. No preamble.',
+        },
+        { role: 'user', content: transcript },
+      ],
     });
-    const result = await model.generateContent(transcript);
-    return result.response.text().trim();
+    return response.choices[0]?.message?.content?.trim() ?? '';
   } catch {
     return '';
   }
@@ -365,10 +334,10 @@ ${transcript}
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GOOGLE_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey)
     return NextResponse.json(
-      { error: 'GOOGLE_API_KEY not configured' },
+      { error: 'GROQ_API_KEY not configured' },
       { status: 500 }
     );
 
@@ -457,7 +426,7 @@ export async function POST(req: NextRequest) {
     image_url: m.image_url,
   }));
 
-  const client = new GoogleGenerativeAI(apiKey);
+  const client = new Groq({ apiKey });
   const effectiveMessageForClassifier = userMsg || '[image uploaded]';
   const draftReply = await generateReply(client, history, mode);
   const classifier = await classify(
