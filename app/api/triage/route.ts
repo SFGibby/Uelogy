@@ -408,8 +408,13 @@ export async function POST(req: NextRequest) {
       })
       .select()
       .single();
-    if (error || !data)
-      return NextResponse.json({ error: 'session create failed' }, { status: 500 });
+    if (error || !data) {
+      console.error('[triage] session insert error', error);
+      return NextResponse.json(
+        { error: 'session create failed', detail: error?.message || 'unknown' },
+        { status: 500 }
+      );
+    }
     sessionId = data.id as string;
   } else {
     const { data: session } = await sb
