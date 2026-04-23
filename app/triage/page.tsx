@@ -170,6 +170,26 @@ export default function TriagePage() {
           };
           setMessages((prev) => {
             if (prev.some((p) => p.id === m.id)) return prev;
+            // Replace an optimistic local message (no id) that matches role +
+            // content + image_url. Prevents the double-render when realtime
+            // delivers the same user message we just appended locally.
+            const matchIdx = prev.findIndex(
+              (p) =>
+                !p.id &&
+                p.role === m.role &&
+                p.content === m.content &&
+                (p.image_url ?? null) === (m.image_url ?? null)
+            );
+            if (matchIdx !== -1) {
+              const next = prev.slice();
+              next[matchIdx] = {
+                id: m.id,
+                role: m.role,
+                content: m.content,
+                image_url: m.image_url ?? null,
+              };
+              return next;
+            }
             return [
               ...prev,
               { id: m.id, role: m.role, content: m.content, image_url: m.image_url ?? null },
@@ -685,6 +705,50 @@ export default function TriagePage() {
                     </div>
                   </div>
                 ))}
+                {loading && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-start',
+                      margin: '10px 0',
+                    }}
+                  >
+                    <AgentAvatar role="assistant" />
+                    <div
+                      style={{
+                        background: 'var(--sp-ink-2)',
+                        border: '1px solid var(--sp-ink-3)',
+                        color: 'var(--sp-text-md)',
+                        padding: '10px 14px',
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontStyle: 'italic',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: 'var(--sp-blue-soft)',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          fontWeight: 700,
+                          marginRight: 4,
+                        }}
+                      >
+                        Helios
+                      </span>
+                      <span className="sp-typing">
+                        <span>·</span>
+                        <span>·</span>
+                        <span>·</span>
+                      </span>
+                      <span>thinking</span>
+                    </div>
+                  </div>
+                )}
                 {timeoutFired && status === 'escalated' && !emailSent && (
                   <div
                     className="sp-card"

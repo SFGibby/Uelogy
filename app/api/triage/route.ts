@@ -105,6 +105,7 @@ const ALL_BUCKETS: Bucket[] = [
 ];
 
 const CHAT_MODEL = 'llama-3.3-70b-versatile';
+const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
 async function classify(
   client: Groq,
@@ -236,22 +237,37 @@ DOCS:
 ${loadDocs()}
 ---`;
 
-  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-    { role: 'system', content: system },
-  ];
+  type ContentPart =
+    | { type: 'text'; text: string }
+    | { type: 'image_url'; image_url: { url: string } };
+  type UserAssistantMsg = {
+    role: 'system' | 'user' | 'assistant';
+    content: string | ContentPart[];
+  };
+
+  const hasImage = history.some((m) => m.role === 'user' && !!m.image_url);
+
+  const messages: UserAssistantMsg[] = [{ role: 'system', content: system }];
   for (const m of history) {
     const text = (m.content || '').trim();
-    const prefix = m.role === 'user' && m.image_url ? `[rep attached an image: ${m.image_url}]\n` : '';
-    const body = prefix + text;
-    if (!body) continue;
-    messages.push({ role: m.role, content: body });
+    if (m.role === 'user' && m.image_url) {
+      const parts: ContentPart[] = [
+        { type: 'image_url', image_url: { url: m.image_url } },
+      ];
+      if (text) parts.push({ type: 'text', text });
+      messages.push({ role: 'user', content: parts });
+    } else if (text) {
+      messages.push({ role: m.role, content: text });
+    }
   }
 
   try {
     const response = await client.chat.completions.create({
-      model: CHAT_MODEL,
+      model: hasImage ? VISION_MODEL : CHAT_MODEL,
       max_tokens: 500,
-      messages,
+      messages: messages as Parameters<
+        typeof client.chat.completions.create
+      >[0]['messages'],
     });
     const text = response.choices[0]?.message?.content?.trim();
     return text && text.length > 0 ? text : '(no response)';
