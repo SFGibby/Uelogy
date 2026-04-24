@@ -189,6 +189,106 @@
   gap: 10px;
 }
 
+.sp-lane-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 24px;
+  align-items: start;
+}
+
+.sp-ops-rail {
+  margin-top: 32px;
+  padding: 18px 16px;
+  border-left: 1px solid var(--sp-ink-3);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 3;
+}
+
+.sp-ops-rail-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sp-text-lo);
+  font-weight: 700;
+}
+
+.sp-ops-rail-body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--sp-text-lo);
+}
+
+.sp-ops-toggle {
+  all: unset;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid var(--sp-ink-3);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sp-text-md);
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.sp-ops-toggle:hover {
+  border-color: var(--sp-ink-4);
+  color: var(--sp-text-hi);
+}
+.sp-ops-toggle.is-on {
+  color: var(--sp-gold);
+  border-color: var(--sp-gold);
+  background: rgba(255, 213, 74, 0.08);
+}
+
+.sp-ops-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sp-ink-4);
+  flex-shrink: 0;
+}
+.sp-ops-toggle.is-on .sp-ops-toggle-dot {
+  background: var(--sp-gold);
+  box-shadow: 0 0 10px var(--sp-gold);
+}
+
+.sp-ops-toggle-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sp-ops-toggle-state {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-text-lo);
+  font-weight: 600;
+}
+.sp-ops-toggle.is-on .sp-ops-toggle-state {
+  color: var(--sp-gold);
+}
+
+@media (max-width: 780px) {
+  .sp-lane-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .sp-ops-rail {
+    margin-top: 16px;
+    padding: 14px 0 0;
+    border-left: none;
+    border-top: 1px solid var(--sp-ink-3);
+  }
+}
+
 .sp-lane-card {
   position: relative;
   text-align: left;

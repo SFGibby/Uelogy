@@ -512,75 +512,51 @@ export default function TriagePage() {
             hands off to a human when it&apos;s stuck — no forms, no friction.
           </p>
 
-          <div
-            className="sp-lane-grid"
-            style={{
-              marginTop: 32,
-              position: 'relative',
-              zIndex: 3,
-            }}
-          >
-            {MODES.filter((m) => m.id !== 'extra_support').map((m) => (
-              <LaneCard key={m.id} mode={m} onClick={() => pickMode(m.id)} />
-            ))}
-          </div>
+          <div className="sp-lane-layout">
+            <div
+              className="sp-lane-grid"
+              style={{
+                marginTop: 32,
+                position: 'relative',
+                zIndex: 3,
+              }}
+            >
+              {MODES.filter((m) => m.id !== 'extra_support').map((m) => (
+                <LaneCard key={m.id} mode={m} onClick={() => pickMode(m.id)} />
+              ))}
+            </div>
 
-          <div
-            style={{
-              marginTop: 18,
-              display: 'flex',
-              justifyContent: 'flex-end',
-              position: 'relative',
-              zIndex: 3,
-            }}
-          >
-            {(() => {
-              const xs = MODES.find((m) => m.id === 'extra_support')!;
-              const isActive = mode === 'extra_support';
-              return (
-                <button
-                  onClick={() => {
-                    if (isActive) resetSession();
-                    else pickMode('extra_support');
-                  }}
-                  className="sp-card"
-                  title={xs.sub}
-                  style={{
-                    padding: '8px 14px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    color: isActive ? 'var(--sp-gold)' : 'var(--sp-text-md)',
-                    borderColor: isActive
-                      ? 'var(--sp-gold)'
-                      : 'var(--sp-ink-3)',
-                    background: isActive
-                      ? 'rgba(255, 213, 74, 0.08)'
-                      : 'transparent',
-                    transition:
-                      'color 0.15s, border-color 0.15s, background 0.15s',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 8,
-                      background: isActive
-                        ? 'var(--sp-gold)'
-                        : 'var(--sp-ink-4)',
-                      boxShadow: isActive
-                        ? '0 0 10px var(--sp-gold)'
-                        : 'none',
-                    }}
-                  />
-                  Extra Support {isActive ? '· on' : '· off'}
-                </button>
-              );
-            })()}
+            <aside className="sp-ops-rail">
+              {(() => {
+                const xs = MODES.find((m) => m.id === 'extra_support')!;
+                const isActive = mode === 'extra_support';
+                return (
+                  <>
+                    <div className="sp-ops-rail-eyebrow">For ops</div>
+                    <button
+                      onClick={() => {
+                        if (isActive) resetSession();
+                        else pickMode('extra_support');
+                      }}
+                      className={`sp-card sp-ops-toggle${isActive ? ' is-on' : ''}`}
+                      title={xs.sub}
+                    >
+                      <span className="sp-ops-toggle-dot" />
+                      <span className="sp-ops-toggle-label">
+                        Extra Support
+                        <span className="sp-ops-toggle-state">
+                          {isActive ? 'on' : 'off'}
+                        </span>
+                      </span>
+                    </button>
+                    <p className="sp-ops-rail-body">
+                      Paste a rep request. I match it against prior brain cases
+                      with dates and past resolutions.
+                    </p>
+                  </>
+                );
+              })()}
+            </aside>
           </div>
         </div>
       </section>
