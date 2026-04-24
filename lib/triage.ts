@@ -36,36 +36,82 @@ export interface Message {
   created_at: string;
 }
 
+/** Used by the rendering components in page.tsx and TriageWidget.tsx. */
+export interface ChatMsg {
+  id?: string;
+  role: MessageRole;
+  content: string;
+  image_url?: string | null;
+}
+
+/** Structured error envelope returned by /api/triage for every non-2xx. */
+export type TriageErrorCode =
+  | 'RATE_LIMITED'
+  | 'TIMEOUT'
+  | 'AUTH'
+  | 'SESSION_GONE'
+  | 'BAD_REQUEST'
+  | 'UNKNOWN';
+
+export interface TriageErrorEnvelope {
+  code: TriageErrorCode;
+  message: string;
+  /** Raw error detail for logging. Never shown to reps. */
+  detail?: string;
+}
+
 export const SUPABASE_URL = 'https://zusoxekerqrvdlctbkcc.supabase.co';
 
-// Map API error strings to rep-facing messages. Never surface model or
-// provider specifics; keep the raw text for console logging.
+/** Map an error code to the rep-facing string. */
+export function friendlyError(code: TriageErrorCode): string {
+  switch (code) {
+    case 'RATE_LIMITED':
+      return 'Helios is at capacity right now — try again in a few seconds.';
+    case 'TIMEOUT':
+      return 'That took too long — try asking again.';
+    case 'AUTH':
+      return "Helios isn't configured — tell Sam.";
+    case 'SESSION_GONE':
+      return "Lost the thread on my end — pick a lane again and we'll restart.";
+    case 'BAD_REQUEST':
+      return "Something looked off with that request — try again.";
+    case 'UNKNOWN':
+    default:
+      return 'Something broke on my end — try again, and ping Sam if it keeps happening.';
+  }
+}
+
+/** Back-compat for callers that still pass a raw error string. */
 export function friendlyApiError(raw: string): string {
+  return friendlyError(classifyError(raw));
+}
+
+/** Substring-match a raw error into a code. Used by consumers that get a
+ * plain string (old-shape responses, thrown fetch errors). */
+export function classifyError(raw: string): TriageErrorCode {
   const r = (raw || '').toLowerCase();
   if (
     r.includes('rate_limit') ||
     r.includes('too many requests') ||
     r.includes('tokens per minute')
   ) {
-    return 'Helios is at capacity right now — try again in a few seconds.';
+    return 'RATE_LIMITED';
   }
-  if (r.includes('timeout') || r.includes('timed out')) {
-    return 'That took too long — try asking again.';
-  }
+  if (r.includes('timeout') || r.includes('timed out')) return 'TIMEOUT';
   if (
     r.includes('api_key') ||
     r.includes('not configured') ||
     r.includes('unauthorized')
   ) {
-    return "Helios isn't configured — tell Sam.";
+    return 'AUTH';
   }
   if (
     r.includes('session create failed') ||
     r.includes('session not found')
   ) {
-    return "Lost the thread on my end — pick a lane again and we'll restart.";
+    return 'SESSION_GONE';
   }
-  return 'Something broke on my end — try again, and ping Sam if it keeps happening.';
+  return 'UNKNOWN';
 }
 
 export function adminClient(): SupabaseClient {

@@ -2,8 +2,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, friendlyApiError } from '../../../lib/triage';
+import {
+  SUPABASE_URL,
+  friendlyApiError,
+  friendlyError,
+  classifyError,
+  type TriageErrorCode,
+} from '../../../lib/triage';
+import { debugLog } from '../_constants';
 
+// Mirror of lib/triage.ts. Widget intentionally omits 'extra_support' —
+// that lane is ops-only and lives on the landing page's right rail.
 type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router';
 type MessageRole = 'user' | 'assistant' | 'human';
 type Status = 'bot' | 'escalated' | 'taken_over';
@@ -44,6 +53,14 @@ const MODES: {
 const PLEDGE_TEXT =
   'Are you actually in the home with the client? If not and we find out all your future requests will be de-prioritized.';
 const STORAGE_KEY = 'triage_widget_session_v1';
+
+let _supabase: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient {
+  if (_supabase) return _supabase;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  _supabase = createClient(SUPABASE_URL, anonKey);
+  return _supabase;
+}
 
 interface StoredState {
   sessionId: string;
@@ -105,8 +122,7 @@ export default function TriageWidget() {
     if (!sessionId || messages.length > 0) return;
     (async () => {
       try {
-        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const sb = createClient(SUPABASE_URL, anonKey);
+        const sb = getSupabase();
         const { data } = await sb
           .from('triage_messages')
           .select('id, role, content, image_url')
@@ -139,8 +155,7 @@ export default function TriageWidget() {
   }, [sessionId, messages.length]);
 
   const subscribe = useCallback((id: string) => {
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const sb = createClient(SUPABASE_URL, anonKey);
+    const sb = getSupabase();
     supabaseRef.current = sb;
     const msgCh = sb
       .channel(`tw-msgs-${id}`)
@@ -337,13 +352,18 @@ export default function TriageWidget() {
       });
       const data = await res.json();
       if (!res.ok) {
-        console.error('[triage-widget] /api/triage failed:', data.error, data.detail);
+        const env = data?.error;
+        const code: TriageErrorCode =
+          env && typeof env === 'object' && 'code' in env
+            ? (env.code as TriageErrorCode)
+            : classifyError(typeof env === 'string' ? env : '');
+        const detail =
+          env && typeof env === 'object' && 'detail' in env ? env.detail : undefined;
+        console.error('[triage-widget] /api/triage failed:', code, detail);
+        debugLog('widget-api', 'error', { code, detail, status: res.status });
         setMessages((prev) => [
           ...prev,
-          {
-            role: 'assistant',
-            content: friendlyApiError(String(data.error || '')),
-          },
+          { role: 'assistant', content: friendlyError(code) },
         ]);
       } else {
         if (!sessionId) setSessionId(data.sessionId);

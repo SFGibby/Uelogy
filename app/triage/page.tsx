@@ -1,8 +1,14 @@
 'use client';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { SUPABASE_URL, friendlyApiError } from '../../lib/triage';
+import {
+  SUPABASE_URL,
+  friendlyApiError,
+  friendlyError,
+  classifyError,
+} from '../../lib/triage';
+import { TIMING, LAYOUT, debugLog } from './_constants';
 
 type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router' | 'extra_support';
 type MessageRole = 'user' | 'assistant' | 'human';
@@ -80,6 +86,19 @@ const MODES: {
 const PLEDGE_TEXT =
   'Are you actually in the home with the client? If not and we find out all your future requests will be de-prioritized.';
 
+// Module-level singleton — stop recreating the Supabase client on every
+// subscribe() call. Lazy so SSR doesn't choke on the env var lookup.
+let _supabase: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient {
+  if (_supabase) return _supabase;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  _supabase = createClient(SUPABASE_URL, anonKey);
+  return _supabase;
+}
+
+// Rep-facing lanes only — Extra Support renders in the right-rail aside.
+const REP_LANES = MODES.filter((m) => m.id !== 'extra_support');
+
 export default function TriagePage() {
   const [mode, setMode] = useState<Mode | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -105,17 +124,41 @@ export default function TriagePage() {
 
   useEffect(() => {
     if (mode) {
-      const t = window.setTimeout(() => inputRef.current?.focus(), 150);
+      const t = window.setTimeout(
+        () => inputRef.current?.focus(),
+        TIMING.inputFocusMs
+      );
       return () => window.clearTimeout(t);
     }
   }, [mode]);
 
+  // Coalesce scroll-to-bottom into a single rAF per list-length change.
+  // Previously this fired on every messages identity change + every loading
+  // flip (4x per send). Now it fires only when the list actually grew.
+  const lastScrolledLenRef = useRef(0);
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth',
+    if (messages.length === lastScrolledLenRef.current) return;
+    lastScrolledLenRef.current = messages.length;
+    const id = requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
     });
-  }, [messages, loading]);
+    return () => cancelAnimationFrame(id);
+  }, [messages.length]);
+
+  // Keep the thinking indicator in view once loading flips on.
+  useEffect(() => {
+    if (!loading) return;
+    const id = requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [loading]);
 
   // Abort any in-flight /api/triage request if the component unmounts.
   useEffect(() => {
@@ -162,9 +205,9 @@ export default function TriagePage() {
   }, [mode, uploading]);
 
   const subscribe = useCallback((id: string) => {
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const sb = createClient(SUPABASE_URL, anonKey);
+    const sb = getSupabase();
     supabaseRef.current = sb;
+    debugLog('realtime', 'subscribing', { sessionId: id });
 
     const msgCh = sb
       .channel(`triage-msgs-${id}`)
@@ -251,7 +294,7 @@ export default function TriagePage() {
     if (status === 'escalated' && !timeoutFired) {
       timeoutRef.current = window.setTimeout(() => {
         setTimeoutFired(true);
-      }, 90_000);
+      }, TIMING.takeoverMs);
     }
     if (status === 'taken_over') {
       setTimeoutFired(false);
@@ -264,23 +307,27 @@ export default function TriagePage() {
     };
   }, [status, timeoutFired]);
 
-  function pickMode(m: Mode) {
-    if (m === 'in_appt') {
-      setShowPledge(true);
-      return;
-    }
-    startSession(m, false);
-  }
-
-  function startSession(m: Mode, pledgeConfirmed: boolean) {
+  const startSession = useCallback((m: Mode, pledgeConfirmed: boolean) => {
     pledgeRef.current = pledgeConfirmed;
+    debugLog('session', 'start', { mode: m, pledgeConfirmed });
     setMode(m);
     setShowPledge(false);
     setMessages([]);
     setTimeout(() => {
       document.getElementById('chat-panel')?.scrollIntoView({ behavior: 'smooth' });
-    }, 30);
-  }
+    }, TIMING.scrollIntoViewMs);
+  }, []);
+
+  const pickMode = useCallback(
+    (m: Mode) => {
+      if (m === 'in_appt') {
+        setShowPledge(true);
+        return;
+      }
+      startSession(m, false);
+    },
+    [startSession]
+  );
 
   // Clears every piece of session state. Used by "Change lane", the
   // Extra Support toggle off-branch, and the resolved-toast auto-timer.
@@ -339,7 +386,7 @@ export default function TriagePage() {
     setTimeout(() => {
       resetSession();
       setShowResolvedToast(false);
-    }, 1200);
+    }, TIMING.resolvedToastMs);
   }
 
   async function send() {
@@ -373,14 +420,18 @@ export default function TriagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        const rawError = String(data.error || '');
-        console.error('[triage] /api/triage failed:', rawError, data.detail);
+        const env = data?.error;
+        const code =
+          env && typeof env === 'object' && 'code' in env
+            ? (env.code as import('../../lib/triage').TriageErrorCode)
+            : classifyError(typeof env === 'string' ? env : '');
+        const detail =
+          env && typeof env === 'object' && 'detail' in env ? env.detail : undefined;
+        console.error('[triage] /api/triage failed:', code, detail);
+        debugLog('api', 'error', { code, detail, status: res.status });
         setMessages((prev) => [
           ...prev,
-          {
-            role: 'assistant',
-            content: friendlyApiError(rawError),
-          },
+          { role: 'assistant', content: friendlyError(code) },
         ]);
       } else {
         if (!sessionId) setSessionId(data.sessionId);
@@ -404,9 +455,11 @@ export default function TriagePage() {
     } finally {
       abortRef.current = null;
       const elapsed = Date.now() - loadingStartedAt;
-      const MIN_THINKING_MS = 700;
-      if (elapsed < MIN_THINKING_MS) {
-        await new Promise((r) => setTimeout(r, MIN_THINKING_MS - elapsed));
+      debugLog('send', 'completed', { elapsedMs: elapsed });
+      if (elapsed < TIMING.minThinkingMs) {
+        await new Promise((r) =>
+          setTimeout(r, TIMING.minThinkingMs - elapsed)
+        );
       }
       setLoading(false);
     }
@@ -521,8 +574,8 @@ export default function TriagePage() {
                 zIndex: 3,
               }}
             >
-              {MODES.filter((m) => m.id !== 'extra_support').map((m) => (
-                <LaneCard key={m.id} mode={m} onClick={() => pickMode(m.id)} />
+              {REP_LANES.map((m) => (
+                <LaneCard key={m.id} mode={m} onPick={pickMode} />
               ))}
             </div>
 
@@ -711,8 +764,8 @@ export default function TriagePage() {
                   flex: 1,
                   overflowY: 'auto',
                   padding: '16px 20px',
-                  minHeight: 320,
-                  maxHeight: 520,
+                  minHeight: LAYOUT.chatMinHeight,
+                  maxHeight: LAYOUT.chatMaxHeight,
                 }}
               >
                 {messages.map((m, i) => (
@@ -1145,13 +1198,14 @@ export default function TriagePage() {
   );
 }
 
-function LaneCard({
+const LaneCard = memo(function LaneCard({
   mode,
-  onClick,
+  onPick,
 }: {
   mode: (typeof MODES)[number];
-  onClick: () => void;
+  onPick: (id: Mode) => void;
 }) {
+  const onClick = () => onPick(mode.id);
   const [tipOpen, setTipOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
 
@@ -1226,7 +1280,7 @@ function LaneCard({
       )}
     </button>
   );
-}
+});
 
 function AgentAvatar({ role }: { role: 'assistant' | 'human' }) {
   const isBot = role === 'assistant';

@@ -12,6 +12,8 @@ import {
   COPY,
   signToken,
   siteBaseUrl,
+  type TriageErrorCode,
+  type TriageErrorEnvelope,
 } from '../../../lib/triage';
 
 export const runtime = 'nodejs';
@@ -23,14 +25,34 @@ const DIR_PATH = join(TRIAGE_DIR, 'directory.md');
 const BRAIN_DIR = join(TRIAGE_DIR, 'brain');
 const BRAIN_SKIP = new Set(['_template.md', 'README.md']);
 
+// Memoize docs per-mode per-serverless-instance. Brain + KB + Directory
+// files don't change between cold starts; recomputing on every POST was
+// ~50-100ms of wasted disk + concat on warm requests.
+const DOCS_CACHE = new Map<Mode, string>();
 function loadDocs(mode: Mode = 'prepping'): string {
+  const cached = DOCS_CACHE.get(mode);
+  if (cached) return cached;
   const kb = safeRead(KB_PATH);
   const dir = safeRead(DIR_PATH);
   // Extra Support lane needs full brain bodies (past resolutions + seen_in
   // dates). Other lanes take the compact slug index to fit Groq free-tier
   // TPM on llama-3.3-70b. Extra Support runs on the larger-TPM model.
   const brain = mode === 'extra_support' ? loadBrainFull() : loadBrain();
-  return `## Knowledge Base\n${kb}\n\n## Directory\n${dir}\n\n## Brain\n${brain}`;
+  const out = `## Knowledge Base\n${kb}\n\n## Directory\n${dir}\n\n## Brain\n${brain}`;
+  DOCS_CACHE.set(mode, out);
+  return out;
+}
+
+function errorResponse(
+  code: TriageErrorCode,
+  message: string,
+  status: number,
+  detail?: string
+) {
+  const envelope: { error: TriageErrorEnvelope } = {
+    error: { code, message, ...(detail ? { detail } : {}) },
+  };
+  return NextResponse.json(envelope, { status });
 }
 
 function loadBrainFull(): string {
@@ -282,19 +304,36 @@ ${loadDocs(mode)}
         ? VISION_MODEL
         : CHAT_MODEL;
 
-  try {
-    const response = await client.chat.completions.create({
+  const createCompletion = () =>
+    client.chat.completions.create({
       model,
       max_tokens: mode === 'extra_support' ? 800 : 500,
       messages: messages as Parameters<
         typeof client.chat.completions.create
       >[0]['messages'],
     });
+
+  try {
+    let response;
+    try {
+      response = await createCompletion();
+    } catch (err) {
+      // Retry once on transient 503 ServiceUnavailable from Groq.
+      const status = (err as { status?: number })?.status;
+      if (status === 503) {
+        await new Promise((r) => setTimeout(r, 200));
+        response = await createCompletion();
+      } else {
+        throw err;
+      }
+    }
     const text = response.choices[0]?.message?.content?.trim();
-    return text && text.length > 0 ? text : '(no response)';
+    if (text && text.length > 0) return text;
+    // Empty 2xx from Groq — rare but happens. Don't leak "(no response)".
+    return "I didn't catch that — say it again?";
   } catch (err) {
     console.error('[triage] generateReply failed', err);
-    return '(no response)';
+    return "I hit a snag on my end — try again.";
   }
 }
 
@@ -324,10 +363,15 @@ async function generateSummary(
 function shouldEscalate(
   mode: Mode,
   botCanAnswer: ClassifierResult['botCanAnswer'],
-  attemptsAfterThis: number
+  attemptsAfterThis: number,
+  alreadyEscalated: boolean
 ): boolean {
   // Extra Support is the ops lane — ops IS the escalation tier.
   if (mode === 'extra_support') return false;
+  // Throttle: one escalation email per session. Once the session has a
+  // bucket set (i.e. we've already paged), subsequent unresolvable turns
+  // don't re-page. Prevents the poll-loop inbox-spam class of bug.
+  if (alreadyEscalated) return false;
   const cfg = MODE_CONFIG[mode];
   if (mode === 'in_appt') return botCanAnswer !== 'confident';
   if (mode === 'about_to') {
@@ -384,21 +428,18 @@ ${transcript}
 export async function POST(req: NextRequest) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey)
-    return NextResponse.json(
-      { error: 'GROQ_API_KEY not configured' },
-      { status: 500 }
-    );
+    return errorResponse('AUTH', 'GROQ_API_KEY not configured', 500);
 
   let body: RequestBody;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return errorResponse('BAD_REQUEST', 'Invalid JSON', 400);
   }
   const hasMessage = body.message && typeof body.message === 'string' && body.message.trim();
   const hasImage = body.imageUrl && typeof body.imageUrl === 'string';
   if (!hasMessage && !hasImage)
-    return NextResponse.json({ error: 'message or imageUrl required' }, { status: 400 });
+    return errorResponse('BAD_REQUEST', 'message or imageUrl required', 400);
 
   const sb = adminClient();
   let sessionId = body.sessionId;
@@ -406,14 +447,12 @@ export async function POST(req: NextRequest) {
 
   if (!sessionId) {
     if (!body.mode || !(body.mode in MODE_CONFIG))
-      return NextResponse.json(
-        { error: 'mode required to start session' },
-        { status: 400 }
-      );
+      return errorResponse('BAD_REQUEST', 'mode required to start session', 400);
     if (body.mode === 'in_appt' && !body.pledgeConfirmed)
-      return NextResponse.json(
-        { error: 'In-Appointment pledge must be confirmed' },
-        { status: 400 }
+      return errorResponse(
+        'BAD_REQUEST',
+        'In-Appointment pledge must be confirmed',
+        400
       );
     mode = body.mode;
     const { data, error } = await sb
@@ -427,9 +466,11 @@ export async function POST(req: NextRequest) {
       .single();
     if (error || !data) {
       console.error('[triage] session insert error', error);
-      return NextResponse.json(
-        { error: 'session create failed', detail: error?.message || 'unknown' },
-        { status: 500 }
+      return errorResponse(
+        'UNKNOWN',
+        'session create failed',
+        500,
+        error?.message || 'unknown'
       );
     }
     sessionId = data.id as string;
@@ -440,17 +481,15 @@ export async function POST(req: NextRequest) {
       .eq('id', sessionId)
       .single();
     if (!session)
-      return NextResponse.json({ error: 'session not found' }, { status: 404 });
+      return errorResponse('SESSION_GONE', 'session not found', 404);
     if (session.status === 'taken_over')
-      return NextResponse.json(
-        { error: 'Session taken over by human; rep messages go through realtime only' },
-        { status: 409 }
+      return errorResponse(
+        'SESSION_GONE',
+        'Session taken over by human; rep messages go through realtime only',
+        409
       );
     if (session.resolved)
-      return NextResponse.json(
-        { error: 'Session already resolved' },
-        { status: 409 }
-      );
+      return errorResponse('SESSION_GONE', 'Session already resolved', 409);
     mode = session.mode as Mode;
   }
 
@@ -493,7 +532,7 @@ export async function POST(req: NextRequest) {
 
   const { data: sessionRow } = await sb
     .from('triage_sessions')
-    .select('attempts, categories, rep_name')
+    .select('attempts, categories, rep_name, bucket')
     .eq('id', sessionId)
     .single();
   const attemptsBefore = sessionRow?.attempts ?? 0;
@@ -510,8 +549,10 @@ export async function POST(req: NextRequest) {
     new Set<Bucket>([...existingCategories, ...classifier.categories])
   );
 
+  const alreadyEscalated = !!sessionRow?.bucket;
   const escalate =
-    !botRejected && shouldEscalate(mode, classifier.botCanAnswer, attemptsAfter);
+    !botRejected &&
+    shouldEscalate(mode, classifier.botCanAnswer, attemptsAfter, alreadyEscalated);
 
   await sb.from('triage_messages').insert({
     session_id: sessionId,
