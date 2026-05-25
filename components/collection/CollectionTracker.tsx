@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, CollectionItem } from '../../lib/supabase';
 import AddItemModal from './AddItemModal';
+import QuickAddBar from './QuickAddBar';
 
 const TYPE_META: Record<string, { label: string; color: string; glow: string }> = {
   mtg:          { label: 'MTG',         color: '#f59e0b', glow: 'rgba(245,158,11,0.3)' },
@@ -147,6 +148,14 @@ export default function CollectionTracker() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Quick-Add bar */}
+        <div style={{ padding: '16px 32px 0', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          <QuickAddBar
+            onAdded={handleSaved}
+            onRemoved={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
+          />
         </div>
 
         {/* Filter bar */}
