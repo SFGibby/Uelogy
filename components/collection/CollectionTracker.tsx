@@ -1,17 +1,51 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, CollectionItem } from '../../lib/supabase';
 import AddItemModal from './AddItemModal';
 import QuickAddBar from './QuickAddBar';
 
-const TYPE_META: Record<string, { label: string; color: string; glow: string }> = {
-  mtg:          { label: 'MTG',         color: '#f59e0b', glow: 'rgba(245,158,11,0.3)' },
-  pokemon:      { label: 'Pokémon',     color: '#ef4444', glow: 'rgba(239,68,68,0.3)' },
-  sports_card:  { label: 'Sports Card', color: '#3b82f6', glow: 'rgba(59,130,246,0.3)' },
-  memorabilia:  { label: 'Memorabilia', color: '#a78bfa', glow: 'rgba(167,139,250,0.3)' },
-  other:        { label: 'Other',       color: '#6b7280', glow: 'rgba(107,114,128,0.3)' },
+type FilterType = '' | 'mtg' | 'pokemon' | 'sports_card' | 'memorabilia' | 'other';
+
+const TYPE_META: Record<string, { label: string; color: string; short: string }> = {
+  mtg:          { label: 'Magic',       color: '#c98a2e', short: 'MTG' },
+  pokemon:      { label: 'Pokémon',     color: '#b14040', short: 'PKM' },
+  sports_card:  { label: 'Sports',      color: '#3f5a8c', short: 'SPT' },
+  memorabilia:  { label: 'Memorabilia', color: '#6a5390', short: 'MEM' },
+  other:        { label: 'Other',       color: '#5a5048', short: 'OTH' },
 };
+
+const TAB_FILTERS: { value: FilterType; label: string; color: string }[] = [
+  { value: '',             label: 'All',         color: '#7a6a52' },
+  { value: 'mtg',          label: 'Magic',       color: '#c98a2e' },
+  { value: 'pokemon',      label: 'Pokémon',     color: '#b14040' },
+  { value: 'sports_card',  label: 'Sports',      color: '#3f5a8c' },
+  { value: 'memorabilia',  label: 'Memorabilia', color: '#6a5390' },
+];
+
+const PER_PAGE = 9; // 3x3 binder page
+
+// Palette
+const COLOR = {
+  desk:         '#2a2118',
+  deskGrain:    '#1f1810',
+  binder:       '#1e2a45',
+  binderEdge:   '#15203a',
+  ring:         '#cbd0d6',
+  ringShadow:   '#7d8186',
+  page:         '#efe5cf',
+  pageEdge:     '#d6c9a8',
+  pageShadow:   'rgba(0,0,0,0.35)',
+  pocket:       'rgba(0,0,0,0.06)',
+  pocketEdge:   'rgba(0,0,0,0.18)',
+  ink:          '#3a2e1f',
+  inkSoft:      '#7a6a52',
+  inkFaint:     '#a08a6a',
+  warmWhite:    '#f4ebd6',
+};
+
+const SERIF = 'Georgia, "Hoefler Text", "Times New Roman", serif';
+const MONO  = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
 export default function CollectionTracker() {
   const [items, setItems] = useState<CollectionItem[]>([]);
@@ -19,15 +53,12 @@ export default function CollectionTracker() {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<CollectionItem | null>(null);
   const [search, setSearch] = useState('');
-  const [filterType, setFilterType] = useState('');
+  const [filterType, setFilterType] = useState<FilterType>('');
   const [sortBy, setSortBy] = useState<'created_at' | 'name' | 'avg_sold_price' | 'purchase_price'>('created_at');
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
+  const [page, setPage] = useState(1);
   const [adminMode, setAdminMode] = useState(false);
 
-  // Light admin gate: ?admin=1 in the URL flips on the management UI and
-  // remembers the choice in localStorage; ?admin=0 turns it off.
-  // No secret — this is a personal site, not a vault. It just keeps
-  // random visitors from seeing the Add/Edit/Delete controls.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -70,6 +101,28 @@ export default function CollectionTracker() {
     setItems(prev => prev.filter(i => i.id !== id));
   };
 
+  const filtered = useMemo(() => items.filter(i => {
+    if (filterType && i.type !== filterType) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return i.name.toLowerCase().includes(q)
+        || (i.set_name ?? '').toLowerCase().includes(q)
+        || (i.player ?? '').toLowerCase().includes(q)
+        || (i.notes ?? '').toLowerCase().includes(q);
+    }
+    return true;
+  }), [items, filterType, search]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [filterType, search, sortBy, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const currentPageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const totalValue = filtered.reduce(
+    (sum, i) => sum + (i.avg_sold_price ?? i.purchase_price ?? 0) * (i.quantity ?? 1),
+    0
+  );
+
   const exportCSV = () => {
     const cols = ['name', 'type', 'set_name', 'condition', 'grade', 'purchase_price', 'avg_sold_price', 'notes', 'created_at'];
     const rows = [cols.join(','), ...filtered.map(i =>
@@ -82,157 +135,350 @@ export default function CollectionTracker() {
     a.click();
   };
 
-  const filtered = items.filter(i => {
-    if (filterType && i.type !== filterType) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return i.name.toLowerCase().includes(q)
-        || (i.set_name ?? '').toLowerCase().includes(q)
-        || (i.player ?? '').toLowerCase().includes(q)
-        || (i.notes ?? '').toLowerCase().includes(q);
-    }
-    return true;
-  });
-
-  const totalValue = filtered.reduce((sum, i) => sum + (i.avg_sold_price ?? i.purchase_price ?? 0) * (i.quantity ?? 1), 0);
-
-  const inp: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 8,
-    padding: '8px 14px',
-    color: '#e8e8e8',
-    fontSize: 13,
-    outline: 'none',
-    backdropFilter: 'blur(8px)',
-  };
+  // Slot-fill: pad the page to PER_PAGE with nulls so the last page has visible empty sleeves
+  const pageSlots: (CollectionItem | null)[] = [
+    ...currentPageItems,
+    ...Array(Math.max(0, PER_PAGE - currentPageItems.length)).fill(null),
+  ];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1a 40%, #0a0f0a 100%)',
-      color: '#e8e8e8',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Ambient background glow blobs */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '10%', left: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)', filter: 'blur(40px)', transform: 'translate(-50%, -50%)' }} />
+    <div
+      style={{
+        minHeight: '100vh',
+        background: COLOR.desk,
+        backgroundImage: `repeating-linear-gradient(45deg, ${COLOR.deskGrain} 0 2px, transparent 2px 8px)`,
+        color: COLOR.warmWhite,
+        fontFamily: SERIF,
+        padding: '40px 20px 80px',
+        position: 'relative',
+      }}
+    >
+      {/* Title strip */}
+      <div style={{ maxWidth: 920, margin: '0 auto 24px', textAlign: 'center' }}>
+        <div
+          style={{
+            fontFamily: MONO,
+            fontSize: 10,
+            letterSpacing: '0.32em',
+            textTransform: 'uppercase',
+            color: 'rgba(244,235,214,0.45)',
+            marginBottom: 6,
+          }}
+        >
+          The Collection
+        </div>
+        <h1
+          style={{
+            fontFamily: SERIF,
+            fontStyle: 'italic',
+            fontWeight: 400,
+            fontSize: 36,
+            margin: 0,
+            color: COLOR.warmWhite,
+            letterSpacing: -0.5,
+          }}
+        >
+          Cards, sleeves, and signatures.
+        </h1>
+        <div
+          style={{
+            marginTop: 12,
+            fontFamily: MONO,
+            fontSize: 11,
+            letterSpacing: '0.1em',
+            color: 'rgba(244,235,214,0.55)',
+          }}
+        >
+          {filtered.length} ITEM{filtered.length === 1 ? '' : 'S'}
+          {totalValue > 0 && (
+            <>
+              <span style={{ margin: '0 10px', color: 'rgba(244,235,214,0.25)' }}>·</span>
+              <span>${totalValue.toFixed(2)} TOTAL</span>
+            </>
+          )}
+        </div>
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          padding: '28px 32px',
-          background: 'rgba(255,255,255,0.02)',
-          backdropFilter: 'blur(12px)',
-        }}>
-          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.5, background: 'linear-gradient(135deg, #e8e8e8 0%, #a0a0a0 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                The Collection
-              </h1>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 5, letterSpacing: '0.02em' }}>
-                {filtered.length} item{filtered.length !== 1 ? 's' : ''}
-                {totalValue > 0 && (
-                  <span style={{ marginLeft: 16, color: '#4ade80', fontWeight: 700, fontSize: 14 }}>
-                    ≈ ${totalValue.toFixed(2)}
-                  </span>
-                )}
-              </div>
-            </div>
-            {adminMode && (
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={exportCSV} style={{ ...inp, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                Export CSV
-              </button>
-              <button
-                onClick={() => { setEditItem(null); setShowModal(true); }}
-                style={{
-                  padding: '9px 22px',
-                  background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
-                  color: '#fff',
-                  border: '1px solid rgba(167,139,250,0.4)',
-                  borderRadius: 10,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 0 20px rgba(124,58,237,0.3)',
-                  letterSpacing: '0.02em',
-                }}
-              >
-                + Add Item
-              </button>
-            </div>
-            )}
-          </div>
+      {/* Admin row (only visible when admin) */}
+      {adminMode && (
+        <div
+          style={{
+            maxWidth: 920,
+            margin: '0 auto 16px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 8,
+            fontFamily: MONO,
+            fontSize: 11,
+          }}
+        >
+          <button
+            onClick={exportCSV}
+            style={adminBtn}
+          >
+            EXPORT CSV
+          </button>
+          <button
+            onClick={() => { setEditItem(null); setShowModal(true); }}
+            style={{ ...adminBtn, background: COLOR.warmWhite, color: COLOR.desk, borderColor: COLOR.warmWhite }}
+          >
+            + ADD ITEM
+          </button>
+        </div>
+      )}
+
+      {/* Quick-Add (admin only). Note: the QuickAddBar keeps the existing dark
+          chrome for now; restyling it to match the binder is a follow-up. */}
+      {adminMode && (
+        <div style={{ maxWidth: 920, margin: '0 auto 24px' }}>
+          <QuickAddBar
+            onAdded={handleSaved}
+            onRemoved={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
+          />
+        </div>
+      )}
+
+      {/* File-folder tabs (filter by type) */}
+      <div
+        style={{
+          maxWidth: 920,
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 4,
+          paddingLeft: 32,
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        {TAB_FILTERS.map((t) => {
+          const active = filterType === t.value;
+          return (
+            <button
+              key={t.value}
+              onClick={() => setFilterType(t.value)}
+              style={{
+                fontFamily: MONO,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: active ? COLOR.warmWhite : 'rgba(244,235,214,0.7)',
+                background: active ? t.color : `${t.color}b3`,
+                border: 'none',
+                borderRadius: '6px 6px 0 0',
+                padding: active ? '11px 18px 9px' : '8px 16px 7px',
+                marginBottom: active ? -2 : 0,
+                cursor: 'pointer',
+                boxShadow: active ? '0 -2px 0 rgba(0,0,0,0.15) inset' : 'none',
+                transform: active ? 'translateY(2px)' : 'none',
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Binder body */}
+      <div
+        style={{
+          maxWidth: 920,
+          margin: '0 auto',
+          background: COLOR.binder,
+          borderTop: `1px solid ${COLOR.binderEdge}`,
+          borderRadius: '0 6px 6px 6px',
+          padding: '20px 20px 24px',
+          boxShadow: `0 24px 60px ${COLOR.pageShadow}, 0 0 0 1px ${COLOR.binderEdge}`,
+          display: 'flex',
+          gap: 16,
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+        {/* Spine with rings */}
+        <div
+          style={{
+            width: 28,
+            flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            padding: '28px 0',
+            background: COLOR.binderEdge,
+            borderRadius: 4,
+          }}
+        >
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                background: COLOR.ring,
+                boxShadow: `inset 0 -2px 0 ${COLOR.ringShadow}, 0 1px 2px rgba(0,0,0,0.5)`,
+              }}
+            />
+          ))}
         </div>
 
-        {/* Quick-Add bar (admin only) */}
-        {adminMode && (
-          <div style={{ padding: '16px 32px 0', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-            <QuickAddBar
-              onAdded={handleSaved}
-              onRemoved={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
-            />
-          </div>
-        )}
-
-        {/* Filter bar */}
-        <div style={{ padding: '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Page */}
+        <div
+          style={{
+            flex: 1,
+            background: COLOR.page,
+            backgroundImage:
+              `repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 1px, transparent 1px 3px),` +
+              `repeating-linear-gradient(90deg, rgba(0,0,0,0.015) 0 1px, transparent 1px 3px)`,
+            borderRadius: 4,
+            padding: '24px 22px 18px',
+            color: COLOR.ink,
+            boxShadow: `inset 1px 0 0 ${COLOR.pageEdge}, 0 2px 4px rgba(0,0,0,0.25)`,
+            minHeight: 540,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Page header: search + sort */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 16,
+              marginBottom: 18,
+              borderBottom: `1px solid ${COLOR.pageEdge}`,
+              paddingBottom: 12,
+            }}
+          >
             <input
-              style={{ ...inp, minWidth: 220, flex: 1 }}
-              placeholder="Search by name, set, player…"
+              type="text"
+              placeholder="Search this binder…"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                borderBottom: `1px solid ${COLOR.inkFaint}`,
+                padding: '4px 0',
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontSize: 14,
+                color: COLOR.ink,
+                outline: 'none',
+                maxWidth: 280,
+              }}
             />
-            <select style={inp} value={filterType} onChange={e => setFilterType(e.target.value)}>
-              <option value="">All Types</option>
-              {Object.entries(TYPE_META).map(([v, m]) => <option key={v} value={v}>{m.label}</option>)}
-            </select>
-            <select style={inp} value={`${sortBy}:${sortDir}`} onChange={e => {
-              const [f, d] = e.target.value.split(':');
-              setSortBy(f as typeof sortBy);
-              setSortDir(d as typeof sortDir);
-            }}>
-              <option value="created_at:desc">Newest First</option>
-              <option value="created_at:asc">Oldest First</option>
+            <select
+              value={`${sortBy}:${sortDir}`}
+              onChange={(e) => {
+                const [f, d] = e.target.value.split(':');
+                setSortBy(f as typeof sortBy);
+                setSortDir(d as typeof sortDir);
+              }}
+              style={{
+                fontFamily: MONO,
+                fontSize: 11,
+                letterSpacing: '0.06em',
+                background: 'transparent',
+                border: `1px solid ${COLOR.inkFaint}`,
+                color: COLOR.ink,
+                padding: '4px 8px',
+                borderRadius: 3,
+              }}
+            >
+              <option value="created_at:desc">Newest first</option>
+              <option value="created_at:asc">Oldest first</option>
               <option value="name:asc">Name A–Z</option>
               <option value="name:desc">Name Z–A</option>
-              <option value="avg_sold_price:desc">Highest Value</option>
-              <option value="avg_sold_price:asc">Lowest Value</option>
-              <option value="purchase_price:desc">Purchase Price ↓</option>
+              <option value="avg_sold_price:desc">Highest value</option>
+              <option value="avg_sold_price:asc">Lowest value</option>
             </select>
           </div>
-        </div>
 
-        {/* Wall */}
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 32px 64px' }}>
+          {/* Sleeves grid (3x3) or empty / loading state */}
           {loading ? (
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, textAlign: 'center', padding: 80 }}>
-              Loading collection…
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontFamily: MONO,
+                fontSize: 12,
+                color: COLOR.inkSoft,
+                letterSpacing: '0.1em',
+              }}
+            >
+              LOADING…
             </div>
           ) : filtered.length === 0 ? (
-            <EmptyState hasItems={items.length > 0} onAdd={() => setShowModal(true)} adminMode={adminMode} />
+            <EmptyBinder
+              hasItems={items.length > 0}
+              adminMode={adminMode}
+              onAdd={() => setShowModal(true)}
+            />
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-              gap: 20,
-            }}>
-              {filtered.map(item => (
-                <DisplayCase
-                  key={item.id}
-                  item={item}
-                  onEdit={adminMode ? () => { setEditItem(item); setShowModal(true); } : undefined}
-                  onDelete={adminMode ? () => handleDelete(item.id) : undefined}
-                />
-              ))}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 14,
+                flex: 1,
+                alignContent: 'start',
+              }}
+            >
+              {pageSlots.map((item, idx) =>
+                item ? (
+                  <Sleeve
+                    key={item.id}
+                    item={item}
+                    onEdit={adminMode ? () => { setEditItem(item); setShowModal(true); } : undefined}
+                    onDelete={adminMode ? () => handleDelete(item.id) : undefined}
+                  />
+                ) : (
+                  <EmptySleeve key={`empty-${idx}`} />
+                )
+              )}
+            </div>
+          )}
+
+          {/* Page footer: pagination */}
+          {filtered.length > 0 && (
+            <div
+              style={{
+                marginTop: 18,
+                paddingTop: 12,
+                borderTop: `1px solid ${COLOR.pageEdge}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontFamily: MONO,
+                fontSize: 11,
+                color: COLOR.inkSoft,
+                letterSpacing: '0.08em',
+              }}
+            >
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                style={pageNavBtn(page <= 1)}
+              >
+                ← PREV
+              </button>
+              <div>
+                PAGE {page} OF {totalPages}
+              </div>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                style={pageNavBtn(page >= totalPages)}
+              >
+                NEXT →
+              </button>
             </div>
           )}
         </div>
@@ -249,262 +495,307 @@ export default function CollectionTracker() {
   );
 }
 
-function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit?: () => void; onDelete?: () => void }) {
-  const canEdit = !!onEdit && !!onDelete;
+// ─────────────────────────────────────────────────────────────────
+
+const adminBtn: React.CSSProperties = {
+  fontFamily: MONO,
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: '0.18em',
+  background: 'transparent',
+  color: 'rgba(244,235,214,0.8)',
+  border: `1px solid rgba(244,235,214,0.3)`,
+  padding: '8px 14px',
+  borderRadius: 3,
+  cursor: 'pointer',
+};
+
+function pageNavBtn(disabled: boolean): React.CSSProperties {
+  return {
+    fontFamily: MONO,
+    fontSize: 11,
+    letterSpacing: '0.1em',
+    background: 'transparent',
+    border: 'none',
+    color: disabled ? 'rgba(58,46,31,0.25)' : COLOR.ink,
+    cursor: disabled ? 'default' : 'pointer',
+    padding: 0,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+
+function Sleeve({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: CollectionItem;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
   const meta = TYPE_META[item.type] ?? TYPE_META.other;
   const img = item.api_image_url || item.image_url;
   const value = item.avg_sold_price ?? item.purchase_price;
-  const [hovered, setHovered] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const canEdit = !!onEdit && !!onDelete;
+  const [hover, setHover] = useState(false);
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         position: 'relative',
-        borderRadius: 16,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transform: hovered ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
-        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-        boxShadow: hovered
-          ? `0 20px 60px ${meta.glow}, 0 0 0 1px ${meta.color}55, inset 0 1px 0 rgba(255,255,255,0.15)`
-          : '0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)',
+        background: COLOR.pocket,
+        border: `1px solid ${COLOR.pocketEdge}`,
+        borderRadius: 3,
+        aspectRatio: '2.5 / 3.5',
+        padding: 8,
+        display: 'flex',
+        flexDirection: 'column',
+        transform: hover ? 'translateY(-2px)' : 'none',
+        transition: 'transform 0.15s',
+        cursor: 'default',
       }}
     >
-      {/* Glass case frame */}
-      <div style={{
-        background: hovered
-          ? `linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 50%, ${meta.color}18 100%)`
-          : 'linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 100%)',
-        backdropFilter: 'blur(12px)',
-        border: `1px solid ${hovered ? meta.color + '44' : 'rgba(255,255,255,0.10)'}`,
-        borderRadius: 16,
-        transition: 'background 0.25s ease, border-color 0.25s ease',
-      }}>
+      {/* Type strip on left edge */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 12,
+          bottom: 12,
+          width: 3,
+          background: meta.color,
+          borderTopRightRadius: 1,
+          borderBottomRightRadius: 1,
+        }}
+      />
 
-        {/* Image area */}
-        <div style={{
-          height: 220,
+      {/* Card image area */}
+      <div
+        style={{
+          flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: 16,
-          position: 'relative',
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.05) 100%)',
-        }}>
-          {img ? (
-            <img
-              src={img}
-              alt={item.name}
-              style={{
-                maxHeight: '100%',
-                maxWidth: '100%',
-                objectFit: 'contain',
-                borderRadius: item.type === 'memorabilia' ? 8 : 6,
-                boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)`,
-                filter: hovered ? 'brightness(1.08)' : 'brightness(1)',
-                transition: 'filter 0.25s ease',
-              }}
-            />
-          ) : (
-            <div style={{
-              width: 120,
-              height: 168,
-              borderRadius: 8,
-              border: `1px solid ${meta.color}30`,
-              backgroundImage: [
-                `linear-gradient(${meta.color}10 1px, transparent 1px)`,
-                `linear-gradient(90deg, ${meta.color}10 1px, transparent 1px)`,
-              ].join(', '),
-              backgroundSize: '20px 20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <span style={{ color: meta.color, fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', opacity: 0.5 }}>
-                {meta.label.toUpperCase()}
-              </span>
-            </div>
-          )}
-
-          {/* Type badge */}
-          <div style={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            background: meta.color + 'cc',
-            color: '#fff',
-            fontSize: 9,
-            fontWeight: 800,
-            padding: '3px 8px',
-            borderRadius: 20,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            boxShadow: `0 2px 8px ${meta.glow}`,
-          }}>
-            {meta.label}
+          minHeight: 0,
+          marginBottom: 6,
+        }}
+      >
+        {img ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={img}
+            alt={item.name}
+            style={{
+              maxHeight: '100%',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              borderRadius: 2,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              fontFamily: MONO,
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.18em',
+              color: meta.color,
+              opacity: 0.6,
+            }}
+          >
+            {meta.short}
           </div>
+        )}
+      </div>
 
-          {/* Special badges */}
-          <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
-            {item.is_foil && (
-              <div style={{ background: 'linear-gradient(135deg, #ffd700, #ff8c00)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
-                FOIL
-              </div>
-            )}
-            {item.is_rookie && (
-              <div style={{ background: 'rgba(74,222,128,0.85)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
-                RC
-              </div>
-            )}
-            {item.is_autographed && (
-              <div style={{ background: 'rgba(251,191,36,0.85)', color: '#000', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, letterSpacing: '0.05em' }}>
-                AUTO
-              </div>
-            )}
-            {item.grade && (
-              <div style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>
-                {item.grade}
-              </div>
-            )}
-          </div>
-
-          {/* Hover menu (admin only) */}
-          {hovered && canEdit && (
-            <div style={{
-              position: 'absolute',
-              bottom: 10,
-              right: 10,
-              display: 'flex',
-              gap: 6,
-            }}>
-              <button
-                onClick={e => { e.stopPropagation(); onEdit!(); }}
-                style={{
-                  padding: '5px 12px',
-                  background: 'rgba(255,255,255,0.12)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: 20,
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Edit
-              </button>
-              <button
-                onClick={e => { e.stopPropagation(); onDelete!(); }}
-                style={{
-                  padding: '5px 10px',
-                  background: 'rgba(239,68,68,0.2)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(239,68,68,0.3)',
-                  borderRadius: 20,
-                  color: '#fca5a5',
-                  fontSize: 11,
-                  cursor: 'pointer',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Info panel */}
-        <div style={{
-          padding: '12px 14px 14px',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(0,0,0,0.2)',
-        }}>
-          <div style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: '#f0f0f0',
-            lineHeight: 1.3,
-            wordBreak: 'break-word',
-            marginBottom: 4,
-            whiteSpace: 'nowrap',
+      {/* Caption: name + value */}
+      <div
+        style={{
+          fontFamily: SERIF,
+          fontSize: 12,
+          fontWeight: 600,
+          color: COLOR.ink,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          lineHeight: 1.3,
+        }}
+        title={item.name}
+      >
+        {item.name}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          marginTop: 2,
+          fontFamily: MONO,
+          fontSize: 10,
+          color: COLOR.inkSoft,
+          letterSpacing: '0.04em',
+        }}
+      >
+        <span
+          style={{
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-          }}>
-            {item.name}
-          </div>
-          {(item.set_name || item.player || item.team) && (
-            <div style={{
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.4)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {item.player || item.set_name}
-              {item.team ? ` · ${item.team}` : item.card_number ? ` · #${item.card_number}` : ''}
-            </div>
-          )}
-          {(item.condition || item.year) && (
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-              {[item.condition, item.year].filter(Boolean).join(' · ')}
-            </div>
-          )}
-          {value != null && (
-            <div style={{
-              fontSize: 16,
-              fontWeight: 800,
-              color: '#4ade80',
-              marginTop: 8,
-              textShadow: '0 0 20px rgba(74,222,128,0.4)',
-            }}>
-              ${value.toFixed(2)}
-            </div>
-          )}
-        </div>
+            whiteSpace: 'nowrap',
+            maxWidth: '60%',
+          }}
+          title={item.set_name ?? ''}
+        >
+          {item.set_name ?? ''}
+        </span>
+        {value != null && <span>${value.toFixed(0)}</span>}
       </div>
+
+      {/* Foil indicator (subtle) */}
+      {item.is_foil && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            fontFamily: MONO,
+            fontSize: 8,
+            letterSpacing: '0.12em',
+            color: COLOR.ink,
+            background: 'rgba(255,255,255,0.4)',
+            padding: '1px 4px',
+            borderRadius: 2,
+          }}
+        >
+          FOIL
+        </div>
+      )}
+
+      {/* Admin overlay (edit/delete) */}
+      {canEdit && hover && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 6,
+            left: 6,
+            display: 'flex',
+            gap: 4,
+          }}
+        >
+          <button
+            onClick={onEdit}
+            style={overlayBtn}
+            title="Edit"
+          >
+            EDIT
+          </button>
+          <button
+            onClick={onDelete}
+            style={{ ...overlayBtn, color: '#a44040' }}
+            title="Delete"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-function EmptyState({ hasItems, onAdd, adminMode }: { hasItems: boolean; onAdd: () => void; adminMode: boolean }) {
+const overlayBtn: React.CSSProperties = {
+  fontFamily: MONO,
+  fontSize: 9,
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  background: 'rgba(255,255,255,0.85)',
+  color: COLOR.ink,
+  border: `1px solid ${COLOR.pageEdge}`,
+  borderRadius: 2,
+  padding: '2px 6px',
+  cursor: 'pointer',
+};
+
+// ─────────────────────────────────────────────────────────────────
+
+function EmptySleeve() {
   return (
-    <div style={{ textAlign: 'center', padding: '100px 20px' }}>
-      <div style={{
-        width: 80,
-        height: 80,
-        margin: '0 auto 28px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.05) 70%)',
-        border: '1px solid rgba(124,58,237,0.2)',
-        boxShadow: '0 0 40px rgba(124,58,237,0.12)',
-      }} />
-      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, marginBottom: 8 }}>
-        {hasItems ? 'No items match your filters.' : 'The wall is empty.'}
+    <div
+      style={{
+        aspectRatio: '2.5 / 3.5',
+        border: `1px dashed ${COLOR.pageEdge}`,
+        borderRadius: 3,
+        background: 'transparent',
+      }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+
+function EmptyBinder({
+  hasItems,
+  adminMode,
+  onAdd,
+}: {
+  hasItems: boolean;
+  adminMode: boolean;
+  onAdd: () => void;
+}) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '80px 20px',
+        textAlign: 'center',
+        gap: 16,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: SERIF,
+          fontStyle: 'italic',
+          fontSize: 18,
+          color: COLOR.ink,
+        }}
+      >
+        {hasItems ? 'Nothing on this page.' : 'This binder is empty.'}
+      </div>
+      <div
+        style={{
+          fontFamily: MONO,
+          fontSize: 11,
+          color: COLOR.inkSoft,
+          letterSpacing: '0.1em',
+        }}
+      >
+        {hasItems ? 'TRY ANOTHER FILTER OR SEARCH' : 'NO ITEMS YET'}
       </div>
       {!hasItems && adminMode && (
-        <>
-          <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, marginBottom: 28 }}>
-            Add your first piece to start your collection.
-          </div>
-          <button
-            onClick={onAdd}
-            style={{
-              padding: '11px 28px',
-              background: 'linear-gradient(135deg, #7c3aed, #5b21b6)',
-              color: '#fff',
-              border: '1px solid rgba(167,139,250,0.4)',
-              borderRadius: 12,
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 0 30px rgba(124,58,237,0.4)',
-            }}
-          >
-            Add First Item
-          </button>
-        </>
+        <button
+          onClick={onAdd}
+          style={{
+            marginTop: 8,
+            fontFamily: MONO,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            background: COLOR.ink,
+            color: COLOR.page,
+            border: 'none',
+            padding: '10px 22px',
+            borderRadius: 3,
+            cursor: 'pointer',
+          }}
+        >
+          ADD FIRST ITEM
+        </button>
       )}
     </div>
   );
