@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { XMLParser } from 'fast-xml-parser';
+import Groq from 'groq-sdk';
 
 interface Article {
   title: string;
@@ -14,22 +15,24 @@ interface Article {
 const GN = (q: string) =>
   `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
 
+// Watchlist: specific companies Sam tracks. Grouped to keep query count
+// reasonable while still hitting each name. Add "solar" anchor where the
+// name is ambiguous (PG&E, Eversource, UI, Vivint).
+const WATCHLIST_QUERIES = [
+  GN('"GoodLeap" OR "LightReach" OR "Sungage" OR "Enfin"'),
+  GN('"Sunrun" OR "SunPower" OR "Vivint Solar"'),
+  GN('"V3 Electric" OR "Freedom Forever" OR "Bright Planet Solar" OR "BrightOps"'),
+  GN('"PG&E" solar OR "Eversource" solar OR "United Illuminating" solar'),
+  GN('residential solar bankruptcy OR layoffs OR acquisition OR "funding round"'),
+];
+
 const FEEDS = {
-  // General solar industry trades
   solarTrade: [
     { url: 'https://cleantechnica.com/feed/', source: 'CleanTechnica' },
     { url: 'https://www.solarpowerworldonline.com/feed/', source: 'Solar Power World' },
     { url: 'https://www.pv-magazine-usa.com/feed/', source: 'PV Magazine' },
     { url: 'https://electrek.co/category/solar/feed/', source: 'Electrek Solar' },
     { url: 'https://www.utilitydive.com/feeds/solar/', source: 'Utility Dive' },
-  ],
-  // Solar business: companies, financing, M&A, bankruptcies
-  solarBusiness: [
-    { url: GN('residential solar company bankruptcy acquisition'), source: 'Google News' },
-    { url: GN('Sunrun Sunnova SunPower solar earnings'), source: 'Google News' },
-    { url: GN('LightReach GoodLeap Mosaic solar financing'), source: 'Google News' },
-    { url: GN('solar installer layoffs funding raise'), source: 'Google News' },
-    { url: GN('Freedom Forever solar'), source: 'Google News' },
   ],
   tech: [
     { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
@@ -126,9 +129,75 @@ async function fetchFeed(url: string, source: string): Promise<Article[]> {
   }
 }
 
-async function getCategory(feeds: { url: string; source: string }[], limit = 4): Promise<Article[]> {
-  const results = await Promise.all(feeds.map(f => fetchFeed(f.url, f.source)));
-  return results.flat().slice(0, limit);
+async function fetchAll(items: { url: string; source: string }[]): Promise<Article[]> {
+  const results = await Promise.all(items.map(f => fetchFeed(f.url, f.source)));
+  return results.flat();
+}
+
+async function fetchWatchlist(): Promise<Article[]> {
+  const feeds = WATCHLIST_QUERIES.map(url => ({ url, source: 'Google News' }));
+  return fetchAll(feeds);
+}
+
+// Dedupe by title token-overlap. Two titles sharing >65% of their meaningful
+// words (>3 chars) are treated as the same story.
+function titleKey(t: string): string {
+  return t.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function similar(a: string, b: string): boolean {
+  const at = new Set(a.split(' ').filter(w => w.length > 3));
+  const bt = new Set(b.split(' ').filter(w => w.length > 3));
+  if (at.size === 0 || bt.size === 0) return false;
+  let overlap = 0;
+  for (const w of at) if (bt.has(w)) overlap++;
+  const min = Math.min(at.size, bt.size);
+  return overlap / min > 0.65;
+}
+
+function dedupe(articles: Article[]): Article[] {
+  const seen: string[] = [];
+  const out: Article[] = [];
+  for (const a of articles) {
+    const k = titleKey(a.title);
+    if (seen.some(s => similar(s, k))) continue;
+    seen.push(k);
+    out.push(a);
+  }
+  return out;
+}
+
+// "The Brief" — 3-5 line LLM summary of what matters. Falls back to empty
+// string on any failure (network, API, no articles).
+async function curate(articles: Article[]): Promise<string> {
+  if (articles.length === 0) return '';
+  if (!process.env.GROQ_API_KEY) return '';
+  try {
+    const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const corpus = articles.slice(0, 28)
+      .map(a => `- ${a.title} (${a.source}): ${a.description.slice(0, 220)}`)
+      .join('\n');
+    const completion = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are writing a weekly briefing for Sam, who leads IT and business systems at a residential solar company. ' +
+            'Read the news items and surface what actually matters: bankruptcies, layoffs, funding rounds, M&A, leadership changes, ' +
+            'regulatory shifts, or anything that meaningfully affects the residential solar market. Skip generic industry hype. ' +
+            'Output 3-5 short lines, plain text, no bullets, no headers, no preamble. Each line stands on its own. ' +
+            'Be specific (name companies, name numbers). Avoid em dashes, the word "amid", and the phrase "in a move that".',
+        },
+        { role: 'user', content: corpus },
+      ],
+      max_tokens: 450,
+      temperature: 0.3,
+    });
+    return completion.choices[0]?.message?.content?.trim() ?? '';
+  } catch {
+    return '';
+  }
 }
 
 function articleRow(a: Article): string {
@@ -164,19 +233,32 @@ function articleRow(a: Article): string {
     </tr>`;
 }
 
-function sectionHeader(bgcolor: string, emoji: string, label: string): string {
+function sectionHeader(bgcolor: string, label: string): string {
   return `
     <tr>
       <td bgcolor="${bgcolor}" style="padding:14px 24px;">
-        <table cellpadding="0" cellspacing="0"><tr>
-          <td style="font-size:20px;vertical-align:middle;">${emoji}</td>
-          <td style="color:#fff;font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding-left:10px;vertical-align:middle;">${label}</td>
-        </tr></table>
+        <div style="color:#fff;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;">${label}</div>
       </td>
     </tr>`;
 }
 
-function buildEmail(solarTrade: Article[], solarBusiness: Article[], tech: Article[], sales: Article[]): string {
+function briefBlock(text: string): string {
+  if (!text) return '';
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const rendered = lines.map(l =>
+    `<div style="color:#0f172a;font-size:14px;line-height:1.65;margin-bottom:10px;">${l}</div>`
+  ).join('');
+  return `
+    <tr>
+      <td bgcolor="#ffffff" style="padding:24px 24px 14px;">
+        <div style="color:#94a3b8;font-size:10px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:14px;font-weight:700;">The Brief</div>
+        ${rendered}
+      </td>
+    </tr>
+    <tr><td style="height:6px;background:#f8fafc;"></td></tr>`;
+}
+
+function buildEmail(brief: string, watchlist: Article[], trade: Article[], tech: Article[], sales: Article[]): string {
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
@@ -196,10 +278,10 @@ function buildEmail(solarTrade: Article[], solarBusiness: Article[], tech: Artic
       <div style="color:#475569;font-size:13px;margin-top:8px;">${today}</div>
       <div style="background:#1e293b;height:1px;margin:20px 32px;"></div>
       <table cellpadding="0" cellspacing="0" align="center"><tr>
-        <td style="padding:0 10px;color:#64748b;font-size:13px;">☀️ Solar</td>
-        <td style="padding:0 10px;color:#64748b;font-size:13px;">⚡ Solar Business</td>
-        <td style="padding:0 10px;color:#64748b;font-size:13px;">💻 Technology</td>
-        <td style="padding:0 10px;color:#64748b;font-size:13px;">📈 Sales</td>
+        <td style="padding:0 10px;color:#64748b;font-size:11px;letter-spacing:.15em;text-transform:uppercase;">Watchlist</td>
+        <td style="padding:0 10px;color:#64748b;font-size:11px;letter-spacing:.15em;text-transform:uppercase;">Industry</td>
+        <td style="padding:0 10px;color:#64748b;font-size:11px;letter-spacing:.15em;text-transform:uppercase;">Tech</td>
+        <td style="padding:0 10px;color:#64748b;font-size:11px;letter-spacing:.15em;text-transform:uppercase;">Sales</td>
       </tr></table>
     </td></tr>
 
@@ -207,19 +289,21 @@ function buildEmail(solarTrade: Article[], solarBusiness: Article[], tech: Artic
     <tr><td bgcolor="#ffffff">
       <table width="100%" cellpadding="0" cellspacing="0">
 
-        ${sectionHeader('#c2410c', '☀️', 'Solar Industry')}
-        ${solarTrade.map(articleRow).join('')}
+        ${briefBlock(brief)}
+
+        ${sectionHeader('#92400e', 'Watchlist')}
+        ${watchlist.map(articleRow).join('')}
         <tr><td style="height:6px;background:#f8fafc;"></td></tr>
 
-        ${sectionHeader('#92400e', '⚡', 'Solar Business & Finance')}
-        ${solarBusiness.map(articleRow).join('')}
+        ${sectionHeader('#c2410c', 'Solar Industry')}
+        ${trade.map(articleRow).join('')}
         <tr><td style="height:6px;background:#f8fafc;"></td></tr>
 
-        ${sectionHeader('#1d4ed8', '💻', 'Technology & IT')}
+        ${sectionHeader('#1d4ed8', 'Technology & IT')}
         ${tech.map(articleRow).join('')}
         <tr><td style="height:6px;background:#f8fafc;"></td></tr>
 
-        ${sectionHeader('#15803d', '📈', 'Sales & Business')}
+        ${sectionHeader('#15803d', 'Sales & Business')}
         ${sales.map(articleRow).join('')}
 
       </table>
@@ -239,6 +323,13 @@ function buildEmail(solarTrade: Article[], solarBusiness: Article[], tech: Artic
 </body></html>`;
 }
 
+function buildSubject(top: string | undefined, today: string): string {
+  if (!top) return `Weekly Brief, ${today}`;
+  const cleaned = top.replace(/\s+/g, ' ').trim();
+  const truncated = cleaned.length > 65 ? cleaned.slice(0, 62) + '...' : cleaned;
+  return `Weekly Brief: ${truncated}`;
+}
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const isVercelCron = req.headers.get('x-vercel-cron') === '1';
   const authHeader = req.headers.get('authorization');
@@ -248,18 +339,32 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const [solarTrade, solarBusiness, tech, sales] = await Promise.all([
-      getCategory(FEEDS.solarTrade, 4),
-      getCategory(FEEDS.solarBusiness, 5),
-      getCategory(FEEDS.tech, 4),
-      getCategory(FEEDS.sales, 4),
+    const [watchlistRaw, tradeRaw, techRaw, salesRaw] = await Promise.all([
+      fetchWatchlist(),
+      fetchAll(FEEDS.solarTrade),
+      fetchAll(FEEDS.tech),
+      fetchAll(FEEDS.sales),
     ]);
 
-    if (solarTrade.length + solarBusiness.length + tech.length + sales.length === 0) {
+    // Dedupe inside each section AND across them (watchlist wins over trade
+    // when the same story shows up in both — we want named-company framing).
+    const watchlist = dedupe(watchlistRaw).slice(0, 6);
+    const watchlistKeys = watchlist.map(a => titleKey(a.title));
+    const trade = dedupe(tradeRaw)
+      .filter(a => !watchlistKeys.some(k => similar(k, titleKey(a.title))))
+      .slice(0, 4);
+    const tech = dedupe(techRaw).slice(0, 3);
+    const sales = dedupe(salesRaw).slice(0, 3);
+
+    const totalCount = watchlist.length + trade.length + tech.length + sales.length;
+    if (totalCount === 0) {
       return NextResponse.json({ error: 'No articles fetched' }, { status: 500 });
     }
 
-    const html = buildEmail(solarTrade, solarBusiness, tech, sales);
+    // Curate over the most-prioritized articles.
+    const brief = await curate([...watchlist, ...trade, ...tech, ...sales]);
+
+    const html = buildEmail(brief, watchlist, trade, tech, sales);
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -270,16 +375,21 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     });
 
     const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const topHeadline = watchlist[0]?.title ?? trade[0]?.title;
+    const subject = buildSubject(topHeadline, today);
+
     await transporter.sendMail({
       from: `"Sam's Weekly Brief" <${process.env.GMAIL_USER}>`,
       to: process.env.NEWSLETTER_TO || process.env.GMAIL_USER,
-      subject: `📰 Weekly Brief — ${today}`,
+      subject,
       html,
     });
 
     return NextResponse.json({
       success: true,
-      counts: { solarTrade: solarTrade.length, solarBusiness: solarBusiness.length, tech: tech.length, sales: sales.length },
+      subject,
+      curated: brief.length > 0,
+      counts: { watchlist: watchlist.length, trade: trade.length, tech: tech.length, sales: sales.length },
     });
   } catch (err) {
     console.error('Newsletter error:', err);
