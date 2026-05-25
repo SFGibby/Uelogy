@@ -22,6 +22,26 @@ export default function CollectionTracker() {
   const [filterType, setFilterType] = useState('');
   const [sortBy, setSortBy] = useState<'created_at' | 'name' | 'avg_sold_price' | 'purchase_price'>('created_at');
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
+  const [adminMode, setAdminMode] = useState(false);
+
+  // Light admin gate: ?admin=1 in the URL flips on the management UI and
+  // remembers the choice in localStorage; ?admin=0 turns it off.
+  // No secret — this is a personal site, not a vault. It just keeps
+  // random visitors from seeing the Add/Edit/Delete controls.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const a = params.get('admin');
+    if (a === '1') {
+      localStorage.setItem('collection_admin', '1');
+      setAdminMode(true);
+    } else if (a === '0') {
+      localStorage.removeItem('collection_admin');
+      setAdminMode(false);
+    } else {
+      setAdminMode(localStorage.getItem('collection_admin') === '1');
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,6 +145,7 @@ export default function CollectionTracker() {
                 )}
               </div>
             </div>
+            {adminMode && (
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={exportCSV} style={{ ...inp, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                 Export CSV
@@ -147,16 +168,19 @@ export default function CollectionTracker() {
                 + Add Item
               </button>
             </div>
+            )}
           </div>
         </div>
 
-        {/* Quick-Add bar */}
-        <div style={{ padding: '16px 32px 0', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-          <QuickAddBar
-            onAdded={handleSaved}
-            onRemoved={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
-          />
-        </div>
+        {/* Quick-Add bar (admin only) */}
+        {adminMode && (
+          <div style={{ padding: '16px 32px 0', maxWidth: 1400, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+            <QuickAddBar
+              onAdded={handleSaved}
+              onRemoved={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
+            />
+          </div>
+        )}
 
         {/* Filter bar */}
         <div style={{ padding: '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -194,7 +218,7 @@ export default function CollectionTracker() {
               Loading collection…
             </div>
           ) : filtered.length === 0 ? (
-            <EmptyState hasItems={items.length > 0} onAdd={() => setShowModal(true)} />
+            <EmptyState hasItems={items.length > 0} onAdd={() => setShowModal(true)} adminMode={adminMode} />
           ) : (
             <div style={{
               display: 'grid',
@@ -205,8 +229,8 @@ export default function CollectionTracker() {
                 <DisplayCase
                   key={item.id}
                   item={item}
-                  onEdit={() => { setEditItem(item); setShowModal(true); }}
-                  onDelete={() => handleDelete(item.id)}
+                  onEdit={adminMode ? () => { setEditItem(item); setShowModal(true); } : undefined}
+                  onDelete={adminMode ? () => handleDelete(item.id) : undefined}
                 />
               ))}
             </div>
@@ -225,7 +249,8 @@ export default function CollectionTracker() {
   );
 }
 
-function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit: () => void; onDelete: () => void }) {
+function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit?: () => void; onDelete?: () => void }) {
+  const canEdit = !!onEdit && !!onDelete;
   const meta = TYPE_META[item.type] ?? TYPE_META.other;
   const img = item.api_image_url || item.image_url;
   const value = item.avg_sold_price ?? item.purchase_price;
@@ -346,8 +371,8 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
             )}
           </div>
 
-          {/* Hover menu */}
-          {hovered && (
+          {/* Hover menu (admin only) */}
+          {hovered && canEdit && (
             <div style={{
               position: 'absolute',
               bottom: 10,
@@ -356,7 +381,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
               gap: 6,
             }}>
               <button
-                onClick={e => { e.stopPropagation(); onEdit(); }}
+                onClick={e => { e.stopPropagation(); onEdit!(); }}
                 style={{
                   padding: '5px 12px',
                   background: 'rgba(255,255,255,0.12)',
@@ -372,7 +397,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
                 Edit
               </button>
               <button
-                onClick={e => { e.stopPropagation(); onDelete(); }}
+                onClick={e => { e.stopPropagation(); onDelete!(); }}
                 style={{
                   padding: '5px 10px',
                   background: 'rgba(239,68,68,0.2)',
@@ -443,7 +468,7 @@ function DisplayCase({ item, onEdit, onDelete }: { item: CollectionItem; onEdit:
   );
 }
 
-function EmptyState({ hasItems, onAdd }: { hasItems: boolean; onAdd: () => void }) {
+function EmptyState({ hasItems, onAdd, adminMode }: { hasItems: boolean; onAdd: () => void; adminMode: boolean }) {
   return (
     <div style={{ textAlign: 'center', padding: '100px 20px' }}>
       <div style={{
@@ -458,7 +483,7 @@ function EmptyState({ hasItems, onAdd }: { hasItems: boolean; onAdd: () => void 
       <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 16, marginBottom: 8 }}>
         {hasItems ? 'No items match your filters.' : 'The wall is empty.'}
       </div>
-      {!hasItems && (
+      {!hasItems && adminMode && (
         <>
           <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, marginBottom: 28 }}>
             Add your first piece to start your collection.
