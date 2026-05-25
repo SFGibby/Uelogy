@@ -9,21 +9,23 @@ const SamSprite = dynamic(() => import('../components/SamSprite'), { ssr: false 
 const SOCIALS = [
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/samuelfgibson/' },
   { label: 'Instagram', href: 'https://www.instagram.com/samuelgibby/' },
+  { label: 'Letterboxd', href: 'https://boxd.it/10W7.5' },
+  { label: 'Beli', href: 'https://beliapp.co/app/SolemnX' },
   { label: 'Facebook', href: 'https://www.facebook.com/samuel.gibson.73/' },
 ];
 
 const WHAT_I_DO = [
   {
     title: 'IT Leadership',
-    desc: 'Managing infrastructure, teams, and the technology that keeps a solar company running.',
+    desc: "Keep a solar company's infrastructure and day-to-day tech running.",
   },
   {
     title: 'Systems & Automation',
-    desc: 'Building workflows and integrations that eliminate busywork — connecting business tools so they actually talk to each other.',
+    desc: 'Wire up workflows and integrations that kill busywork and make business tools actually talk to each other.',
   },
   {
     title: 'Solar Industry',
-    desc: 'Working at the intersection of clean energy and enterprise tech. SunPower is one of the most recognized names in residential solar.',
+    desc: 'Most of my work happens in residential solar. SunPower is one of the most recognized names in the space.',
   },
 ];
 
@@ -211,8 +213,8 @@ export default function Home() {
               Samuel<br />Gibson.
             </h1>
             <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', maxWidth: 540, lineHeight: 1.7, margin: '28px 0 0' }}>
-              I build infrastructure and automations that keep a solar company operating at scale.
-              Outside of work: cards, memorabilia, and the occasional Tetris session.
+              I lead IT and business systems at SunPower, a solar company.
+              Off the clock: cards, pickleball, and tinkering with sites like this one.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 40 }}>
               {SOCIALS.map(s => (
@@ -244,12 +246,9 @@ export default function Home() {
 
         {/* ── WHAT I DO ── */}
         <section style={{ padding: '80px 48px', borderTop: '1px solid rgba(255,255,255,0.06)', maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 10, textShadow: '0 0 6px #33ff33' }}>
+          <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 48, textShadow: '0 0 6px #33ff33' }}>
             WHAT I DO
           </div>
-          <h2 style={{ fontSize: 36, fontWeight: 800, color: '#fff', margin: '0 0 48px', letterSpacing: -0.5 }}>
-            Building things that actually work.
-          </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20 }}>
             {WHAT_I_DO.map(card => (
               <div key={card.title} style={{
