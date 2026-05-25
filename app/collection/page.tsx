@@ -31,10 +31,10 @@ export default function CollectionPage() {
         playerVars: { loop: 1, playlist: YT_VIDEO_ID, controls: 0, disablekb: 1 },
         events: {
           onReady: (e: { target: YTPlayer }) => {
+            // Click-to-play only. Browsers block autoplay anyway and unexpected
+            // music on landing is jarring.
             e.target.setVolume(30);
-            e.target.playVideo();
             setReady(true);
-            setPlaying(true);
           },
         },
       });
