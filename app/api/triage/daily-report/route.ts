@@ -46,6 +46,9 @@ async function runReport() {
   const heliosSolved = sessions.filter((s) => s.helios_solved === true).length;
   const escalated = sessions.filter((s) => s.status === 'escalated' || s.status === 'taken_over').length;
 
+  // No chats in the last 24h → don't bother emailing.
+  if (total === 0) return { total, resolved, heliosSolved, escalated, skipped: true };
+
   const lines: string[] = [];
   lines.push(`SunPower Triage — last 24 h`);
   lines.push(`Total chats: ${total}`);
