@@ -7,8 +7,8 @@ import type { SearchResult } from '../../app/api/search/route';
 type CardType = 'mtg' | 'pokemon';
 
 const TYPES: { value: CardType; label: string; color: string }[] = [
-  { value: 'mtg', label: 'MTG', color: '#f59e0b' },
-  { value: 'pokemon', label: 'Pokémon', color: '#ef4444' },
+  { value: 'mtg',     label: 'Magic',   color: '#c98a2e' },
+  { value: 'pokemon', label: 'Pokémon', color: '#b14040' },
 ];
 
 const CONDITIONS = [
@@ -19,6 +19,18 @@ const CONDITIONS = [
   'Heavily Played (HP)',
   'Damaged (DMG)',
 ];
+
+const COLOR = {
+  page:        '#efe5cf',
+  pageEdge:    '#d6c9a8',
+  ink:         '#3a2e1f',
+  inkSoft:     '#7a6a52',
+  inkFaint:    '#a08a6a',
+  ringShadow:  '#bda57e',
+};
+
+const SERIF = 'Georgia, "Hoefler Text", "Times New Roman", serif';
+const MONO  = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
 interface Props {
   onAdded: (item: CollectionItem) => void;
@@ -54,7 +66,7 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
     searchInputRef.current?.focus();
   }, []);
 
-  const accent = TYPES.find((t) => t.value === type)?.color ?? '#f59e0b';
+  const accent = TYPES.find((t) => t.value === type)?.color ?? '#c98a2e';
 
   const changeType = (t: CardType) => {
     setType(t);
@@ -156,47 +168,52 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
     onRemoved?.(id);
   };
 
-  // Container styles match the existing dark-glass aesthetic. Will be
-  // restyled when the binder visual lands; for now it lives at the top
-  // of CollectionTracker.
+  // Card-on-desk look: cream paper with a thin dark border, no blur, no glow.
   const containerStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-    backdropFilter: 'blur(8px)',
+    background: COLOR.page,
+    border: `1px solid ${COLOR.ink}`,
+    borderRadius: 3,
+    padding: 18,
+    color: COLOR.ink,
+    fontFamily: SERIF,
+    boxShadow: `0 6px 16px rgba(0,0,0,0.25)`,
   };
-  const inp: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 8,
-    padding: '8px 12px',
-    color: '#e8e8e8',
-    fontSize: 13,
+  const fieldInp: React.CSSProperties = {
+    background: 'transparent',
+    border: `1px solid ${COLOR.inkFaint}`,
+    borderRadius: 2,
+    padding: '6px 8px',
+    color: COLOR.ink,
+    fontSize: 12,
+    fontFamily: MONO,
     outline: 'none',
   };
 
   return (
     <div style={containerStyle}>
-      {/* Top row: type chips + recent count */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 6 }}>
+      {/* Top row: type tabs + session count */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: COLOR.inkSoft, textTransform: 'uppercase', fontWeight: 700, marginRight: 6 }}>
+          Quick Add
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
           {TYPES.map((t) => (
             <button
               key={t.value}
               type="button"
               onClick={() => changeType(t.value)}
               style={{
-                padding: '6px 14px',
-                borderRadius: 20,
-                border: `1px solid ${type === t.value ? t.color : 'rgba(255,255,255,0.12)'}`,
-                background: type === t.value ? t.color + '22' : 'transparent',
-                color: type === t.value ? t.color : 'rgba(255,255,255,0.55)',
-                fontSize: 12,
-                fontWeight: type === t.value ? 700 : 500,
+                fontFamily: MONO,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: type === t.value ? '#fff' : t.color,
+                background: type === t.value ? t.color : 'transparent',
+                border: `1px solid ${t.color}`,
+                borderRadius: 2,
+                padding: '5px 12px',
                 cursor: 'pointer',
-                letterSpacing: '0.04em',
               }}
             >
               {t.label}
@@ -205,15 +222,15 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
         </div>
         <div
           style={{
-            fontSize: 11,
-            color: 'rgba(255,255,255,0.4)',
-            letterSpacing: '0.12em',
+            fontFamily: MONO,
+            fontSize: 10,
+            letterSpacing: '0.16em',
+            color: COLOR.inkFaint,
             textTransform: 'uppercase',
-            fontWeight: 600,
             marginLeft: 'auto',
           }}
         >
-          Quick Add · {recent.length} this session
+          {recent.length} added this session
         </div>
       </div>
 
@@ -242,10 +259,16 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
             }}
             placeholder={`Type a ${type === 'mtg' ? 'Magic' : 'Pokémon'} card name…`}
             style={{
-              ...inp,
               width: '100%',
-              padding: '12px 14px',
-              fontSize: 15,
+              background: 'transparent',
+              border: 'none',
+              borderBottom: `1px solid ${COLOR.ink}`,
+              padding: '10px 0',
+              fontSize: 18,
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              color: COLOR.ink,
+              outline: 'none',
               boxSizing: 'border-box',
             }}
           />
@@ -256,19 +279,19 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                 top: '100%',
                 left: 0,
                 right: 0,
-                background: '#1a1a24',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 10,
-                marginTop: 6,
-                maxHeight: 320,
+                background: COLOR.page,
+                border: `1px solid ${COLOR.ink}`,
+                borderRadius: 2,
+                marginTop: 4,
+                maxHeight: 340,
                 overflowY: 'auto',
                 zIndex: 20,
-                boxShadow: '0 12px 32px rgba(0,0,0,0.4)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
               }}
             >
               {searching && (
-                <div style={{ padding: '12px 14px', color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>
-                  Searching…
+                <div style={{ padding: '12px 14px', fontFamily: MONO, fontSize: 11, color: COLOR.inkSoft, letterSpacing: '0.1em' }}>
+                  SEARCHING…
                 </div>
               )}
               {results.map((r, i) => (
@@ -283,26 +306,27 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                     alignItems: 'center',
                     gap: 12,
                     padding: '10px 14px',
-                    background: i === highlight ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    background: i === highlight ? COLOR.pageEdge : 'transparent',
                     border: 'none',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    borderBottom: `1px solid ${COLOR.pageEdge}`,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    color: '#e8e8e8',
-                    fontFamily: 'inherit',
+                    color: COLOR.ink,
+                    fontFamily: SERIF,
                   }}
                 >
                   {r.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={r.imageUrl}
                       alt=""
-                      style={{ width: 32, height: 44, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }}
+                      style={{ width: 30, height: 42, objectFit: 'cover', borderRadius: 1, flexShrink: 0 }}
                     />
                   )}
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div
                       style={{
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: 600,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -311,10 +335,12 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                     >
                       {r.name}
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{r.set}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 10, color: COLOR.inkSoft, letterSpacing: '0.04em' }}>
+                      {r.set}
+                    </div>
                   </div>
                   {r.marketPrice != null && (
-                    <div style={{ fontSize: 12, color: '#4ade80', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: MONO, fontSize: 11, color: COLOR.ink, fontWeight: 700, whiteSpace: 'nowrap' }}>
                       ${r.marketPrice.toFixed(2)}
                     </div>
                   )}
@@ -324,13 +350,14 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
           )}
           <div
             style={{
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.35)',
-              marginTop: 8,
-              letterSpacing: '0.04em',
+              fontFamily: MONO,
+              fontSize: 10,
+              color: COLOR.inkFaint,
+              marginTop: 6,
+              letterSpacing: '0.06em',
             }}
           >
-            ↑↓ to navigate · ↵ to select · Esc to clear
+            ↑↓ navigate &middot; ↵ select &middot; Esc clear
           </div>
         </div>
       ) : (
@@ -345,34 +372,42 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
           }}
           style={{
             display: 'flex',
-            gap: 14,
-            background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${accent}44`,
-            borderRadius: 10,
-            padding: 12,
+            gap: 16,
+            background: 'rgba(255,255,255,0.4)',
+            border: `1px solid ${accent}`,
+            borderRadius: 2,
+            padding: 14,
             alignItems: 'flex-start',
             flexWrap: 'wrap',
           }}
         >
           {selected.imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={selected.imageUrl}
               alt=""
-              style={{ width: 56, height: 78, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+              style={{
+                width: 60,
+                height: 84,
+                objectFit: 'cover',
+                borderRadius: 2,
+                flexShrink: 0,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+              }}
             />
           )}
-          <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{selected.name}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: COLOR.ink, fontFamily: SERIF }}>
+                  {selected.name}
+                </div>
+                <div style={{ fontSize: 11, fontFamily: MONO, color: COLOR.inkSoft, letterSpacing: '0.06em', marginTop: 2 }}>
                   {selected.set}
                   {selected.marketPrice != null && (
                     <>
-                      <span style={{ margin: '0 6px', color: 'rgba(255,255,255,0.25)' }}>·</span>
-                      <span style={{ color: '#4ade80', fontWeight: 600 }}>
-                        ${selected.marketPrice.toFixed(2)}
-                      </span>
+                      <span style={{ margin: '0 6px', color: COLOR.inkFaint }}>·</span>
+                      <span style={{ color: COLOR.ink, fontWeight: 700 }}>${selected.marketPrice.toFixed(2)}</span>
                     </>
                   )}
                 </div>
@@ -382,21 +417,21 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                 onClick={clearSelection}
                 title="Cancel (Esc)"
                 style={{
-                  background: 'none',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 6,
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: 12,
-                  padding: '4px 8px',
+                  fontFamily: MONO,
+                  fontSize: 10,
+                  background: 'transparent',
+                  border: `1px solid ${COLOR.inkFaint}`,
+                  borderRadius: 2,
+                  color: COLOR.inkSoft,
+                  padding: '3px 7px',
                   cursor: 'pointer',
-                  fontFamily: 'inherit',
                 }}
               >
                 ✕
               </button>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <label style={{ fontFamily: MONO, fontSize: 9, color: COLOR.inkSoft, display: 'flex', flexDirection: 'column', gap: 3, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 Qty
                 <input
                   ref={qtyInputRef}
@@ -404,15 +439,15 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                   min="1"
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
-                  style={{ ...inp, width: 64 }}
+                  style={{ ...fieldInp, width: 56 }}
                 />
               </label>
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <label style={{ fontFamily: MONO, fontSize: 9, color: COLOR.inkSoft, display: 'flex', flexDirection: 'column', gap: 3, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 Condition
                 <select
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
-                  style={{ ...inp, minWidth: 160 }}
+                  style={{ ...fieldInp, minWidth: 160 }}
                 >
                   {CONDITIONS.map((c) => (
                     <option key={c} value={c}>
@@ -421,7 +456,7 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                   ))}
                 </select>
               </label>
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <label style={{ fontFamily: MONO, fontSize: 9, color: COLOR.inkSoft, display: 'flex', flexDirection: 'column', gap: 3, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 Purchase $
                 <input
                   type="number"
@@ -430,11 +465,11 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                   value={purchasePrice}
                   onChange={(e) => setPurchasePrice(e.target.value)}
                   placeholder="optional"
-                  style={{ ...inp, width: 100 }}
+                  style={{ ...fieldInp, width: 90 }}
                 />
               </label>
               {type === 'mtg' && (
-                <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 6, alignSelf: 'flex-end', paddingBottom: 8, cursor: 'pointer' }}>
+                <label style={{ fontFamily: MONO, fontSize: 11, color: COLOR.inkSoft, display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 6, cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   <input
                     type="checkbox"
                     checked={isFoil}
@@ -449,17 +484,17 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                 disabled={saving}
                 style={{
                   marginLeft: 'auto',
-                  alignSelf: 'flex-end',
-                  padding: '10px 20px',
-                  background: saving ? '#333' : accent,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  fontSize: 13,
+                  fontFamily: MONO,
+                  fontSize: 11,
                   fontWeight: 700,
+                  letterSpacing: '0.18em',
+                  background: saving ? COLOR.inkFaint : COLOR.ink,
+                  color: COLOR.page,
+                  border: 'none',
+                  borderRadius: 2,
+                  padding: '9px 18px',
                   cursor: saving ? 'default' : 'pointer',
-                  letterSpacing: '0.02em',
-                  fontFamily: 'inherit',
+                  textTransform: 'uppercase',
                 }}
               >
                 {saving ? 'Saving…' : 'Add ↵'}
@@ -471,7 +506,7 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
 
       {/* Recently added stack (this session) */}
       {recent.length > 0 && (
-        <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLOR.pageEdge}`, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {recent.map((item) => {
             const value = item.avg_sold_price ?? item.purchase_price;
             return (
@@ -480,41 +515,52 @@ export default function QuickAddBar({ onAdded, onRemoved }: Props) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 20,
-                  padding: '5px 10px 5px 5px',
-                  fontSize: 12,
-                  color: 'rgba(255,255,255,0.75)',
+                  gap: 6,
+                  background: 'rgba(255,255,255,0.4)',
+                  border: `1px solid ${COLOR.pageEdge}`,
+                  borderRadius: 2,
+                  padding: '3px 8px 3px 3px',
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  color: COLOR.ink,
                 }}
               >
                 {item.api_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.api_image_url}
                     alt=""
-                    style={{ width: 22, height: 30, objectFit: 'cover', borderRadius: 3 }}
+                    style={{ width: 20, height: 28, objectFit: 'cover', borderRadius: 1 }}
                   />
                 )}
-                <span style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span
+                  style={{
+                    maxWidth: 180,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontFamily: SERIF,
+                    fontSize: 12,
+                  }}
+                >
                   {item.name}
                 </span>
                 {value != null && (
-                  <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 600 }}>${value.toFixed(2)}</span>
+                  <span style={{ color: COLOR.inkSoft, fontSize: 10 }}>${value.toFixed(0)}</span>
                 )}
                 <button
                   type="button"
                   onClick={() => undoRecent(item.id)}
                   title="Undo"
                   style={{
-                    background: 'none',
+                    background: 'transparent',
                     border: 'none',
-                    color: 'rgba(255,255,255,0.4)',
+                    color: COLOR.inkFaint,
                     cursor: 'pointer',
-                    fontSize: 14,
+                    fontSize: 12,
                     padding: 0,
                     marginLeft: 2,
-                    fontFamily: 'inherit',
+                    fontFamily: MONO,
                   }}
                 >
                   ×

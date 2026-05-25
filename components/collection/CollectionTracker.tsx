@@ -227,8 +227,7 @@ export default function CollectionTracker() {
         </div>
       )}
 
-      {/* Quick-Add (admin only). Note: the QuickAddBar keeps the existing dark
-          chrome for now; restyling it to match the binder is a follow-up. */}
+      {/* Quick-Add (admin only) — styled as a cream index card on the desk */}
       {adminMode && (
         <div style={{ maxWidth: 920, margin: '0 auto 24px' }}>
           <QuickAddBar
