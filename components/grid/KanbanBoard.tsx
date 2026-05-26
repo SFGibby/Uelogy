@@ -15,22 +15,25 @@ import { supabase } from '../../lib/supabase';
 import type { GridStage, GridType, GridTask } from '../../lib/supabase';
 import StageColumn from './StageColumn';
 import TaskCard from './TaskCard';
+import TaskEditModal from './TaskEditModal';
 
 interface Props {
   adminMode: boolean;
-  onTaskClick: (task: GridTask) => void;
 }
 
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
-export default function KanbanBoard({ adminMode, onTaskClick }: Props) {
+export default function KanbanBoard({ adminMode }: Props) {
   const [stages, setStages] = useState<GridStage[]>([]);
   const [types, setTypes] = useState<GridType[]>([]);
   const [tasks, setTasks] = useState<GridTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<GridTask | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Modal state: editing an existing task OR creating in a specific stage
+  const [editing, setEditing] = useState<GridTask | null>(null);
+  const [creatingInStage, setCreatingInStage] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -64,26 +67,34 @@ export default function KanbanBoard({ adminMode, onTaskClick }: Props) {
     return acc;
   }, {});
 
-  const handleAddTask = async (stageId: string) => {
-    const title = window.prompt('Task title?')?.trim();
-    if (!title) return;
-    const stageTasks = tasksByStage[stageId] ?? [];
-    const maxPos = stageTasks.reduce((m, t) => Math.max(m, t.position), -1);
-    const payload = {
-      title,
-      stage_id: stageId,
-      position: maxPos + 1,
-    };
-    const { data, error } = await supabase
-      .from('grid_tasks')
-      .insert(payload)
-      .select()
-      .single();
-    if (error) {
-      alert('Create failed: ' + error.message);
-      return;
-    }
-    setTasks((prev) => [...prev, data as GridTask]);
+  const openCreateModal = (stageId: string) => {
+    setEditing(null);
+    setCreatingInStage(stageId);
+  };
+
+  const openEditModal = (task: GridTask) => {
+    if (!adminMode) return;
+    setCreatingInStage(null);
+    setEditing(task);
+  };
+
+  const closeModal = () => {
+    setEditing(null);
+    setCreatingInStage(null);
+  };
+
+  const handleSaved = (task: GridTask) => {
+    setTasks((prev) => {
+      const idx = prev.findIndex((t) => t.id === task.id);
+      if (idx === -1) return [...prev, task];
+      const next = [...prev];
+      next[idx] = task;
+      return next;
+    });
+  };
+
+  const handleDeleted = (id: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
   const handleDragStart = (e: DragStartEvent) => {
@@ -232,35 +243,49 @@ export default function KanbanBoard({ adminMode, onTaskClick }: Props) {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 20 }}>
-        {stages.map((stage) => (
-          <StageColumn
-            key={stage.id}
-            stage={stage}
-            tasks={tasksByStage[stage.id] ?? []}
-            types={types}
-            adminMode={adminMode}
-            onTaskClick={onTaskClick}
-            onAddClick={adminMode ? () => handleAddTask(stage.id) : undefined}
-          />
-        ))}
-      </div>
-      <DragOverlay>
-        {activeTask && (
-          <TaskCard
-            task={activeTask}
-            type={types.find((t) => t.id === activeTask.type_id)}
-            adminMode={true}
-            preview
-          />
-        )}
-      </DragOverlay>
-    </DndContext>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 20 }}>
+          {stages.map((stage) => (
+            <StageColumn
+              key={stage.id}
+              stage={stage}
+              tasks={tasksByStage[stage.id] ?? []}
+              types={types}
+              adminMode={adminMode}
+              onTaskClick={openEditModal}
+              onAddClick={adminMode ? () => openCreateModal(stage.id) : undefined}
+            />
+          ))}
+        </div>
+        <DragOverlay>
+          {activeTask && (
+            <TaskCard
+              task={activeTask}
+              type={types.find((t) => t.id === activeTask.type_id)}
+              adminMode={true}
+              preview
+            />
+          )}
+        </DragOverlay>
+      </DndContext>
+
+      {(editing !== null || creatingInStage !== null) && (
+        <TaskEditModal
+          task={editing}
+          defaultStageId={creatingInStage}
+          stages={stages}
+          types={types}
+          onClose={closeModal}
+          onSaved={handleSaved}
+          onDeleted={handleDeleted}
+        />
+      )}
+    </>
   );
 }

@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import GridBackground from '../../components/grid/GridBackground';
 import GridMusic from '../../components/grid/GridMusic';
 import KanbanBoard from '../../components/grid/KanbanBoard';
-import type { GridTask } from '../../lib/supabase';
 
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
@@ -30,12 +29,6 @@ export default function GridPage() {
       setAdminMode(localStorage.getItem('grid_admin') === '1');
     }
   }, []);
-
-  const handleTaskClick = (task: GridTask) => {
-    // Full edit modal lands in Stream B5. For now, log so the click chain
-    // is observable.
-    console.log('TASK', task);
-  };
 
   return (
     <main
@@ -108,7 +101,7 @@ export default function GridPage() {
           padding: '12px 32px 80px',
         }}
       >
-        <KanbanBoard adminMode={adminMode} onTaskClick={handleTaskClick} />
+        <KanbanBoard adminMode={adminMode} />
       </section>
 
       <GridMusic />
