@@ -146,7 +146,9 @@ export default function CollectionTracker() {
       style={{
         minHeight: '100vh',
         background: COLOR.desk,
-        backgroundImage: `repeating-linear-gradient(45deg, ${COLOR.deskGrain} 0 2px, transparent 2px 8px)`,
+        // Very subtle radial vignette so the binder feels lit from above —
+        // no stripes, no burlap.
+        backgroundImage: `radial-gradient(ellipse at 50% -10%, rgba(255,235,200,0.05) 0%, transparent 60%)`,
         color: COLOR.warmWhite,
         fontFamily: SERIF,
         padding: '40px 20px 80px',
@@ -381,12 +383,22 @@ export default function CollectionTracker() {
               style={{
                 fontFamily: MONO,
                 fontSize: 11,
-                letterSpacing: '0.06em',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
                 background: 'transparent',
-                border: `1px solid ${COLOR.inkFaint}`,
+                border: 'none',
+                borderBottom: `1px solid ${COLOR.inkFaint}`,
                 color: COLOR.ink,
-                padding: '4px 8px',
-                borderRadius: 3,
+                padding: '4px 22px 4px 4px',
+                borderRadius: 0,
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                outline: 'none',
+                cursor: 'pointer',
+                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path d='M0 0l4 6 4-6z' fill='%237a6a52'/></svg>")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 6px center',
               }}
             >
               <option value="created_at:desc">Newest first</option>
@@ -749,53 +761,91 @@ function EmptyBinder({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '80px 20px',
-        textAlign: 'center',
-        gap: 16,
+        position: 'relative',
       }}
     >
+      {/* Empty 3x3 grid so the binder's structure is always visible */}
       <div
         style={{
-          fontFamily: SERIF,
-          fontStyle: 'italic',
-          fontSize: 18,
-          color: COLOR.ink,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 14,
+          flex: 1,
+          alignContent: 'start',
         }}
       >
-        {hasItems ? 'Nothing on this page.' : 'This binder is empty.'}
+        {Array.from({ length: PER_PAGE }).map((_, i) => (
+          <EmptySleeve key={i} />
+        ))}
       </div>
+
+      {/* Caption overlay — centered text on top of the empty grid */}
       <div
         style={{
-          fontFamily: MONO,
-          fontSize: 11,
-          color: COLOR.inkSoft,
-          letterSpacing: '0.1em',
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 14,
+          pointerEvents: 'none',
         }}
       >
-        {hasItems ? 'TRY ANOTHER FILTER OR SEARCH' : 'NO ITEMS YET'}
-      </div>
-      {!hasItems && adminMode && (
-        <button
-          onClick={onAdd}
+        <div
           style={{
-            marginTop: 8,
-            fontFamily: MONO,
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.18em',
-            background: COLOR.ink,
-            color: COLOR.page,
-            border: 'none',
-            padding: '10px 22px',
-            borderRadius: 3,
-            cursor: 'pointer',
+            background: COLOR.page,
+            padding: '14px 22px',
+            border: `1px solid ${COLOR.pageEdge}`,
+            borderRadius: 2,
+            textAlign: 'center',
+            pointerEvents: 'auto',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
           }}
         >
-          ADD FIRST ITEM
-        </button>
-      )}
+          <div
+            style={{
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontSize: 17,
+              color: COLOR.ink,
+              marginBottom: 4,
+            }}
+          >
+            {hasItems ? 'Nothing on this page.' : 'This binder is empty.'}
+          </div>
+          <div
+            style={{
+              fontFamily: MONO,
+              fontSize: 10,
+              color: COLOR.inkSoft,
+              letterSpacing: '0.18em',
+            }}
+          >
+            {hasItems ? 'TRY ANOTHER FILTER' : 'NO ITEMS YET'}
+          </div>
+          {!hasItems && adminMode && (
+            <button
+              onClick={onAdd}
+              style={{
+                marginTop: 12,
+                fontFamily: MONO,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                background: COLOR.ink,
+                color: COLOR.page,
+                border: 'none',
+                padding: '8px 18px',
+                borderRadius: 2,
+                cursor: 'pointer',
+              }}
+            >
+              ADD FIRST ITEM
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
