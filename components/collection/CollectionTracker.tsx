@@ -156,7 +156,7 @@ export default function CollectionTracker() {
       }}
     >
       {/* Title strip */}
-      <div style={{ maxWidth: 920, margin: '0 auto 24px', textAlign: 'center' }}>
+      <div style={{ maxWidth: 680, margin: '0 auto 24px', textAlign: 'center' }}>
         <div
           style={{
             fontFamily: MONO,
@@ -205,7 +205,7 @@ export default function CollectionTracker() {
       {adminMode && (
         <div
           style={{
-            maxWidth: 920,
+            maxWidth: 680,
             margin: '0 auto 16px',
             display: 'flex',
             justifyContent: 'flex-end',
@@ -231,7 +231,7 @@ export default function CollectionTracker() {
 
       {/* Quick-Add (admin only) — styled as a cream index card on the desk */}
       {adminMode && (
-        <div style={{ maxWidth: 920, margin: '0 auto 24px' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto 24px' }}>
           <QuickAddBar
             onAdded={handleSaved}
             onRemoved={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
@@ -242,7 +242,7 @@ export default function CollectionTracker() {
       {/* File-folder tabs (filter by type) */}
       <div
         style={{
-          maxWidth: 920,
+          maxWidth: 680,
           margin: '0 auto',
           display: 'flex',
           alignItems: 'flex-end',
@@ -284,7 +284,7 @@ export default function CollectionTracker() {
       {/* Binder body */}
       <div
         style={{
-          maxWidth: 920,
+          maxWidth: 680,
           margin: '0 auto',
           background: COLOR.binder,
           borderTop: `1px solid ${COLOR.binderEdge}`,
@@ -337,7 +337,7 @@ export default function CollectionTracker() {
             padding: '24px 22px 18px',
             color: COLOR.ink,
             boxShadow: `inset 1px 0 0 ${COLOR.pageEdge}, 0 2px 4px rgba(0,0,0,0.25)`,
-            minHeight: 540,
+            minHeight: 420,
             display: 'flex',
             flexDirection: 'column',
           }}
