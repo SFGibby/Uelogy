@@ -6,6 +6,39 @@ const SUPABASE_ANON_KEY = 'sb_publishable_rsJEEE17xhg45mkpVDithw_mCwwlDFh';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+export interface GridStage {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+  created_at: string;
+}
+
+export interface GridType {
+  id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export interface GridTaskLink {
+  label: string;
+  url: string;
+}
+
+export interface GridTask {
+  id: string;
+  title: string;
+  description?: string | null;
+  stage_id?: string | null;
+  type_id?: string | null;
+  position: number;
+  due_at?: string | null;
+  links: GridTaskLink[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CollectionItem {
   id: string;
   type: 'mtg' | 'pokemon' | 'sports_card' | 'memorabilia' | 'other';
