@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import TeacherSprite from './TeacherSprite';
-import SolarVillage from './SolarVillage';
+import ProfessorUel from './ProfessorUel';
 
 const PROGRESS_KEY = 'sql_learn_progress';
 
@@ -240,20 +239,28 @@ ORDER BY total_revenue DESC;`,
 
 type Row = Record<string, string | number | null>;
 
-// Sea of Stars palette — deep night sky with amber window glow
+// Classroom palette — warm dim room, chalkboard green, wooden lockers + desk
 const c = {
-  bg: '#080e1c',
-  sidebar: '#0b1427',
-  border: '#1c2e50',
-  borderHL: '#243a62',
-  text: '#f0ead8',
-  muted: '#7a8aa8',
-  accent: '#ffb830',
-  accentHover: '#ffd166',
-  codeBg: '#060a15',
-  rowAlt: '#0d1628',
-  error: '#f87171',
-  panelBg: '#0e2240',
+  bg:          '#1a1d28',   // room (dim classroom light)
+  wall:        '#22252f',   // wall plaster (slightly lighter)
+  sidebar:     '#3a2b1f',   // locker bank backing (dark wood)
+  border:      '#4a3422',   // wood-grain border
+  borderHL:    '#6b4a2c',   // brighter wood edge
+  chalkboard:  '#1e3a2a',   // chalkboard green
+  chalkFrame:  '#5e4b2e',   // wooden chalkboard frame
+  chalk:       '#f0ebd0',   // chalk-white text
+  chalkDust:   '#a8a290',   // faded chalk
+  text:        '#f0ead8',   // warm white body text
+  muted:       '#a89d80',   // soft tan/muted text
+  accent:      '#e3b465',   // brass — for active locker, hover, accents
+  accentHover: '#f0c878',
+  desk:        '#7a4a2a',   // wooden desk
+  deskTop:     '#a06530',   // lighter desk surface
+  codeBg:      '#241612',   // textarea bg on desk (dark wood-inset)
+  rowAlt:      '#202736',
+  error:       '#f0846a',   // red ink
+  panelBg:     '#2a3b3a',   // chalkboard-adjacent panel for results
+  lessonDone:  '#7fc7a3',   // green LED on a completed locker
 };
 
 export default function SQLLearn() {
@@ -367,29 +374,19 @@ export default function SQLLearn() {
 
   const lesson = LESSONS[activeLesson];
 
-  // Starfield — small glowing dots, sparse and soft
-  const starfieldStyle: React.CSSProperties = {
+  // Subtle warm-glow lighting from the front of the room (where the chalkboard is)
+  const roomLightingStyle: React.CSSProperties = {
     position: 'fixed',
     inset: 0,
     pointerEvents: 'none',
     zIndex: 0,
-    backgroundImage: [
-      'radial-gradient(1px 1px at 12% 18%, rgba(212,232,248,0.75), transparent 50%)',
-      'radial-gradient(1px 1px at 28% 62%, rgba(212,232,248,0.55), transparent 50%)',
-      'radial-gradient(1.5px 1.5px at 44% 28%, rgba(255,209,102,0.55), transparent 50%)',
-      'radial-gradient(1px 1px at 62% 72%, rgba(212,232,248,0.65), transparent 50%)',
-      'radial-gradient(1px 1px at 78% 34%, rgba(212,232,248,0.45), transparent 50%)',
-      'radial-gradient(1.5px 1.5px at 88% 82%, rgba(255,209,102,0.5), transparent 50%)',
-      'radial-gradient(1px 1px at 8% 88%, rgba(212,232,248,0.55), transparent 50%)',
-      'radial-gradient(1px 1px at 54% 8%, rgba(212,232,248,0.6), transparent 50%)',
-    ].join(', '),
-    backgroundSize: '100% 100%',
+    background: `radial-gradient(ellipse at 60% 0%, rgba(227,180,101,0.06) 0%, transparent 55%)`,
   };
 
   if (!ready) {
     return (
       <div style={{ minHeight: '100vh', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-        <div style={starfieldStyle} />
+        <div style={roomLightingStyle} />
         <div style={{ color: c.muted, fontFamily: 'system-ui, sans-serif', fontSize: '14px', position: 'relative', zIndex: 1 }}>Loading SQL engine…</div>
       </div>
     );
@@ -404,59 +401,85 @@ export default function SQLLearn() {
       color: c.text,
       position: 'relative',
     }}>
-      {/* Starfield */}
-      <div style={starfieldStyle} />
-      {/* Moonlight glow from top-right */}
+      <div style={roomLightingStyle} />
+
+      {/* Locker bank — sidebar restyled as a row of school lockers */}
       <div style={{
-        position: 'fixed',
-        top: 0, left: 0, right: 0,
-        height: '50vh',
-        pointerEvents: 'none',
-        zIndex: 0,
-        background: 'radial-gradient(ellipse at 82% -10%, rgba(200,223,240,0.08) 0%, transparent 55%), radial-gradient(ellipse at 20% -10%, rgba(255,184,48,0.06) 0%, transparent 60%)',
-      }} />
-      {/* Sidebar */}
-      <div style={{
-        width: '220px',
+        width: '240px',
         background: c.sidebar,
-        borderRight: `1px solid ${c.border}`,
+        // Vertical wood-grain stripes via repeating-linear-gradient for the locker bank backing
+        backgroundImage: `repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 60px)`,
+        borderRight: `2px solid ${c.border}`,
         flexShrink: 0,
         overflowY: 'auto',
         position: 'relative',
         zIndex: 1,
+        boxShadow: `inset -6px 0 12px rgba(0,0,0,0.35)`,
       }}>
-        <div style={{ padding: '20px 16px 8px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>SQL Fundamentals</span>
+        <div style={{
+          padding: '20px 16px 12px',
+          fontSize: '10px',
+          fontWeight: 700,
+          letterSpacing: '0.22em',
+          color: c.chalkDust,
+          textTransform: 'uppercase',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: `1px solid ${c.border}`,
+          marginBottom: 8,
+        }}>
+          <span>SQL Lockers</span>
           <span style={{ color: c.accent, fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
         </div>
-        {LESSONS.map((l, i) => {
-          const done = completed.includes(l.id);
-          return (
-            <button
-              key={l.id}
-              onClick={() => selectLesson(i)}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '10px 16px',
-                fontSize: '13px',
-                background: i === activeLesson ? c.panelBg : 'transparent',
-                color: i === activeLesson ? c.text : done ? c.accent : c.muted,
-                border: 'none',
-                borderLeft: i === activeLesson ? `2px solid ${c.accent}` : '2px solid transparent',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 8,
-              }}
-            >
-              <span>{l.title}</span>
-              {done && <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.accent, flexShrink: 0, display: 'inline-block', boxShadow: `0 0 6px ${c.accent}` }} />}
-            </button>
-          );
-        })}
+        <div style={{ display: 'flex', flexDirection: 'column', padding: '0 10px 12px', gap: 6 }}>
+          {LESSONS.map((l, i) => {
+            const done = completed.includes(l.id);
+            const active = i === activeLesson;
+            return (
+              <button
+                key={l.id}
+                onClick={() => selectLesson(i)}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '12px 14px 12px 18px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  background: active ? c.accent : `linear-gradient(180deg, ${c.borderHL} 0%, ${c.border} 100%)`,
+                  color: active ? c.sidebar : c.text,
+                  border: `1px solid ${active ? c.accentHover : c.borderHL}`,
+                  borderRadius: 3,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                  // Locker face: a faint vent line up top, like real school lockers
+                  boxShadow: `inset 0 1px 0 rgba(255,235,200,0.08), 0 2px 4px rgba(0,0,0,0.3)`,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {l.title}
+                </span>
+                <span
+                  title={done ? 'Completed' : active ? 'In progress' : 'Locker closed'}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    flexShrink: 0,
+                    background: done ? c.lessonDone : active ? c.sidebar : 'rgba(0,0,0,0.5)',
+                    boxShadow: done ? `0 0 6px ${c.lessonDone}` : 'inset 0 0 2px rgba(0,0,0,0.6)',
+                  }}
+                />
+              </button>
+            );
+          })}
+        </div>
         <button
           onClick={() => {
             if (!confirm('Reset all progress?')) return;
@@ -466,139 +489,159 @@ export default function SQLLearn() {
             setCompleted([]);
             selectLesson(0);
           }}
-          style={{ margin: '12px 16px 16px', padding: '6px 12px', background: 'none', border: `1px solid ${c.border}`, borderRadius: 6, color: c.muted, fontSize: 11, cursor: 'pointer', letterSpacing: '0.04em' }}
+          style={{
+            margin: '0 16px 18px',
+            padding: '8px 12px',
+            background: 'none',
+            border: `1px solid ${c.border}`,
+            borderRadius: 3,
+            color: c.muted,
+            fontSize: 11,
+            cursor: 'pointer',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            fontFamily: 'ui-monospace, monospace',
+          }}
         >
           Reset Progress
         </button>
       </div>
 
-      {/* Main */}
+      {/* Main classroom area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
-        {/* Village banner — natural 2:1 aspect so full bg is visible */}
+        {/* Chalkboard — replaces the village banner + concept speech bubble */}
         <div style={{
+          padding: '20px 28px 8px',
+          background: c.wall,
           borderBottom: `1px solid ${c.border}`,
-          background: '#0a1220',
-          position: 'relative',
         }}>
-          <SolarVillage />
+          <div style={{
+            position: 'relative',
+            background: c.chalkboard,
+            border: `10px solid ${c.chalkFrame}`,
+            borderRadius: 4,
+            padding: '22px 26px 24px',
+            color: c.chalk,
+            // Subtle chalk dust on the green slate
+            backgroundImage:
+              `radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),` +
+              `radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)`,
+            backgroundSize: '14px 14px, 22px 22px',
+            backgroundPosition: '0 0, 7px 11px',
+            boxShadow: `0 4px 0 ${c.chalkFrame}, 0 10px 20px rgba(0,0,0,0.45), inset 0 0 30px rgba(0,0,0,0.35)`,
+            display: 'flex',
+            gap: 22,
+            alignItems: 'flex-start',
+          }}>
+            {/* Uel pinned to the left of the chalkboard */}
+            <div style={{ flexShrink: 0 }}>
+              <ProfessorUel scale={0.6} />
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontFamily: '"Bradley Hand", "Comic Sans MS", "Marker Felt", cursive',
+                fontSize: '24px',
+                lineHeight: 1.1,
+                color: c.chalk,
+                marginBottom: 14,
+                letterSpacing: '0.01em',
+                textShadow: '0 1px 0 rgba(0,0,0,0.25)',
+              }}>
+                {lesson.title}
+              </div>
+              <pre style={{
+                fontSize: '14px',
+                lineHeight: '1.7',
+                color: c.chalk,
+                fontFamily: '"Bradley Hand", "Comic Sans MS", "Marker Felt", cursive',
+                whiteSpace: 'pre-wrap',
+                margin: 0,
+                fontWeight: 400,
+              }}>
+                {lesson.concept}
+              </pre>
+            </div>
+          </div>
         </div>
 
-        {/* Concept with teacher */}
+        {/* Wooden desk — wraps the query editor like an actual desk surface */}
         <div style={{
           padding: '24px 28px',
           borderBottom: `1px solid ${c.border}`,
-          background: c.bg,
-          display: 'flex',
-          gap: '24px',
-          alignItems: 'flex-start',
+          background: c.desk,
+          // Wooden plank grain along the desk: horizontal subtle stripes
+          backgroundImage:
+            `repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 1px, transparent 1px 3px),` +
+            `repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 80px)`,
+          boxShadow: `inset 0 6px 12px rgba(0,0,0,0.3)`,
         }}>
-          {/* Teacher sprite + speech-bubble tail */}
-          <div style={{ flexShrink: 0, paddingTop: '4px' }}>
-            <TeacherSprite />
-          </div>
-
-          {/* Speech bubble */}
           <div style={{
-            flex: 1,
-            position: 'relative',
-            background: c.panelBg,
-            border: `1px solid ${c.borderHL}`,
-            borderRadius: '4px',
-            padding: '18px 22px',
-            boxShadow: `0 0 0 2px ${c.bg}, 0 0 0 3px ${c.border}`,
+            background: c.deskTop,
+            backgroundImage: `repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0 1px, transparent 1px 6px)`,
+            border: `1px solid ${c.border}`,
+            borderRadius: 4,
+            padding: '16px 18px',
+            boxShadow: `0 4px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,235,200,0.12)`,
           }}>
-            {/* Bubble tail pointing to teacher */}
-            <div style={{
-              position: 'absolute',
-              left: '-10px',
-              top: '28px',
-              width: 0,
-              height: 0,
-              borderTop: '8px solid transparent',
-              borderBottom: '8px solid transparent',
-              borderRight: `10px solid ${c.borderHL}`,
-            }} />
-            <div style={{
-              position: 'absolute',
-              left: '-8px',
-              top: '29px',
-              width: 0,
-              height: 0,
-              borderTop: '7px solid transparent',
-              borderBottom: '7px solid transparent',
-              borderRight: `9px solid ${c.panelBg}`,
-            }} />
-            <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.accent, textTransform: 'uppercase', marginBottom: '10px' }}>
-              Prof. Uel
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.22em', color: c.chalk, textTransform: 'uppercase' }}>
+                Query Editor <span style={{ fontWeight: 400, letterSpacing: '0.04em', color: c.chalkDust, marginLeft: 8 }}>⌘ Enter to run</span>
+              </div>
+              <button
+                onClick={runQuery}
+                style={{
+                  padding: '7px 18px',
+                  background: c.accent,
+                  color: c.sidebar,
+                  border: `1px solid ${c.accentHover}`,
+                  borderRadius: 3,
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  fontFamily: 'ui-monospace, monospace',
+                  transition: 'background 0.15s',
+                  boxShadow: `0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)`,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = c.accentHover)}
+                onMouseLeave={e => (e.currentTarget.style.background = c.accent)}
+              >
+                Run
+              </button>
             </div>
-            <pre style={{
-              fontSize: '14px',
-              lineHeight: '1.7',
-              color: c.text,
-              fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-              whiteSpace: 'pre-wrap',
-              margin: 0,
-            }}>
-              {lesson.concept}
-            </pre>
-          </div>
-        </div>
-
-        {/* Query editor */}
-        <div style={{ padding: '20px 28px', borderBottom: `1px solid ${c.border}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: c.muted, textTransform: 'uppercase' }}>
-              Query Editor <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— ⌘ Enter to run</span>
-            </div>
-            <button
-              onClick={runQuery}
-              style={{
-                padding: '6px 16px',
-                background: c.accent,
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'background 0.15s',
+            <textarea
+              ref={textareaRef}
+              value={query}
+              onChange={e => {
+                setQuery(e.target.value);
+                persistQuery(LESSONS[activeLesson].id, e.target.value);
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = c.accentHover)}
-              onMouseLeave={e => (e.currentTarget.style.background = c.accent)}
-            >
-              Run
-            </button>
-          </div>
-          <textarea
-            ref={textareaRef}
-            value={query}
-            onChange={e => {
-              setQuery(e.target.value);
-              persistQuery(LESSONS[activeLesson].id, e.target.value);
-            }}
-            rows={6}
-            spellCheck={false}
-            style={{
-              width: '100%',
-              background: c.codeBg,
-              border: `1px solid ${c.border}`,
-              borderRadius: '8px',
-              padding: '14px 16px',
-              color: c.text,
-              fontSize: '13px',
-              fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-              lineHeight: '1.6',
-              outline: 'none',
-              resize: 'none',
-              boxSizing: 'border-box',
-              caretColor: c.text,
-            }}
-            onFocus={e => (e.currentTarget.style.borderColor = c.accent)}
-            onBlur={e => (e.currentTarget.style.borderColor = c.border)}
-          />
-          <div style={{ marginTop: '8px', fontSize: '12px', color: c.muted }}>
-            Hint: {lesson.hint}
+              rows={6}
+              spellCheck={false}
+              style={{
+                width: '100%',
+                background: c.codeBg,
+                border: `1px solid ${c.border}`,
+                borderRadius: 3,
+                padding: '14px 16px',
+                color: c.chalk,
+                fontSize: '13px',
+                fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+                lineHeight: '1.6',
+                outline: 'none',
+                resize: 'none',
+                boxSizing: 'border-box',
+                caretColor: c.chalk,
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)',
+              }}
+              onFocus={e => (e.currentTarget.style.borderColor = c.accent)}
+              onBlur={e => (e.currentTarget.style.borderColor = c.border)}
+            />
+            <div style={{ marginTop: '8px', fontSize: '12px', color: c.chalkDust, fontStyle: 'italic' }}>
+              Hint: {lesson.hint}
+            </div>
           </div>
         </div>
 
