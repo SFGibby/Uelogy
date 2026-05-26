@@ -1,19 +1,42 @@
 'use client';
 
-// The Grid — Tron-themed project tracker. This file is the skeleton: layout,
-// hero, and background only. The kanban board, lightcycle game intro, and
-// admin modals follow in subsequent commits.
+// The Grid — Tron-themed project tracker.
 
+import { useState, useEffect } from 'react';
 import GridBackground from '../../components/grid/GridBackground';
 import GridMusic from '../../components/grid/GridMusic';
+import KanbanBoard from '../../components/grid/KanbanBoard';
+import type { GridTask } from '../../lib/supabase';
 
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
-const CYAN_FAINT = 'rgba(0,240,255,0.18)';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 const DISPLAY = '"Geist Mono", "JetBrains Mono", ui-monospace, monospace';
 
 export default function GridPage() {
+  const [adminMode, setAdminMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const a = params.get('admin');
+    if (a === '1') {
+      localStorage.setItem('grid_admin', '1');
+      setAdminMode(true);
+    } else if (a === '0') {
+      localStorage.removeItem('grid_admin');
+      setAdminMode(false);
+    } else {
+      setAdminMode(localStorage.getItem('grid_admin') === '1');
+    }
+  }, []);
+
+  const handleTaskClick = (task: GridTask) => {
+    // Full edit modal lands in Stream B5. For now, log so the click chain
+    // is observable.
+    console.log('TASK', task);
+  };
+
   return (
     <main
       style={{
@@ -27,14 +50,13 @@ export default function GridPage() {
     >
       <GridBackground />
 
-      {/* Hero */}
       <section
         style={{
           position: 'relative',
           zIndex: 2,
-          maxWidth: 1180,
+          maxWidth: 1280,
           margin: '0 auto',
-          padding: '60px 32px 40px',
+          padding: '56px 32px 24px',
         }}
       >
         <div
@@ -46,7 +68,7 @@ export default function GridPage() {
             marginBottom: 14,
           }}
         >
-          User Program · Authenticated
+          User Program &middot; {adminMode ? 'Admin' : 'Visitor'}
         </div>
         <h1
           style={{
@@ -65,75 +87,28 @@ export default function GridPage() {
         <p
           style={{
             color: CYAN_DIM,
-            maxWidth: 580,
-            marginTop: 20,
+            maxWidth: 620,
+            marginTop: 18,
             fontSize: 14,
             lineHeight: 1.7,
             letterSpacing: '0.02em',
           }}
         >
-          A self-imposed board for the projects I am actually running. Stages on the x-axis, types as
-          tags, due dates when they matter. Public read; admin gate flips edit mode on.
+          A self-imposed board for the projects I am actually running. Stages on the x-axis, types
+          as colored tags. Drag to move between stages. {adminMode ? '' : 'Add ?admin=1 to the URL to edit.'}
         </p>
       </section>
 
-      {/* Placeholder board area — the real kanban replaces this in B4 */}
       <section
         style={{
           position: 'relative',
           zIndex: 2,
-          maxWidth: 1180,
+          maxWidth: 1280,
           margin: '0 auto',
-          padding: '20px 32px 80px',
+          padding: '12px 32px 80px',
         }}
       >
-        <div
-          style={{
-            position: 'relative',
-            padding: '40px 36px',
-            border: `1px solid ${CYAN_FAINT}`,
-            background: 'rgba(0,12,16,0.55)',
-            // Chamfered top-right corner using clip-path
-            clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)',
-            boxShadow: `0 0 24px rgba(0,240,255,0.10), inset 0 0 0 1px rgba(0,240,255,0.04)`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              letterSpacing: '0.36em',
-              color: CYAN_DIM,
-              textTransform: 'uppercase',
-              fontWeight: 700,
-            }}
-          >
-            System &middot; Status
-          </div>
-          <div
-            style={{
-              marginTop: 12,
-              fontSize: 22,
-              color: CYAN,
-              fontFamily: DISPLAY,
-              letterSpacing: '0.04em',
-            }}
-          >
-            Board initialization queued.
-          </div>
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 13,
-              color: CYAN_DIM,
-              lineHeight: 1.7,
-              maxWidth: 540,
-            }}
-          >
-            Stages, types, and tasks will live here. Visitors will see the board read-only. Adding
-            <code style={{ background: 'rgba(0,240,255,0.08)', padding: '1px 6px', margin: '0 4px', color: CYAN }}>?admin=1</code>
-            to the URL flips management mode on.
-          </div>
-        </div>
+        <KanbanBoard adminMode={adminMode} onTaskClick={handleTaskClick} />
       </section>
 
       <GridMusic />
