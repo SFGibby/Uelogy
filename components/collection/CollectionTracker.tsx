@@ -16,7 +16,7 @@ const TYPE_META: Record<string, { label: string; color: string; short: string }>
 };
 
 const TAB_FILTERS: { value: FilterType; label: string; color: string }[] = [
-  { value: '',             label: 'All',         color: '#7a6a52' },
+  { value: '',             label: 'All',         color: '#5a5e68' },
   { value: 'mtg',          label: 'Magic',       color: '#c98a2e' },
   { value: 'pokemon',      label: 'Pokémon',     color: '#b14040' },
   { value: 'sports_card',  label: 'Sports',      color: '#3f5a8c' },
@@ -25,23 +25,25 @@ const TAB_FILTERS: { value: FilterType; label: string; color: string }[] = [
 
 const PER_PAGE = 9; // 3x3 binder page
 
-// Palette
+// Palette — card binder, not school binder. Dark plastic page backings,
+// clear plastic pocket sleeves, vinyl-textured cover. No paper grain.
 const COLOR = {
-  desk:         '#2a2118',
-  deskGrain:    '#1f1810',
-  binder:       '#1e2a45',
-  binderEdge:   '#15203a',
-  ring:         '#cbd0d6',
-  ringShadow:   '#7d8186',
-  page:         '#efe5cf',
-  pageEdge:     '#d6c9a8',
-  pageShadow:   'rgba(0,0,0,0.35)',
-  pocket:       'rgba(0,0,0,0.06)',
-  pocketEdge:   'rgba(0,0,0,0.18)',
-  ink:          '#3a2e1f',
-  inkSoft:      '#7a6a52',
-  inkFaint:     '#a08a6a',
-  warmWhite:    '#f4ebd6',
+  desk:         '#1c1c20',     // neutral dark surface, no amber/leather
+  deskGrain:    '#141417',     // reserved for subtle desk noise
+  binder:       '#1e2a45',     // navy vinyl cover
+  binderEdge:   '#15203a',     // cover edge / spine
+  ring:         '#9ea4ad',     // hardware silver (slightly darker than before)
+  ringShadow:   '#5f636b',
+  page:         '#0d0d12',     // black plastic page backing
+  pageEdge:     '#1a1a22',     // page edge / divider line on the binder body
+  pageShadow:   'rgba(0,0,0,0.5)',
+  pocket:       'rgba(255,255,255,0.04)',   // faint plastic highlight on black
+  pocketEdge:   'rgba(255,255,255,0.18)',   // plastic sleeve weld (visible)
+  pocketGloss:  'rgba(255,255,255,0.10)',   // top-edge gloss
+  ink:          '#e3e3ea',     // light text on dark page
+  inkSoft:      '#9499a3',
+  inkFaint:     '#5a5e68',
+  warmWhite:    '#f4ebd6',     // header text on desk (kept warm for contrast)
 };
 
 const SERIF = 'Georgia, "Hoefler Text", "Times New Roman", serif';
@@ -281,12 +283,19 @@ export default function CollectionTracker() {
         })}
       </div>
 
-      {/* Binder body */}
+      {/* Binder body — navy PU-vinyl cover with a subtle pebble grain */}
       <div
         style={{
           maxWidth: 680,
           margin: '0 auto',
           background: COLOR.binder,
+          // Pebble texture for the vinyl cover — two offset dot grids at very
+          // low opacity. Reads as grain, not pattern.
+          backgroundImage:
+            `radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),` +
+            `radial-gradient(rgba(0,0,0,0.18) 1px, transparent 1px)`,
+          backgroundSize: '6px 6px, 9px 9px',
+          backgroundPosition: '0 0, 3px 4px',
           borderTop: `1px solid ${COLOR.binderEdge}`,
           borderRadius: '0 6px 6px 6px',
           padding: '20px 20px 24px',
@@ -325,18 +334,15 @@ export default function CollectionTracker() {
           ))}
         </div>
 
-        {/* Page */}
+        {/* Page — black plastic backing, no grain (card binder pages aren't paper) */}
         <div
           style={{
             flex: 1,
             background: COLOR.page,
-            backgroundImage:
-              `repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 1px, transparent 1px 3px),` +
-              `repeating-linear-gradient(90deg, rgba(0,0,0,0.015) 0 1px, transparent 1px 3px)`,
             borderRadius: 4,
             padding: '24px 22px 18px',
             color: COLOR.ink,
-            boxShadow: `inset 1px 0 0 ${COLOR.pageEdge}, 0 2px 4px rgba(0,0,0,0.25)`,
+            boxShadow: `inset 1px 0 0 ${COLOR.pageEdge}, 0 2px 4px rgba(0,0,0,0.5)`,
             minHeight: 420,
             display: 'flex',
             flexDirection: 'column',
@@ -396,7 +402,7 @@ export default function CollectionTracker() {
                 MozAppearance: 'none',
                 outline: 'none',
                 cursor: 'pointer',
-                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path d='M0 0l4 6 4-6z' fill='%237a6a52'/></svg>")`,
+                backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'><path d='M0 0l4 6 4-6z' fill='%239499a3'/></svg>")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 6px center',
               }}
@@ -567,6 +573,8 @@ function Sleeve({
         transform: hover ? 'translateY(-2px)' : 'none',
         transition: 'transform 0.15s',
         cursor: 'default',
+        // Top-edge gloss strip — plastic sleeve highlight
+        boxShadow: `inset 0 1px 0 ${COLOR.pocketGloss}, 0 2px 6px rgba(0,0,0,0.4)`,
       }}
     >
       {/* Type strip on left edge */}
@@ -736,9 +744,10 @@ function EmptySleeve() {
     <div
       style={{
         aspectRatio: '2.5 / 3.5',
-        border: `1px dashed ${COLOR.pageEdge}`,
+        border: `1px dashed ${COLOR.pocketEdge}`,
         borderRadius: 3,
         background: 'transparent',
+        opacity: 0.5,
       }}
     />
   );
@@ -794,13 +803,14 @@ function EmptyBinder({
       >
         <div
           style={{
-            background: COLOR.page,
+            background: 'rgba(255,255,255,0.06)',
             padding: '14px 22px',
-            border: `1px solid ${COLOR.pageEdge}`,
+            border: `1px solid ${COLOR.pocketEdge}`,
             borderRadius: 2,
             textAlign: 'center',
             pointerEvents: 'auto',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(4px)',
           }}
         >
           <div
