@@ -16,16 +16,16 @@ const SOCIALS = [
 
 const WHAT_I_DO = [
   {
-    title: 'IT Leadership',
-    desc: "Keep a solar company's infrastructure and day-to-day tech running.",
+    title: 'SunPower',
+    desc: 'Director of Business Systems. I keep the day-to-day tech, automations, and reporting running across a residential solar company.',
   },
   {
-    title: 'Systems & Automation',
-    desc: 'Wire up workflows and integrations that kill busywork and make business tools actually talk to each other.',
+    title: 'RT Management',
+    desc: 'Same systems playbook on the side for another sales team — integrations, automations, executive reporting.',
   },
   {
-    title: 'Solar Industry',
-    desc: 'Most of my work happens in residential solar. SunPower is one of the most recognized names in the space.',
+    title: 'Ride Southern Utah',
+    desc: "Admin since 2012 for the bike event org. 500–1,000 riders per race, plus the new site they needed.",
   },
 ];
 
@@ -213,8 +213,8 @@ export default function Home() {
               Samuel<br />Gibson.
             </h1>
             <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', maxWidth: 540, lineHeight: 1.7, margin: '28px 0 0' }}>
-              I lead IT and business systems at SunPower, a solar company.
-              Off the clock: cards, pickleball, and tinkering with sites like this one.
+              Director of Business Systems at SunPower. Same playbook on the side for RT Management and admin work for Ride Southern Utah since 2012.
+              Off the clock: cards, pickleball, and sites like this one.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 40 }}>
               {SOCIALS.map(s => (
