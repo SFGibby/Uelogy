@@ -250,6 +250,8 @@ export default function CollectionTracker() {
           alignItems: 'flex-end',
           gap: 4,
           paddingLeft: 32,
+          paddingRight: 12,
+          flexWrap: 'wrap',
           position: 'relative',
           zIndex: 2,
         }}

@@ -23,6 +23,14 @@ const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
 export default function StageManager({ stages: initial, onClose, onChange }: Props) {
   const [stages, setStages] = useState<GridStage[]>([...initial].sort((a, b) => a.position - b.position));
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -130,9 +138,9 @@ export default function StageManager({ stages: initial, onClose, onChange }: Pro
         zIndex: 100,
         background: 'rgba(0,0,0,0.85)',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: isMobile ? 'stretch' : 'center',
         justifyContent: 'center',
-        padding: 20,
+        padding: isMobile ? 0 : 20,
         backdropFilter: 'blur(3px)',
       }}
     >
@@ -140,14 +148,14 @@ export default function StageManager({ stages: initial, onClose, onChange }: Pro
         onClick={(e) => e.stopPropagation()}
         style={{
           background: '#020608',
-          border: `1px solid ${CYAN_FAINT}`,
-          boxShadow: `0 0 36px rgba(0,240,255,0.15)`,
+          border: isMobile ? 'none' : `1px solid ${CYAN_FAINT}`,
+          boxShadow: isMobile ? 'none' : `0 0 36px rgba(0,240,255,0.15)`,
           width: '100%',
-          maxWidth: 620,
-          maxHeight: 'calc(100vh - 40px)',
+          maxWidth: isMobile ? '100%' : 620,
+          maxHeight: isMobile ? '100vh' : 'calc(100vh - 40px)',
           overflowY: 'auto',
-          clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)',
-          padding: '24px 28px',
+          clipPath: isMobile ? 'none' : 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)',
+          padding: isMobile ? '20px 18px' : '24px 28px',
           color: '#e0f4f8',
           fontFamily: MONO,
         }}

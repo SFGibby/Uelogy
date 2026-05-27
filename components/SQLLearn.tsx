@@ -271,6 +271,14 @@ export default function SQLLearn() {
   const [results, setResults] = useState<Row[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [ran, setRan] = useState(false);
   const [completed, setCompleted] = useState<string[]>([]);
   const progressRef = useRef<Progress>({ activeLesson: 0, queries: {}, completed: [] });
@@ -397,24 +405,25 @@ export default function SQLLearn() {
       minHeight: '100vh',
       background: c.bg,
       display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
       color: c.text,
       position: 'relative',
     }}>
       <div style={roomLightingStyle} />
 
-      {/* Locker bank — sidebar restyled as a row of school lockers */}
+      {/* Locker bank — sidebar on desktop, horizontal strip on mobile */}
       <div style={{
-        width: '240px',
+        width: isMobile ? '100%' : '240px',
         background: c.sidebar,
-        // Vertical wood-grain stripes via repeating-linear-gradient for the locker bank backing
         backgroundImage: `repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 60px)`,
-        borderRight: `2px solid ${c.border}`,
+        borderRight: isMobile ? 'none' : `2px solid ${c.border}`,
+        borderBottom: isMobile ? `2px solid ${c.border}` : 'none',
         flexShrink: 0,
-        overflowY: 'auto',
+        overflowY: isMobile ? 'visible' : 'auto',
         position: 'relative',
         zIndex: 1,
-        boxShadow: `inset -6px 0 12px rgba(0,0,0,0.35)`,
+        boxShadow: isMobile ? `inset 0 -6px 12px rgba(0,0,0,0.35)` : `inset -6px 0 12px rgba(0,0,0,0.35)`,
       }}>
         <div style={{
           padding: '20px 16px 12px',
@@ -432,7 +441,13 @@ export default function SQLLearn() {
           <span>SQL Lockers</span>
           <span style={{ color: c.accent, fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', padding: '0 10px 12px', gap: 6 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'row' : 'column',
+          padding: isMobile ? '0 10px 10px' : '0 10px 12px',
+          gap: 6,
+          overflowX: isMobile ? 'auto' : 'visible',
+        }}>
           {LESSONS.map((l, i) => {
             const done = completed.includes(l.id);
             const active = i === activeLesson;
@@ -442,7 +457,9 @@ export default function SQLLearn() {
                 onClick={() => selectLesson(i)}
                 style={{
                   position: 'relative',
-                  width: '100%',
+                  width: isMobile ? 'auto' : '100%',
+                  minWidth: isMobile ? 150 : undefined,
+                  flexShrink: isMobile ? 0 : undefined,
                   textAlign: 'left',
                   padding: '12px 14px 12px 18px',
                   fontSize: '12px',
@@ -530,12 +547,13 @@ export default function SQLLearn() {
             backgroundPosition: '0 0, 7px 11px',
             boxShadow: `0 4px 0 ${c.chalkFrame}, 0 10px 20px rgba(0,0,0,0.45), inset 0 0 30px rgba(0,0,0,0.35)`,
             display: 'flex',
-            gap: 22,
-            alignItems: 'flex-start',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 8 : 22,
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {/* Uel pinned to the left of the chalkboard */}
+            {/* Uel pinned to the left (or above on mobile) */}
             <div style={{ flexShrink: 0 }}>
-              <ProfessorUel scale={0.6} />
+              <ProfessorUel scale={isMobile ? 0.45 : 0.6} />
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -204,7 +204,7 @@ export default function Home() {
         </div>
 
         {/* ── HERO ── */}
-        <section style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '100px 48px 80px', maxWidth: 1000, margin: '0 auto', gap: 40 }}>
+        <section style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '80px 24px 60px', maxWidth: 1000, margin: '0 auto', gap: 40, flexWrap: 'wrap' }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'var(--font-vt323), monospace', color: '#33ff33', fontSize: 14, letterSpacing: '0.12em', marginBottom: 20, textShadow: '0 0 6px #33ff33' }}>
               SOLAR · AUTOMATION · UTAH

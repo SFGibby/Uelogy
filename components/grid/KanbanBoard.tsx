@@ -263,7 +263,7 @@ export default function KanbanBoard({ adminMode }: Props) {
   return (
     <>
       {adminMode && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => setShowStageManager(true)} style={toolbarBtn}>
             Manage Stages
           </button>

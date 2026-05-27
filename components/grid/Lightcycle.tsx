@@ -237,7 +237,16 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
     }
   }, []);
 
-  // Player input
+  // Shared turn function used by both keyboard and on-screen D-pad
+  const opposite: Record<Dir, Dir> = { up: 'down', down: 'up', left: 'right', right: 'left' };
+  const tryTurn = useCallback((dir: Dir) => {
+    if (stateRef.current.phase !== 'playing') return;
+    const p = stateRef.current.player;
+    if (dir === opposite[p.dir]) return;
+    p.dir = dir;
+  }, []);
+
+  // Player input — keyboard
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (stateRef.current.phase !== 'playing') return;
@@ -253,15 +262,12 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
       };
       const dir = map[e.key];
       if (!dir) return;
-      const opposite: Record<Dir, Dir> = { up: 'down', down: 'up', left: 'right', right: 'left' };
-      const p = stateRef.current.player;
-      if (dir === opposite[p.dir]) return;
       e.preventDefault();
-      p.dir = dir;
+      tryTurn(dir);
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, []);
+  }, [tryTurn]);
 
   // Game loop
   useEffect(() => {
@@ -371,8 +377,36 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
         gap: 14,
         fontFamily: MONO,
         padding: 20,
+        overflowY: 'auto',
       }}
     >
+      <style>{`
+        .lc-dpad { display: none; }
+        @media (pointer: coarse) {
+          .lc-dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 56px);
+            grid-template-rows: repeat(3, 56px);
+            gap: 6px;
+            margin-top: 4px;
+            touch-action: manipulation;
+          }
+        }
+        .lc-dpad button {
+          background: rgba(0,12,16,0.7);
+          border: 1px solid rgba(0,240,255,0.45);
+          color: #00f0ff;
+          font-size: 22px;
+          font-family: inherit;
+          cursor: pointer;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .lc-dpad button:active {
+          background: rgba(0,240,255,0.25);
+          box-shadow: 0 0 14px rgba(0,240,255,0.55);
+        }
+      `}</style>
       {/* HUD */}
       <div
         style={{
@@ -403,8 +437,22 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
           boxShadow: '0 0 28px rgba(0,240,255,0.28)',
           maxWidth: '95vw',
           height: 'auto',
+          touchAction: 'none',
         }}
       />
+
+      {/* Touch D-pad — only shows on coarse-pointer devices */}
+      <div className="lc-dpad" aria-hidden={state.phase !== 'playing'}>
+        <div />
+        <button type="button" onClick={() => tryTurn('up')} aria-label="Up">↑</button>
+        <div />
+        <button type="button" onClick={() => tryTurn('left')} aria-label="Left">←</button>
+        <div />
+        <button type="button" onClick={() => tryTurn('right')} aria-label="Right">→</button>
+        <div />
+        <button type="button" onClick={() => tryTurn('down')} aria-label="Down">↓</button>
+        <div />
+      </div>
 
       {/* Overlay messages + buttons */}
       <div style={{ minHeight: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>

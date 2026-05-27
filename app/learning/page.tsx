@@ -150,7 +150,7 @@ export default function HallwayPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${DOORS.length}, 1fr)`,
+            gridTemplateColumns: `repeat(auto-fit, minmax(140px, 1fr))`,
             gap: 22,
             alignItems: 'end',
           }}
