@@ -16,6 +16,8 @@ import type { GridStage, GridType, GridTask } from '../../lib/supabase';
 import StageColumn from './StageColumn';
 import TaskCard from './TaskCard';
 import TaskEditModal from './TaskEditModal';
+import StageManager from './StageManager';
+import TypeManager from './TypeManager';
 
 interface Props {
   adminMode: boolean;
@@ -34,6 +36,9 @@ export default function KanbanBoard({ adminMode }: Props) {
   // Modal state: editing an existing task OR creating in a specific stage
   const [editing, setEditing] = useState<GridTask | null>(null);
   const [creatingInStage, setCreatingInStage] = useState<string | null>(null);
+  // Manager modal flags
+  const [showStageManager, setShowStageManager] = useState(false);
+  const [showTypeManager, setShowTypeManager] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -242,8 +247,32 @@ export default function KanbanBoard({ adminMode }: Props) {
     );
   }
 
+  const toolbarBtn: React.CSSProperties = {
+    fontFamily: MONO,
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: '0.22em',
+    textTransform: 'uppercase',
+    background: 'transparent',
+    color: CYAN_DIM,
+    border: '1px solid rgba(0,240,255,0.3)',
+    padding: '7px 12px',
+    cursor: 'pointer',
+  };
+
   return (
     <>
+      {adminMode && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          <button type="button" onClick={() => setShowStageManager(true)} style={toolbarBtn}>
+            Manage Stages
+          </button>
+          <button type="button" onClick={() => setShowTypeManager(true)} style={toolbarBtn}>
+            Manage Types
+          </button>
+        </div>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -284,6 +313,22 @@ export default function KanbanBoard({ adminMode }: Props) {
           onClose={closeModal}
           onSaved={handleSaved}
           onDeleted={handleDeleted}
+        />
+      )}
+
+      {showStageManager && (
+        <StageManager
+          stages={stages}
+          onChange={setStages}
+          onClose={() => setShowStageManager(false)}
+        />
+      )}
+
+      {showTypeManager && (
+        <TypeManager
+          types={types}
+          onChange={setTypes}
+          onClose={() => setShowTypeManager(false)}
         />
       )}
     </>
