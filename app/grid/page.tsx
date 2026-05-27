@@ -3,9 +3,12 @@
 // The Grid — Tron-themed project tracker.
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import GridBackground from '../../components/grid/GridBackground';
 import GridMusic from '../../components/grid/GridMusic';
 import KanbanBoard from '../../components/grid/KanbanBoard';
+
+const Lightcycle = dynamic(() => import('../../components/grid/Lightcycle'), { ssr: false });
 
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
@@ -14,6 +17,7 @@ const DISPLAY = '"Geist Mono", "JetBrains Mono", ui-monospace, monospace';
 
 export default function GridPage() {
   const [adminMode, setAdminMode] = useState(false);
+  const [gameVisible, setGameVisible] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -105,6 +109,34 @@ export default function GridPage() {
       </section>
 
       <GridMusic />
+
+      {gameVisible && (
+        <Lightcycle onEnd={() => setGameVisible(false)} onSkip={() => setGameVisible(false)} />
+      )}
+
+      {!gameVisible && (
+        <button
+          onClick={() => setGameVisible(true)}
+          style={{
+            position: 'fixed',
+            bottom: 28,
+            right: 28,
+            zIndex: 50,
+            background: 'rgba(0,0,0,0.75)',
+            border: '1px solid rgba(0,240,255,0.4)',
+            color: '#00f0ff',
+            padding: '8px 16px',
+            fontFamily: MONO,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+          }}
+        >
+          New Game
+        </button>
+      )}
     </main>
   );
 }
