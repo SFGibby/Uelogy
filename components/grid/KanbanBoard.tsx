@@ -12,7 +12,7 @@ import {
   closestCorners,
 } from '@dnd-kit/core';
 import { supabase } from '../../lib/supabase';
-import type { GridStage, GridType, GridTask } from '../../lib/supabase';
+import type { GridStage, GridType, GridTask, GridTaskSavings } from '../../lib/supabase';
 import StageColumn from './StageColumn';
 import TaskCard from './TaskCard';
 import TaskEditModal from './TaskEditModal';
@@ -30,6 +30,7 @@ export default function KanbanBoard({ adminMode }: Props) {
   const [stages, setStages] = useState<GridStage[]>([]);
   const [types, setTypes] = useState<GridType[]>([]);
   const [tasks, setTasks] = useState<GridTask[]>([]);
+  const [savedById, setSavedById] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<GridTask | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +48,11 @@ export default function KanbanBoard({ adminMode }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [s, t, k] = await Promise.all([
+    const [s, t, k, sg] = await Promise.all([
       supabase.from('grid_stages').select('*').order('position'),
       supabase.from('grid_types').select('*').order('created_at'),
       supabase.from('grid_tasks').select('*').order('position'),
+      supabase.from('grid_task_savings').select('*'),
     ]);
     if (s.error || t.error || k.error) {
       setError(s.error?.message ?? t.error?.message ?? k.error?.message ?? 'unknown error');
@@ -58,6 +60,11 @@ export default function KanbanBoard({ adminMode }: Props) {
     setStages((s.data as GridStage[]) ?? []);
     setTypes((t.data as GridType[]) ?? []);
     setTasks((k.data as GridTask[]) ?? []);
+    // savings view may not exist yet if Sam hasn't run the budget migration; ignore that error.
+    const savingsRows = (sg.data as GridTaskSavings[]) ?? [];
+    setSavedById(
+      Object.fromEntries(savingsRows.map((r) => [r.grid_task_id, Number(r.saved)]))
+    );
     setLoading(false);
   }, []);
 
@@ -287,6 +294,7 @@ export default function KanbanBoard({ adminMode }: Props) {
               tasks={tasksByStage[stage.id] ?? []}
               types={types}
               adminMode={adminMode}
+              savedById={savedById}
               onTaskClick={openEditModal}
               onAddClick={adminMode ? () => openCreateModal(stage.id) : undefined}
             />

@@ -34,9 +34,66 @@ export interface GridTask {
   type_id?: string | null;
   position: number;
   due_at?: string | null;
+  cost?: number | null;
   links: GridTaskLink[];
   created_at: string;
   updated_at: string;
+}
+
+export type BudgetKind = 'income' | 'expense' | 'savings' | 'transfer';
+export type BudgetCadence = 'monthly' | 'annual' | 'biennial';
+
+export interface BudgetPayer {
+  id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export interface BudgetCategory {
+  id: string;
+  name: string;
+  color: string;
+  kind: BudgetKind;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface BudgetRecurring {
+  id: string;
+  name: string;
+  amount: number;
+  payer_id?: string | null;
+  category_id?: string | null;
+  cadence: BudgetCadence;
+  next_due_date?: string | null;
+  remaining_debt?: number | null;
+  remaining_payments?: number | null;
+  is_active: boolean;
+  note?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetTransaction {
+  id: string;
+  occurred_on: string;
+  amount: number;
+  payer_id?: string | null;
+  category_id?: string | null;
+  kind: BudgetKind;
+  description: string;
+  note?: string | null;
+  grid_task_id?: string | null;
+  recurring_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GridTaskSavings {
+  grid_task_id: string;
+  cost: number;
+  saved: number;
 }
 
 export interface CollectionItem {

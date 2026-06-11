@@ -10,6 +10,7 @@ interface Props {
   tasks: GridTask[];
   types: GridType[];
   adminMode: boolean;
+  savedById?: Record<string, number>;
   onTaskClick: (task: GridTask) => void;
   onAddClick?: () => void;
 }
@@ -19,6 +20,7 @@ export default function StageColumn({
   tasks,
   types,
   adminMode,
+  savedById,
   onTaskClick,
   onAddClick,
 }: Props) {
@@ -91,6 +93,7 @@ export default function StageColumn({
             task={task}
             type={task.type_id ? typesById[task.type_id] : undefined}
             adminMode={adminMode}
+            saved={savedById?.[task.id]}
             onClick={() => onTaskClick(task)}
           />
         ))}

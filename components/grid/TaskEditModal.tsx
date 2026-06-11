@@ -40,6 +40,9 @@ export default function TaskEditModal({
   );
   const [typeId, setTypeId] = useState<string | null>(task?.type_id ?? null);
   const [dueAt, setDueAt] = useState(task?.due_at ?? '');
+  const [cost, setCost] = useState<string>(
+    task?.cost != null ? String(task.cost) : ''
+  );
   const [links, setLinks] = useState<GridTaskLink[]>(task?.links ?? []);
   const [saving, setSaving] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -69,12 +72,14 @@ export default function TaskEditModal({
     if (!title.trim() || saving) return;
     setSaving(true);
     const cleanLinks = links.filter((l) => l.label.trim() && l.url.trim());
+    const parsedCost = cost.trim() === '' ? null : Number(cost);
     const payload = {
       title: title.trim(),
       description: description.trim() || null,
       stage_id: stageId,
       type_id: typeId,
       due_at: dueAt || null,
+      cost: parsedCost != null && !Number.isNaN(parsedCost) ? parsedCost : null,
       links: cleanLinks,
     };
     try {
@@ -340,6 +345,26 @@ export default function TaskEditModal({
             onChange={(e) => setDueAt(e.target.value)}
             style={{ ...inputStyle, width: 'auto', minWidth: 180, colorScheme: 'dark' }}
           />
+        </div>
+
+        {/* Cost — makes this card a savings goal in the budget tool */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>
+            Cost (optional) &mdash; turns this into a savings goal
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: CYAN_DIM, fontFamily: MONO, fontSize: 14 }}>$</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
+              style={{ ...inputStyle, width: 160, fontFamily: 'inherit' }}
+              placeholder="0.00"
+            />
+          </div>
         </div>
 
         {/* Links */}
