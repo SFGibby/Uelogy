@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import ReturnHome from '../../components/site/ReturnHome';
 
 const ProfessorUel = dynamic(() => import('../../components/ProfessorUel'), { ssr: false });
 
@@ -57,6 +58,7 @@ export default function HallwayPage() {
         overflow: 'hidden',
       }}
     >
+      <ReturnHome variant="bell" />
       {/* Warm overhead glow */}
       <div
         style={{

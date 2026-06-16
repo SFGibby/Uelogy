@@ -2,6 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import ReturnHome from '../../components/site/ReturnHome';
+import { useMute } from '../../components/site/MuteToggle';
 
 const CollectionTracker = dynamic(() => import('../../components/collection/CollectionTracker'), { ssr: false });
 
@@ -18,6 +20,14 @@ export default function CollectionPage() {
   const playerRef = useRef<YTPlayer | null>(null);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
+  const [muted] = useMute();
+
+  // Respect the global mute: when muted goes true, pause whatever's playing.
+  useEffect(() => {
+    if (!muted) return;
+    playerRef.current?.pauseVideo();
+    setPlaying(false);
+  }, [muted]);
 
   useEffect(() => {
     const tag = document.createElement('script');
@@ -51,6 +61,7 @@ export default function CollectionPage() {
       playerRef.current.pauseVideo();
       setPlaying(false);
     } else {
+      if (muted) return;
       playerRef.current.playVideo();
       setPlaying(true);
     }
@@ -58,6 +69,8 @@ export default function CollectionPage() {
 
   return (
     <>
+      <ReturnHome variant="exit-sign" />
+
       {/* Hidden YouTube player */}
       <div
         ref={playerDivRef}

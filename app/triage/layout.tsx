@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Figtree } from 'next/font/google';
 import TriageHeader from './_components/TriageHeader';
 import TriageWidgetMount from './_components/TriageWidgetMount';
+import ReturnHome from '../../components/site/ReturnHome';
 import './triage.css';
 
 const figtree = Figtree({
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
 export default function TriageLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`${figtree.variable} triage-root`}>
+      <ReturnHome variant="clipboard" />
       <TriageHeader />
       {children}
       <TriageWidgetMount />

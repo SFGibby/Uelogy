@@ -5,6 +5,7 @@
 // video ID to the Tron Legacy soundtrack loop.
 
 import { useEffect, useRef, useState } from 'react';
+import { useMute } from '../site/MuteToggle';
 
 const YT_VIDEO_ID = 'UOYk5qT3ffo';
 
@@ -19,6 +20,14 @@ export default function GridMusic() {
   const playerRef = useRef<YTPlayer | null>(null);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
+  const [muted] = useMute();
+
+  // Respect global mute.
+  useEffect(() => {
+    if (!muted) return;
+    playerRef.current?.pauseVideo();
+    setPlaying(false);
+  }, [muted]);
 
   useEffect(() => {
     const tag = document.createElement('script');
@@ -50,6 +59,7 @@ export default function GridMusic() {
       playerRef.current.pauseVideo();
       setPlaying(false);
     } else {
+      if (muted) return;
       playerRef.current.playVideo();
       setPlaying(true);
     }

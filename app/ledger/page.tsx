@@ -1,12 +1,12 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import GridEntry from '../../components/grid/GridEntry';
+import TheLedger from '../../components/ledger/TheLedger';
 
 export const dynamic = 'force-dynamic';
 
-export default async function GridPage() {
+export default async function LedgerPage() {
   const store = await cookies();
-  const ok = store.get('grid_auth')?.value === '1';
+  const ok = store.get('ledger_auth')?.value === '1';
   if (!ok) redirect('/');
-  return <GridEntry />;
+  return <TheLedger />;
 }

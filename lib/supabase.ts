@@ -126,3 +126,14 @@ export interface CollectionItem {
   quantity?: number | null;
   created_at: string;
 }
+
+export type LeaderboardGame = 'grid' | 'tetris' | 'learning';
+
+export interface Leaderboard {
+  id: string;
+  game: LeaderboardGame;
+  player_initials: string;
+  score: number;
+  is_sam: boolean;
+  played_at: string;
+}

@@ -1,10 +1,9 @@
 'use client';
 
-// The Ledger — budget tool. Lives at /grid/budget, behind Flynn's gate.
-// Aesthetic: warm leather book on a desk under a brass lamp.
+// The Ledger — Antha's budget tool. Lives at /ledger, behind its own password.
+// Aesthetic: illuminated manuscript on parchment, vine borders, brass key, secret-garden palette.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import type {
   BudgetCategory,
@@ -14,18 +13,21 @@ import type {
   GridTask,
   GridTaskSavings,
 } from '../../lib/supabase';
-import AddEntryModal from './AddEntryModal';
+import EntryModal from './EntryModal';
+import ReturnHome from '../site/ReturnHome';
 
-const PAPER = '#f1e3c0';
-const PAPER_EDGE = '#c9b288';
-const INK = '#2a1b10';
-const INK_DIM = '#6b5640';
-const RED_INK = '#a8301f';
-const GREEN_INK = '#2e6a3c';
-const LAMP = '#f0a040';
-const WOOD = '#3a2010';
-const SERIF = 'Georgia, "Iowan Old Style", "Times New Roman", serif';
-const HAND = '"Courier Prime", "Courier New", ui-monospace, monospace';
+const PAPER = '#f5ecd3';
+const PAPER_EDGE = '#c9b485';
+const INK = '#1f3422';
+const INK_DIM = '#5b6e5b';
+const CRIMSON = '#8a2a2a';
+const FOREST = '#3a5a3a';
+const IVY = '#6b8e4e';
+const TEAL_DIM = '#3a5a6b';
+const BRASS = '#b8932e';
+const WOOD = '#2a1810';
+const SERIF = '"Cardo", "IM Fell DW Pica", Georgia, "Iowan Old Style", serif';
+const HAND = '"IM Fell DW Pica", "Cardo", Georgia, serif';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -49,7 +51,7 @@ function isoDate(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-export default function Ledger() {
+export default function TheLedger() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
   const [payers, setPayers] = useState<BudgetPayer[]>([]);
@@ -124,7 +126,6 @@ export default function Ledger() {
     return { income, expense, saved, net: income - expense - saved };
   }, [transactions]);
 
-  // Recurring items whose next_due_date falls within this month
   const dueThisMonth = useMemo(() => {
     const start = startOfMonth(month).getTime();
     const end = endOfMonth(month).getTime();
@@ -139,35 +140,25 @@ export default function Ledger() {
     setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
   }
 
+  const monthName = MONTH_NAMES[month.getMonth()];
+  const dropCap = monthName.charAt(0);
+  const monthRest = monthName.slice(1);
+
   return (
     <main
       style={{
         minHeight: '100vh',
         background:
-          `radial-gradient(60% 50% at 50% 0%, ${LAMP}33 0%, transparent 60%), linear-gradient(180deg, ${WOOD} 0%, #1a0e06 100%)`,
+          `radial-gradient(80% 60% at 50% 0%, ${IVY}26 0%, transparent 60%), linear-gradient(180deg, ${WOOD} 0%, #120a06 100%)`,
         backgroundAttachment: 'fixed',
         fontFamily: SERIF,
         color: INK,
         padding: '40px 16px 80px',
       }}
     >
-      {/* lamp halo top */}
-      <div
-        aria-hidden
-        style={{
-          position: 'fixed',
-          top: -120,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LAMP}66 0%, transparent 65%)`,
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
+      <ReturnHome variant="garden-gate" />
 
-      {/* Top bar */}
+      {/* Top bar (month nav + add entry) */}
       <div
         style={{
           position: 'relative',
@@ -177,74 +168,53 @@ export default function Ledger() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          color: '#e8c98a',
+          gap: 16,
+          flexWrap: 'wrap',
+          color: '#e7d6a8',
           fontFamily: SERIF,
         }}
       >
-        <Link
-          href="/grid"
-          style={{
-            color: '#e8c98a',
-            fontFamily: HAND,
-            fontSize: 11,
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            textDecoration: 'none',
-            border: '1px solid #8a6a3a',
-            padding: '6px 12px',
-          }}
-        >
-          ← Back to Flynn&apos;s
-        </Link>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            gap: 12,
             fontFamily: SERIF,
             fontStyle: 'italic',
             fontSize: 22,
           }}
         >
-          <button
-            onClick={() => shiftMonth(-1)}
-            aria-label="Previous month"
-            style={navBtnStyle}
-          >
+          <button onClick={() => shiftMonth(-1)} aria-label="Previous month" style={navBtnStyle}>
             ◀
           </button>
-          <span style={{ minWidth: 200, textAlign: 'center' }}>
-            {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
+          <span style={{ minWidth: 180, textAlign: 'center' }}>
+            {monthName} {month.getFullYear()}
           </span>
-          <button
-            onClick={() => shiftMonth(1)}
-            aria-label="Next month"
-            style={navBtnStyle}
-          >
+          <button onClick={() => shiftMonth(1)} aria-label="Next month" style={navBtnStyle}>
             ▶
           </button>
         </div>
         <button
           onClick={() => setAdding(true)}
           style={{
-            background: LAMP,
-            color: '#2a1300',
-            border: 'none',
-            padding: '8px 18px',
-            fontFamily: HAND,
-            fontSize: 11,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            fontWeight: 700,
+            background: FOREST,
+            color: PAPER,
+            border: `1px solid ${IVY}`,
+            padding: '10px 22px',
+            fontFamily: SERIF,
+            fontStyle: 'italic',
+            fontSize: 14,
+            letterSpacing: '0.06em',
             cursor: 'pointer',
-            boxShadow: `0 0 12px ${LAMP}aa`,
+            boxShadow: `0 4px 14px rgba(0,0,0,0.4)`,
+            minHeight: 44,
           }}
         >
-          + Add Entry
+          ✦ Record an Entry
         </button>
       </div>
 
-      {/* The book */}
+      {/* The illuminated page */}
       <div
         style={{
           position: 'relative',
@@ -253,51 +223,85 @@ export default function Ledger() {
           margin: '0 auto',
           background: PAPER,
           backgroundImage:
-            `radial-gradient(circle at 30% 20%, ${PAPER_EDGE}22 0%, transparent 60%), repeating-linear-gradient(0deg, transparent 0 27px, ${PAPER_EDGE}22 27px 28px)`,
+            `radial-gradient(circle at 20% 10%, ${PAPER_EDGE}28 0%, transparent 60%), radial-gradient(circle at 80% 90%, ${PAPER_EDGE}22 0%, transparent 55%), repeating-linear-gradient(0deg, transparent 0 27px, ${PAPER_EDGE}1d 27px 28px)`,
           border: `1px solid ${PAPER_EDGE}`,
-          boxShadow: '0 30px 80px rgba(0,0,0,0.7), inset 0 0 60px rgba(120,80,30,0.15)',
-          padding: '36px clamp(20px, 5vw, 56px) 44px',
+          boxShadow: '0 30px 80px rgba(0,0,0,0.7), inset 0 0 60px rgba(75,90,40,0.15)',
+          padding: '36px clamp(20px, 5vw, 56px) 48px',
         }}
       >
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: SERIF,
-            fontVariant: 'small-caps',
-            letterSpacing: '0.06em',
-            fontSize: 'clamp(28px, 4vw, 40px)',
-            color: INK,
-            borderBottom: `1px solid ${INK}`,
-            paddingBottom: 8,
-            marginBottom: 24,
-          }}
-        >
-          The Household Ledger
-        </h1>
+        <VineCorner pos="tl" />
+        <VineCorner pos="tr" />
+        <VineCorner pos="bl" />
+        <VineCorner pos="br" />
+
+        {/* Title with illuminated drop cap on the month */}
+        <header style={{ marginBottom: 28, borderBottom: `1px double ${INK}`, paddingBottom: 14 }}>
+          <h1
+            style={{
+              margin: 0,
+              fontFamily: SERIF,
+              fontVariant: 'small-caps',
+              letterSpacing: '0.08em',
+              fontSize: 'clamp(28px, 4vw, 40px)',
+              color: INK,
+              fontStyle: 'italic',
+            }}
+          >
+            The Household Ledger
+          </h1>
+          <div
+            style={{
+              marginTop: 6,
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontSize: 18,
+              color: INK_DIM,
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 6,
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                fontFamily: SERIF,
+                fontWeight: 700,
+                fontSize: 44,
+                color: BRASS,
+                lineHeight: 1,
+                marginRight: 4,
+                textShadow: `0 1px 0 ${INK}22`,
+              }}
+            >
+              {dropCap}
+            </span>
+            <span>
+              {monthRest}, in the year of our Lord {month.getFullYear()}
+            </span>
+          </div>
+        </header>
 
         {error && (
           <div
             style={{
-              background: '#f9d6c8',
-              border: `1px solid ${RED_INK}`,
-              color: RED_INK,
+              background: '#f3d6cc',
+              border: `1px solid ${CRIMSON}`,
+              color: CRIMSON,
               padding: '10px 14px',
               marginBottom: 16,
               fontFamily: HAND,
               fontSize: 13,
             }}
           >
-            Something went wrong: {error}. Did you run the budget-schema.sql migration?
+            A complication: {error}. Has the budget-schema.sql migration been run?
           </div>
         )}
 
-        {/* Summary */}
         <Summary {...totals} />
 
-        {/* Recurring due this month */}
-        <Section title="Recurring This Month">
+        <Section title="Recurring this month">
           {dueThisMonth.length === 0 ? (
-            <Empty hint="Nothing scheduled for this month." />
+            <Empty hint="Nothing scheduled to come due." />
           ) : (
             <table style={tableStyle}>
               <thead>
@@ -317,13 +321,13 @@ export default function Ledger() {
                             month: 'short',
                             day: 'numeric',
                           })
-                        : '—'}
+                        : '·'}
                     </td>
                     <td style={tdStyle}>{r.name}</td>
-                    <td style={{ ...tdStyle, color: INK_DIM }}>
-                      {r.payer_id ? payerById.get(r.payer_id)?.name ?? '—' : '—'}
+                    <td style={{ ...tdStyle, color: INK_DIM, fontStyle: 'italic' }}>
+                      {r.payer_id ? payerById.get(r.payer_id)?.name ?? '·' : '·'}
                     </td>
-                    <td style={{ ...tdStyle, textAlign: 'right', color: RED_INK }}>
+                    <td style={{ ...tdStyle, textAlign: 'right', color: CRIMSON }}>
                       {fmt(Number(r.amount))}
                     </td>
                   </tr>
@@ -333,12 +337,13 @@ export default function Ledger() {
           )}
         </Section>
 
-        {/* Transactions */}
-        <Section title="Entries">
+        <PressedLeafDivider />
+
+        <Section title="The day's entries">
           {loading ? (
-            <Empty hint="Opening the book…" />
+            <Empty hint="Turning the page…" />
           ) : transactions.length === 0 ? (
-            <Empty hint="No entries this month. Add one to start the ledger." />
+            <Empty hint="The page is yet unwritten. Record an entry above." />
           ) : (
             <table style={tableStyle}>
               <thead>
@@ -354,11 +359,7 @@ export default function Ledger() {
                 {transactions.map((t) => {
                   const cat = t.category_id ? catById.get(t.category_id) : undefined;
                   const color =
-                    t.kind === 'income'
-                      ? GREEN_INK
-                      : t.kind === 'savings'
-                      ? GREEN_INK
-                      : RED_INK;
+                    t.kind === 'income' || t.kind === 'savings' ? FOREST : CRIMSON;
                   const sign = t.kind === 'income' ? '+' : t.kind === 'savings' ? '↗' : '−';
                   return (
                     <tr key={t.id}>
@@ -369,11 +370,11 @@ export default function Ledger() {
                         })}
                       </td>
                       <td style={tdStyle}>{t.description}</td>
-                      <td style={{ ...tdStyle, color: cat?.color ?? INK_DIM }}>
-                        {cat?.name ?? '—'}
+                      <td style={{ ...tdStyle, color: cat?.color ?? INK_DIM, fontStyle: 'italic' }}>
+                        {cat?.name ?? '·'}
                       </td>
-                      <td style={{ ...tdStyle, color: INK_DIM }}>
-                        {t.payer_id ? payerById.get(t.payer_id)?.name ?? '—' : '—'}
+                      <td style={{ ...tdStyle, color: INK_DIM, fontStyle: 'italic' }}>
+                        {t.payer_id ? payerById.get(t.payer_id)?.name ?? '·' : '·'}
                       </td>
                       <td style={{ ...tdStyle, textAlign: 'right', color, fontFamily: HAND }}>
                         {sign} {fmt(Number(t.amount))}
@@ -386,12 +387,13 @@ export default function Ledger() {
           )}
         </Section>
 
-        {/* Savings Goals (Grid↔Budget link) */}
-        <Section title="Savings Goals">
+        <PressedLeafDivider />
+
+        <Section title="Things we are saving toward">
           {tasks.length === 0 ? (
-            <Empty hint="Mark a project on The Grid with a cost to start saving toward it." />
+            <Empty hint="Mark a project on The Grid with a cost to plant a savings goal here." />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {tasks.map((task) => {
                 const sg = savingsByTaskId.get(task.id);
                 const target = Number(task.cost ?? 0);
@@ -404,20 +406,23 @@ export default function Ledger() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'baseline',
-                        marginBottom: 4,
+                        marginBottom: 6,
+                        flexWrap: 'wrap',
+                        gap: 6,
                       }}
                     >
-                      <span style={{ fontWeight: 600 }}>{task.title}</span>
-                      <span style={{ fontFamily: HAND, fontSize: 13, color: INK_DIM }}>
+                      <span style={{ fontWeight: 600, fontFamily: SERIF }}>{task.title}</span>
+                      <span style={{ fontFamily: HAND, fontSize: 14, color: INK_DIM }}>
                         {fmt(saved)} / {fmt(target)}
                       </span>
                     </div>
                     <div
                       style={{
-                        height: 10,
-                        background: `${INK}22`,
+                        height: 8,
+                        background: `${INK}1c`,
                         border: `1px solid ${INK}55`,
                         position: 'relative',
+                        borderRadius: 1,
                       }}
                     >
                       <div
@@ -425,8 +430,8 @@ export default function Ledger() {
                           position: 'absolute',
                           inset: 0,
                           width: `${pct}%`,
-                          background: GREEN_INK,
-                          boxShadow: `inset 0 0 4px ${INK}44`,
+                          background: `linear-gradient(90deg, ${FOREST} 0%, ${IVY} 100%)`,
+                          boxShadow: `inset 0 0 4px ${INK}33`,
                         }}
                       />
                     </div>
@@ -436,10 +441,25 @@ export default function Ledger() {
             </div>
           )}
         </Section>
+
+        <footer
+          style={{
+            marginTop: 36,
+            paddingTop: 14,
+            borderTop: `1px solid ${INK}55`,
+            color: TEAL_DIM,
+            fontStyle: 'italic',
+            fontFamily: SERIF,
+            fontSize: 13,
+            textAlign: 'center',
+          }}
+        >
+          Kept faithfully on this {new Date().toLocaleDateString('en-US', { weekday: 'long' })}.
+        </footer>
       </div>
 
       {adding && (
-        <AddEntryModal
+        <EntryModal
           categories={categories}
           payers={payers}
           tasks={tasks}
@@ -462,16 +482,16 @@ function Summary({ income, expense, saved, net }: { income: number; expense: num
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
         gap: 12,
-        marginBottom: 24,
+        marginBottom: 26,
         padding: '14px 0',
         borderTop: `1px solid ${INK}55`,
         borderBottom: `1px solid ${INK}55`,
       }}
     >
-      <Stat label="Income" value={income} color={GREEN_INK} />
-      <Stat label="Expense" value={expense} color={RED_INK} />
-      <Stat label="Savings" value={saved} color={GREEN_INK} />
-      <Stat label="Net" value={net} color={net >= 0 ? GREEN_INK : RED_INK} />
+      <Stat label="Income" value={income} color={FOREST} />
+      <Stat label="Expense" value={expense} color={CRIMSON} />
+      <Stat label="Savings" value={saved} color={FOREST} />
+      <Stat label="Net" value={net} color={net >= 0 ? FOREST : CRIMSON} />
     </div>
   );
 }
@@ -479,7 +499,17 @@ function Summary({ income, expense, saved, net }: { income: number; expense: num
 function Stat({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: INK_DIM, fontFamily: HAND, marginBottom: 4 }}>
+      <div
+        style={{
+          fontSize: 11,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: INK_DIM,
+          fontFamily: SERIF,
+          fontStyle: 'italic',
+          marginBottom: 4,
+        }}
+      >
         {label}
       </div>
       <div style={{ fontFamily: HAND, fontSize: 22, color }}>{fmt(value)}</div>
@@ -494,10 +524,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         style={{
           fontFamily: SERIF,
           fontVariant: 'small-caps',
-          fontSize: 18,
-          letterSpacing: '0.06em',
-          margin: '0 0 10px',
-          color: INK,
+          fontStyle: 'italic',
+          fontSize: 19,
+          letterSpacing: '0.08em',
+          margin: '0 0 12px',
+          color: FOREST,
         }}
       >
         {title}
@@ -523,34 +554,83 @@ function Empty({ hint }: { hint: string }) {
   );
 }
 
+function PressedLeafDivider() {
+  return (
+    <div aria-hidden style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0' }}>
+      <div style={{ flex: 1, height: 1, background: `${INK}44` }} />
+      <svg width="24" height="14" viewBox="0 0 24 14" aria-hidden>
+        <path
+          d="M 2 7 Q 8 0 12 7 Q 16 14 22 7"
+          stroke={IVY}
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <circle cx="12" cy="7" r="1.6" fill={BRASS} />
+      </svg>
+      <div style={{ flex: 1, height: 1, background: `${INK}44` }} />
+    </div>
+  );
+}
+
+function VineCorner({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
+  const place: React.CSSProperties = {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    pointerEvents: 'none',
+    opacity: 0.55,
+  };
+  if (pos === 'tl') Object.assign(place, { top: 6, left: 6, transform: 'rotate(0deg)' });
+  if (pos === 'tr') Object.assign(place, { top: 6, right: 6, transform: 'scaleX(-1)' });
+  if (pos === 'bl') Object.assign(place, { bottom: 6, left: 6, transform: 'scaleY(-1)' });
+  if (pos === 'br') Object.assign(place, { bottom: 6, right: 6, transform: 'scale(-1,-1)' });
+  return (
+    <svg style={place} viewBox="0 0 48 48" aria-hidden>
+      <path
+        d="M 4 30 Q 4 14 22 8 Q 30 6 36 12 M 12 28 Q 16 22 22 22 M 18 36 Q 22 30 28 30"
+        stroke={IVY}
+        strokeWidth="1.2"
+        fill="none"
+      />
+      <ellipse cx="22" cy="22" rx="4" ry="2" fill={IVY} opacity="0.5" />
+      <ellipse cx="28" cy="30" rx="3.5" ry="1.8" fill={IVY} opacity="0.4" />
+      <circle cx="36" cy="12" r="2" fill={BRASS} opacity="0.6" />
+    </svg>
+  );
+}
+
 const tableStyle: React.CSSProperties = {
   width: '100%',
   borderCollapse: 'collapse',
   fontFamily: HAND,
-  fontSize: 14,
+  fontSize: 15,
 };
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
   fontFamily: SERIF,
   fontVariant: 'small-caps',
+  fontStyle: 'italic',
   fontSize: 12,
-  letterSpacing: '0.1em',
+  letterSpacing: '0.12em',
   color: INK_DIM,
   borderBottom: `1px solid ${INK}55`,
   padding: '6px 8px',
 };
 const tdStyle: React.CSSProperties = {
-  padding: '8px 8px',
+  padding: '9px 8px',
   borderBottom: `1px dashed ${INK}33`,
   verticalAlign: 'top',
   color: INK,
 };
 const navBtnStyle: React.CSSProperties = {
   background: 'transparent',
-  border: '1px solid #8a6a3a',
-  color: '#e8c98a',
-  padding: '4px 10px',
+  border: `1px solid ${BRASS}`,
+  color: '#e7d6a8',
+  padding: '4px 12px',
   fontSize: 14,
   cursor: 'pointer',
   fontFamily: SERIF,
+  fontStyle: 'italic',
+  minWidth: 44,
+  minHeight: 36,
 };

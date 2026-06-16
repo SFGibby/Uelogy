@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type Gate = 'flynns' | 'tron';
+type Gate = 'tron' | 'ledger';
 
 interface Props {
   gate: Gate;

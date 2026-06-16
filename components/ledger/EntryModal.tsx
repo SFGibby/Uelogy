@@ -18,13 +18,15 @@ interface Props {
   onSaved: () => void;
 }
 
-const PAPER = '#f1e3c0';
-const INK = '#2a1b10';
-const INK_DIM = '#6b5640';
-const LAMP = '#f0a040';
-const RED_INK = '#a8301f';
-const SERIF = 'Georgia, "Iowan Old Style", serif';
-const HAND = '"Courier Prime", "Courier New", ui-monospace, monospace';
+const PAPER = '#f5ecd3';
+const INK = '#1f3422';
+const INK_DIM = '#5b6e5b';
+const FOREST = '#3a5a3a';
+const IVY = '#6b8e4e';
+const CRIMSON = '#8a2a2a';
+const BRASS = '#b8932e';
+const SERIF = '"Cardo", "IM Fell DW Pica", Georgia, serif';
+const HAND = '"IM Fell DW Pica", "Cardo", Georgia, serif';
 
 function isoDate(d: Date) {
   const y = d.getFullYear();
@@ -40,7 +42,7 @@ const KINDS: { value: BudgetKind; label: string }[] = [
   { value: 'transfer', label: 'Transfer' },
 ];
 
-export default function AddEntryModal({
+export default function EntryModal({
   categories,
   payers,
   tasks,
@@ -59,22 +61,20 @@ export default function AddEntryModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Categories filtered to the chosen kind
   const visibleCategories = useMemo(
     () => categories.filter((c) => c.kind === kind),
     [categories, kind]
   );
 
-  // Reset category when kind changes if current pick no longer fits
-  useEffect(() => {
-    if (categoryId && !visibleCategories.find((c) => c.id === categoryId)) {
-      setCategoryId(visibleCategories[0]?.id ?? '');
-    } else if (!categoryId && visibleCategories[0]) {
-      setCategoryId(visibleCategories[0].id);
+  // Derived effective category — keeps the user's pick if it still fits the kind,
+  // otherwise falls through to the first valid option. Pure derivation, no effect.
+  const effectiveCategoryId = useMemo(() => {
+    if (categoryId && visibleCategories.some((c) => c.id === categoryId)) {
+      return categoryId;
     }
-  }, [visibleCategories, categoryId]);
+    return visibleCategories[0]?.id ?? '';
+  }, [categoryId, visibleCategories]);
 
-  // Close on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -92,7 +92,7 @@ export default function AddEntryModal({
       return;
     }
     if (!description.trim()) {
-      setError('Add a short description so it reads in the ledger.');
+      setError('A short description, so the page reads clearly.');
       return;
     }
     setBusy(true);
@@ -103,7 +103,7 @@ export default function AddEntryModal({
       kind,
       description: description.trim(),
       note: note.trim() || null,
-      category_id: categoryId || null,
+      category_id: effectiveCategoryId || null,
       payer_id: payerId || null,
       grid_task_id: kind === 'savings' ? (gridTaskId || null) : null,
     });
@@ -121,7 +121,7 @@ export default function AddEntryModal({
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.6)',
+        background: 'rgba(15,10,5,0.7)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -136,23 +136,29 @@ export default function AddEntryModal({
           background: PAPER,
           color: INK,
           fontFamily: SERIF,
-          width: 'min(500px, 100%)',
+          width: 'min(520px, 100%)',
+          maxHeight: 'calc(100vh - 32px)',
+          overflowY: 'auto',
           padding: '24px 28px 22px',
-          border: '1px solid #8a6a3a',
-          boxShadow: `0 30px 80px rgba(0,0,0,0.5), 0 0 60px ${LAMP}44`,
+          border: `1px solid ${BRASS}`,
+          boxShadow: `0 30px 80px rgba(0,0,0,0.5), 0 0 60px ${IVY}33`,
+          backgroundImage:
+            `radial-gradient(circle at 20% 10%, ${IVY}1a 0%, transparent 60%), repeating-linear-gradient(0deg, transparent 0 27px, ${INK}10 27px 28px)`,
         }}
       >
         <div
           style={{
             fontVariant: 'small-caps',
+            fontStyle: 'italic',
             fontSize: 22,
-            letterSpacing: '0.04em',
-            borderBottom: `1px solid ${INK}55`,
+            letterSpacing: '0.06em',
+            borderBottom: `1px double ${INK}55`,
             paddingBottom: 6,
             marginBottom: 16,
+            color: FOREST,
           }}
         >
-          New Entry
+          A New Entry
         </div>
 
         <Label>Kind</Label>
@@ -163,15 +169,16 @@ export default function AddEntryModal({
               type="button"
               onClick={() => setKind(k.value)}
               style={{
-                padding: '6px 12px',
-                background: kind === k.value ? INK : 'transparent',
+                padding: '8px 14px',
+                background: kind === k.value ? FOREST : 'transparent',
                 color: kind === k.value ? PAPER : INK,
                 border: `1px solid ${INK}88`,
-                fontFamily: HAND,
-                fontSize: 11,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
+                fontFamily: SERIF,
+                fontStyle: 'italic',
+                fontSize: 13,
+                letterSpacing: '0.06em',
                 cursor: 'pointer',
+                minHeight: 44,
               }}
             >
               {k.label}
@@ -207,7 +214,7 @@ export default function AddEntryModal({
           <input
             type="text"
             required
-            placeholder="e.g. Costco run"
+            placeholder="e.g. seedlings from the market"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             style={inputStyle}
@@ -217,11 +224,11 @@ export default function AddEntryModal({
         <Row>
           <Field label="Category">
             <select
-              value={categoryId}
+              value={effectiveCategoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               style={inputStyle}
             >
-              <option value="">—</option>
+              <option value="">·</option>
               {visibleCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -235,7 +242,7 @@ export default function AddEntryModal({
               onChange={(e) => setPayerId(e.target.value)}
               style={inputStyle}
             >
-              <option value="">—</option>
+              <option value="">·</option>
               {payers.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -246,7 +253,7 @@ export default function AddEntryModal({
         </Row>
 
         {kind === 'savings' && (
-          <Field label="For project (savings goal)">
+          <Field label="For a project (savings goal)">
             <select
               value={gridTaskId}
               onChange={(e) => setGridTaskId(e.target.value)}
@@ -274,9 +281,10 @@ export default function AddEntryModal({
         {error && (
           <div
             style={{
-              color: RED_INK,
-              fontFamily: HAND,
-              fontSize: 12,
+              color: CRIMSON,
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontSize: 13,
               marginBottom: 10,
             }}
           >
@@ -292,12 +300,12 @@ export default function AddEntryModal({
               background: 'transparent',
               color: INK,
               border: `1px solid ${INK}88`,
-              padding: '8px 14px',
-              fontFamily: HAND,
-              fontSize: 11,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
+              padding: '10px 16px',
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontSize: 13,
               cursor: 'pointer',
+              minHeight: 44,
             }}
           >
             Cancel
@@ -306,21 +314,20 @@ export default function AddEntryModal({
             type="submit"
             disabled={busy}
             style={{
-              background: LAMP,
-              color: '#2a1300',
-              border: 'none',
-              padding: '8px 18px',
-              fontFamily: HAND,
-              fontSize: 11,
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              fontWeight: 800,
+              background: FOREST,
+              color: PAPER,
+              border: `1px solid ${IVY}`,
+              padding: '10px 22px',
+              fontFamily: SERIF,
+              fontStyle: 'italic',
+              fontSize: 14,
+              letterSpacing: '0.04em',
               cursor: busy ? 'not-allowed' : 'pointer',
               opacity: busy ? 0.6 : 1,
-              boxShadow: `0 0 12px ${LAMP}aa`,
+              minHeight: 44,
             }}
           >
-            {busy ? 'Saving…' : 'Record Entry'}
+            {busy ? 'Saving…' : 'Record it'}
           </button>
         </div>
       </form>
@@ -332,9 +339,10 @@ function Label({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        fontFamily: HAND,
-        fontSize: 10,
-        letterSpacing: '0.3em',
+        fontFamily: SERIF,
+        fontStyle: 'italic',
+        fontSize: 12,
+        letterSpacing: '0.18em',
         textTransform: 'uppercase',
         color: INK_DIM,
         marginBottom: 4,
@@ -347,7 +355,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 12, flex: 1 }}>
+    <div style={{ marginBottom: 12, flex: 1, minWidth: 0 }}>
       <Label>{label}</Label>
       {children}
     </div>
@@ -355,7 +363,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function Row({ children }: { children: React.ReactNode }) {
-  return <div style={{ display: 'flex', gap: 12 }}>{children}</div>;
+  return <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>{children}</div>;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -363,9 +371,10 @@ const inputStyle: React.CSSProperties = {
   background: 'rgba(255,250,235,0.7)',
   border: `1px solid ${INK}55`,
   color: INK,
-  padding: '8px 10px',
+  padding: '10px 12px',
   fontFamily: HAND,
-  fontSize: 14,
+  fontSize: 15,
   outline: 'none',
   boxSizing: 'border-box',
+  minHeight: 44,
 };

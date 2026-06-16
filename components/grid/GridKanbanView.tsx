@@ -1,16 +1,12 @@
 'use client';
 
 // The Grid — Tron-themed project tracker.
-// (Extracted from app/grid/page.tsx so the page can be a server component
-// that routes between Flynn's exterior, interior, and this view based on cookies.)
+// Rendered inside GridEntry after Digitize + Lightcycle run.
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import GridBackground from './GridBackground';
 import GridMusic from './GridMusic';
 import KanbanBoard from './KanbanBoard';
-
-const Lightcycle = dynamic(() => import('./Lightcycle'), { ssr: false });
 
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
@@ -19,7 +15,6 @@ const DISPLAY = '"Geist Mono", "JetBrains Mono", ui-monospace, monospace';
 
 export default function GridKanbanView() {
   const [adminMode, setAdminMode] = useState(false);
-  const [gameVisible, setGameVisible] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -36,9 +31,9 @@ export default function GridKanbanView() {
     }
   }, []);
 
-  async function lockAll() {
+  async function exitToHome() {
     await fetch('/api/grid/lock', { method: 'POST' });
-    window.location.href = '/grid';
+    window.location.href = '/';
   }
 
   return (
@@ -78,19 +73,21 @@ export default function GridKanbanView() {
         >
           <span>User Program &middot; {adminMode ? 'Admin' : 'Visitor'}</span>
           <button
-            onClick={lockAll}
+            onClick={exitToHome}
             style={{
               background: 'transparent',
               border: `1px solid ${CYAN_DIM}`,
               color: CYAN_DIM,
-              padding: '4px 10px',
+              padding: '6px 12px',
               fontFamily: MONO,
               fontSize: 9,
               letterSpacing: '0.3em',
               textTransform: 'uppercase',
               cursor: 'pointer',
+              minHeight: 44,
+              minWidth: 44,
             }}
-            aria-label="Leave Flynn's"
+            aria-label="Exit to Sam's"
           >
             Exit
           </button>
@@ -137,34 +134,6 @@ export default function GridKanbanView() {
       </section>
 
       <GridMusic />
-
-      {gameVisible && (
-        <Lightcycle onEnd={() => setGameVisible(false)} onSkip={() => setGameVisible(false)} />
-      )}
-
-      {!gameVisible && (
-        <button
-          onClick={() => setGameVisible(true)}
-          style={{
-            position: 'fixed',
-            bottom: 28,
-            right: 28,
-            zIndex: 50,
-            background: 'rgba(0,0,0,0.75)',
-            border: '1px solid rgba(0,240,255,0.4)',
-            color: '#00f0ff',
-            padding: '8px 16px',
-            fontFamily: MONO,
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-          }}
-        >
-          New Game
-        </button>
-      )}
     </main>
   );
 }

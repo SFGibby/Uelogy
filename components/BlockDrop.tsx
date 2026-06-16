@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { submitGameScore } from '../lib/leaderboards';
 
 const COLS = 10;
 const ROWS = 20;
@@ -150,8 +151,10 @@ export default function BlockDrop({ onMilestone, onGameEnd, audioRef, onLevelCha
   },[tick]);
 
   const submitScore = useCallback(()=>{
-    const entry:LeaderboardEntry={name:(nameInput.trim()||'AAA').slice(0,10).toUpperCase(), score:stateRef.current.score, date:new Date().toLocaleDateString()};
+    const safe = (nameInput.trim()||'AAA').slice(0,10).toUpperCase();
+    const entry:LeaderboardEntry={name:safe, score:stateRef.current.score, date:new Date().toLocaleDateString()};
     setLeaderboard(saveToLeaderboard(entry));
+    void submitGameScore('tetris', safe, entry.score);
     setShowNameInput(false); setShowLeaderboard(true);
     onGameEnd?.();
   },[nameInput, onGameEnd]);

@@ -7,6 +7,7 @@
 // Leaderboard lives in localStorage under 'lightcycle_leaderboard'.
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { submitGameScore } from '../../lib/leaderboards';
 
 const COLS = 56;
 const ROWS = 30;
@@ -181,6 +182,7 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
       date: new Date().toLocaleDateString(),
     };
     setLeaderboard(saveToLeaderboard(entry));
+    void submitGameScore('grid', safeName, entry.score);
     setScoreSaved(true);
     setShowName(false);
   }, [name]);
