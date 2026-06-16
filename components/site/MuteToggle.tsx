@@ -2,8 +2,10 @@
 
 // Single global mute state, persisted to localStorage as 'muteAll' = '1'|'0'.
 // Other audio sources subscribe via useMute() and stop playing when muted.
+// Uses useSyncExternalStore so the subscription doesn't trigger lint warnings
+// about setState-in-effect, and is consistent across React 19 transitions.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 const KEY = 'muteAll';
 const EVENT = 'mute-change';
@@ -26,25 +28,21 @@ function broadcast(muted: boolean) {
   }
 }
 
-export function useMute(): [boolean, (next?: boolean) => void] {
-  const [muted, setMuted] = useState<boolean>(false);
+function subscribe(notify: () => void) {
+  window.addEventListener(EVENT, notify);
+  window.addEventListener('storage', notify);
+  return () => {
+    window.removeEventListener(EVENT, notify);
+    window.removeEventListener('storage', notify);
+  };
+}
 
-  useEffect(() => {
-    setMuted(read());
-    function onCustom(e: Event) {
-      const ce = e as CustomEvent<boolean>;
-      setMuted(ce.detail);
-    }
-    function onStorage(e: StorageEvent) {
-      if (e.key === KEY) setMuted(e.newValue === '1');
-    }
-    window.addEventListener(EVENT, onCustom);
-    window.addEventListener('storage', onStorage);
-    return () => {
-      window.removeEventListener(EVENT, onCustom);
-      window.removeEventListener('storage', onStorage);
-    };
-  }, []);
+export function useMute(): [boolean, (next?: boolean) => void] {
+  const muted = useSyncExternalStore(
+    subscribe,
+    () => read(),
+    () => false
+  );
 
   const toggle = useCallback((next?: boolean) => {
     const v = typeof next === 'boolean' ? next : !read();

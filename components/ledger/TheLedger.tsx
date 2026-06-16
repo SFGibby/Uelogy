@@ -98,6 +98,8 @@ export default function TheLedger() {
   }, [month]);
 
   useEffect(() => {
+    // Load-on-mount pattern; setState happens inside the async load.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
 

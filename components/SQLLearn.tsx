@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import ProfessorUel from './ProfessorUel';
+import ScoreEntry from './games/ScoreEntry';
 
 const PROGRESS_KEY = 'sql_learn_progress';
+const SUBMIT_KEY = 'sql_learn_submitted';
 
 interface Progress {
   activeLesson: number;
@@ -281,9 +283,17 @@ export default function SQLLearn() {
   }, []);
   const [ran, setRan] = useState(false);
   const [completed, setCompleted] = useState<string[]>([]);
+  const [submittedScore, setSubmittedScore] = useState(false);
+  const [showScoreEntry, setShowScoreEntry] = useState(false);
   const progressRef = useRef<Progress>({ activeLesson: 0, queries: {}, completed: [] });
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setSubmittedScore(typeof window !== 'undefined' && localStorage.getItem(SUBMIT_KEY) === '1');
+  }, []);
+
+  const allDone = completed.length >= LESSONS.length;
 
   useEffect(() => {
     const p = loadProgress();
@@ -441,6 +451,34 @@ export default function SQLLearn() {
           <span>SQL Lockers</span>
           <span style={{ color: c.accent, fontWeight: 700 }}>{completed.length}/{LESSONS.length}</span>
         </div>
+        {allDone && !submittedScore && (
+          <div
+            style={{
+              padding: '6px 16px 12px',
+              borderBottom: `1px solid ${c.border}`,
+              marginBottom: 6,
+            }}
+          >
+            <button
+              onClick={() => setShowScoreEntry(true)}
+              style={{
+                width: '100%',
+                background: c.accent,
+                color: c.sidebar,
+                border: 'none',
+                padding: '10px 12px',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                borderRadius: 3,
+              }}
+            >
+              ✦ Submit your score
+            </button>
+          </div>
+        )}
         <div style={{
           display: 'flex',
           flexDirection: isMobile ? 'row' : 'column',
@@ -725,6 +763,45 @@ export default function SQLLearn() {
           )}
         </div>
       </div>
+
+      {showScoreEntry && (
+        <div
+          onClick={() => setShowScoreEntry(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15,10,5,0.78)',
+            zIndex: 200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#1a1d28',
+              border: `1px solid ${c.accent}`,
+              padding: 8,
+              boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+            }}
+          >
+            <ScoreEntry
+              game="learning"
+              score={completed.length}
+              accent={c.accent}
+              dim={c.muted}
+              font={'Georgia, "Iowan Old Style", serif'}
+              onDone={() => {
+                try { localStorage.setItem(SUBMIT_KEY, '1'); } catch {}
+                setSubmittedScore(true);
+                setShowScoreEntry(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

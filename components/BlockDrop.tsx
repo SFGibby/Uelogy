@@ -161,25 +161,69 @@ export default function BlockDrop({ onMilestone, onGameEnd, audioRef, onLevelCha
 
   useEffect(()=>{ rafRef.current=requestAnimationFrame(gameLoop); return()=>cancelAnimationFrame(rafRef.current); },[gameLoop]);
 
+  // Named input actions, shared between keyboard and the touch D-pad.
+  const moveLeft = useCallback(() => {
+    const s = stateRef.current;
+    if (showNameInput || !s.started || s.gameOver || s.paused) return;
+    if (!collides(s.grid, s.piece, -1)) s.piece.x--;
+    tick();
+  }, [tick, showNameInput]);
+  const moveRight = useCallback(() => {
+    const s = stateRef.current;
+    if (showNameInput || !s.started || s.gameOver || s.paused) return;
+    if (!collides(s.grid, s.piece, 1)) s.piece.x++;
+    tick();
+  }, [tick, showNameInput]);
+  const softDrop = useCallback(() => {
+    const s = stateRef.current;
+    if (showNameInput || !s.started || s.gameOver || s.paused) return;
+    drop();
+    dropCounter.current = 0;
+    tick();
+  }, [drop, tick, showNameInput]);
+  const rotatePiece = useCallback(() => {
+    const s = stateRef.current;
+    if (showNameInput || !s.started || s.gameOver || s.paused) return;
+    const rot = rotate(s.piece.shape);
+    if (!collides(s.grid, s.piece, 0, 0, rot)) s.piece.shape = rot;
+    tick();
+  }, [tick, showNameInput]);
+  const hardDrop = useCallback(() => {
+    const s = stateRef.current;
+    if (showNameInput || !s.started || s.gameOver || s.paused) return;
+    let dy = 0;
+    while (!collides(s.grid, s.piece, 0, dy + 1)) dy++;
+    s.piece.y += dy;
+    drop();
+    tick();
+  }, [drop, tick, showNameInput]);
+  const togglePause = useCallback(() => {
+    const s = stateRef.current;
+    if (showNameInput || !s.started || s.gameOver) return;
+    s.paused = !s.paused;
+    if (s.paused) audioRef?.current?.pause();
+    else audioRef?.current?.play().catch(() => {});
+    tick();
+  }, [tick, showNameInput, audioRef]);
+
   useEffect(()=>{
     const handleKey=(e:KeyboardEvent)=>{
-      const s=stateRef.current;
       if(showNameInput) return;
+      const s=stateRef.current;
       if(!s.started||s.gameOver) return;
-      if(e.key==='p'||e.key==='P'){ s.paused=!s.paused; if(s.paused){audioRef?.current?.pause();}else{audioRef?.current?.play().catch(()=>{});} tick(); return; }
+      if(e.key==='p'||e.key==='P'){ e.preventDefault(); togglePause(); return; }
       if(s.paused) return;
       switch(e.key){
-        case 'ArrowLeft': e.preventDefault(); if(!collides(s.grid,s.piece,-1))s.piece.x--; break;
-        case 'ArrowRight': e.preventDefault(); if(!collides(s.grid,s.piece,1))s.piece.x++; break;
-        case 'ArrowDown': e.preventDefault(); drop(); dropCounter.current=0; break;
-        case 'ArrowUp': { e.preventDefault(); const rot=rotate(s.piece.shape); if(!collides(s.grid,s.piece,0,0,rot))s.piece.shape=rot; break; }
-        case ' ': { e.preventDefault(); let dy=0; while(!collides(s.grid,s.piece,0,dy+1))dy++; s.piece.y+=dy; drop(); break; }
+        case 'ArrowLeft': e.preventDefault(); moveLeft(); break;
+        case 'ArrowRight': e.preventDefault(); moveRight(); break;
+        case 'ArrowDown': e.preventDefault(); softDrop(); break;
+        case 'ArrowUp': e.preventDefault(); rotatePiece(); break;
+        case ' ': e.preventDefault(); hardDrop(); break;
       }
-      tick();
     };
     window.addEventListener('keydown',handleKey);
     return()=>window.removeEventListener('keydown',handleKey);
-  },[drop,tick,showNameInput]);
+  },[moveLeft,moveRight,softDrop,rotatePiece,hardDrop,togglePause,showNameInput]);
 
   const s = stateRef.current;
 
@@ -311,6 +355,48 @@ export default function BlockDrop({ onMilestone, onGameEnd, audioRef, onLevelCha
             {!s.started&&<button onClick={()=>setShowLeaderboard(false)} className="text-[#1aaa1a] text-sm hover:text-[#33ff33]">BACK</button>}
           </div>
         )}
+
+        {/* Touch D-pad — only on coarse-pointer devices */}
+        <style>{`
+          .bd-dpad { display: none; }
+          @media (pointer: coarse) {
+            .bd-dpad {
+              display: grid;
+              grid-template-columns: repeat(3, 56px);
+              grid-template-rows: repeat(2, 56px);
+              gap: 6px;
+              margin-top: 14px;
+              justify-content: center;
+              touch-action: manipulation;
+            }
+            .bd-dpad .wide { grid-column: span 3; }
+          }
+          .bd-dpad button {
+            background: rgba(0,12,16,0.7);
+            border: 1px solid #33ff33;
+            color: #33ff33;
+            font-size: 22px;
+            font-family: inherit;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+            min-width: 44px;
+          }
+          .bd-dpad button:active {
+            background: rgba(51,255,51,0.22);
+            box-shadow: 0 0 14px rgba(51,255,51,0.55);
+          }
+        `}</style>
+        <div className="bd-dpad" aria-hidden={!s.started || s.gameOver}>
+          <div />
+          <button type="button" onPointerDown={rotatePiece} aria-label="Rotate">↻</button>
+          <div />
+          <button type="button" onPointerDown={moveLeft} aria-label="Left">←</button>
+          <button type="button" onPointerDown={softDrop} aria-label="Down">↓</button>
+          <button type="button" onPointerDown={moveRight} aria-label="Right">→</button>
+          <button type="button" onPointerDown={hardDrop} aria-label="Hard drop" className="wide">⤓ DROP</button>
+        </div>
       </div>
     </div>
   );
