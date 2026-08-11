@@ -6,17 +6,26 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import Bulletin from './Bulletin';
-import Cabinet from './Cabinet';
+import ArcadeCabinet, { type Score } from './ArcadeCabinet';
+import ArcadeCarpet from './ArcadeCarpet';
+import ExitSign from './ExitSign';
 import MuteToggle, { useMute } from './MuteToggle';
+import OperatorsLicense from './OperatorsLicense';
 import PasswordModal from '../grid/PasswordModal';
-import SocialNeons from './SocialNeons';
+import { fetchAllTopScores } from '../../lib/leaderboards';
+import type { LeaderboardGame } from '../../lib/supabase';
 
-const SamSprite = dynamic(() => import('../SamSprite'), { ssr: false });
 const TetrisCabinetOverlay = dynamic(
   () => import('../games/TetrisCabinetOverlay'),
   { ssr: false }
 );
+const BlockDropDemo = dynamic(() => import('./demos/BlockDropDemo'), { ssr: false });
+const LightcycleDemo = dynamic(() => import('./demos/LightcycleDemo'), { ssr: false });
+const LedgerVineDemo = dynamic(() => import('./demos/LedgerVineDemo'), { ssr: false });
+const DojoQueryDemo = dynamic(() => import('./demos/DojoQueryDemo'), { ssr: false });
+const CardFlipDemo = dynamic(() => import('./demos/CardFlipDemo'), { ssr: false });
+const OfficeChatDemo = dynamic(() => import('./demos/OfficeChatDemo'), { ssr: false });
+const HustleTickerDemo = dynamic(() => import('./demos/HustleTickerDemo'), { ssr: false });
 
 const SOCIALS = [
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/samuelfgibson/' },
@@ -43,13 +52,53 @@ const WHAT_I_DO = [
 
 const AMBIENT_SRC = '/sfx/arcade-ambient.mp3';
 
+// Fun static fallbacks for cabinets without a real game leaderboard.
+const FALLBACKS: Record<string, Score[]> = {
+  ledger: [
+    { rank: 1, initials: 'SAM', score: 400000 },
+    { rank: 2, initials: 'UEL', score: 315000 },
+    { rank: 3, initials: 'IRA', score: 220000 },
+  ],
+  collection: [
+    { rank: 1, initials: 'MTG', score: 999000 },
+    { rank: 2, initials: 'PSA', score: 730000 },
+    { rank: 3, initials: 'HOF', score: 610000 },
+  ],
+  office: [
+    { rank: 1, initials: 'P0', score: 999999 },
+    { rank: 2, initials: 'P1', score: 512000 },
+    { rank: 3, initials: 'P2', score: 240000 },
+  ],
+  hustle: [
+    { rank: 1, initials: 'SAM', score: 480000 },
+    { rank: 2, initials: 'CAM', score: 310000 },
+    { rank: 3, initials: 'RSU', score: 200000 },
+  ],
+};
+
 export default function SamsInterior() {
   const router = useRouter();
   const [tronOpen, setTronOpen] = useState(false);
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [tetrisOpen, setTetrisOpen] = useState(false);
+  const [scores, setScores] = useState<Record<LeaderboardGame, Score[]>>({
+    grid: [],
+    tetris: [],
+    learning: [],
+  });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [muted] = useMute();
+
+  // One fetch on mount, distribute per-cabinet. Empty games fall back to static tables.
+  useEffect(() => {
+    let alive = true;
+    fetchAllTopScores(3).then((groups) => {
+      if (alive) setScores(groups);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Ambient audio. Missing-safe — if /sfx/arcade-ambient.mp3 isn't dropped yet, we just don't play.
   useEffect(() => {
@@ -86,23 +135,8 @@ export default function SamsInterior() {
         padding: '24px 16px 80px',
       }}
     >
-      {/* Faint floor grid suggestion */}
-      <div
-        aria-hidden
-        style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundImage:
-            'linear-gradient(rgba(0,240,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.04) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-          maskImage:
-            'linear-gradient(180deg, transparent 0%, transparent 50%, black 100%)',
-          WebkitMaskImage:
-            'linear-gradient(180deg, transparent 0%, transparent 50%, black 100%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
+      {/* Arcade carpet floor with perspective */}
+      <ArcadeCarpet />
 
       <div
         className="sams-grid"
@@ -149,77 +183,76 @@ export default function SamsInterior() {
           >
             ARCADE · EVERYTHING IS A GAME
           </div>
-          <div
-            style={{
-              marginTop: 14,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'flex-end',
-              gap: 10,
-            }}
-          >
-            <div style={{ transform: 'scale(1.6)', transformOrigin: 'bottom center' }}>
-              <SamSprite />
-            </div>
-          </div>
-          <div
-            aria-hidden
-            style={{
-              width: 96,
-              height: 8,
-              borderRadius: '50%',
-              background: 'rgba(51,255,51,0.12)',
-              filter: 'blur(4px)',
-              margin: '8px auto 0',
-            }}
-          />
+          {/* Sprite lives as ambient decoration walking the arcade — see SamAmbient below */}
         </header>
 
-        {/* Cabinet column → desktop becomes a row */}
+        {/* Front row */}
         <section
           className="sams-cabinets"
           style={{
             display: 'grid',
-            gap: 16,
+            gap: 20,
+            justifyItems: 'center',
           }}
         >
-          <Cabinet
-            label="The Grid"
-            variant="grid"
-            sublabel="PROJECT TRACKER"
+          <ArcadeCabinet
+            marquee="GRID"
+            accent="#00f0ff"
             locked
-            onClick={() => setTronOpen(true)}
+            onActivate={() => setTronOpen(true)}
+            demo={<LightcycleDemo />}
+            scores={scores.grid}
+            startOffsetMs={0}
+            stateDurationMs={6500}
+            ariaLabel="Grid — locked cabinet, opens password"
           />
-          <Cabinet
-            label="The Ledger"
-            variant="ledger"
-            sublabel="HOUSEHOLD BOOK"
+          <ArcadeCabinet
+            marquee="LEDGER"
+            accent="#6b8e4e"
             locked
-            onClick={() => setLedgerOpen(true)}
+            onActivate={() => setLedgerOpen(true)}
+            demo={<LedgerVineDemo />}
+            fallbackScores={FALLBACKS.ledger}
+            startOffsetMs={1500}
+            stateDurationMs={9200}
+            ariaLabel="Ledger — locked cabinet, opens password"
           />
-          <Cabinet
-            label="Learning"
-            variant="learning"
-            sublabel="HALLWAY"
+          <ArcadeCabinet
+            marquee="DOJO"
+            accent="#f0c060"
             href="/learning"
+            demo={<DojoQueryDemo />}
+            scores={scores.learning}
+            startOffsetMs={3000}
+            stateDurationMs={7800}
+            ariaLabel="Dojo — learning notes"
           />
-          <Cabinet
-            label="Collection"
-            variant="collection"
-            sublabel="GALLERY"
+          <ArcadeCabinet
+            marquee="COLLECTION"
+            accent="#d040a0"
             href="/collection"
+            demo={<CardFlipDemo />}
+            fallbackScores={FALLBACKS.collection}
+            startOffsetMs={4500}
+            stateDurationMs={10400}
+            ariaLabel="Collection — gallery"
           />
-          <Cabinet
-            label="Tetris"
-            variant="tetris"
-            sublabel="PRESS START"
-            onClick={() => setTetrisOpen(true)}
+          <ArcadeCabinet
+            marquee="OFFICE"
+            accent="#ffb020"
+            href="/triage"
+            demo={<OfficeChatDemo />}
+            fallbackScores={FALLBACKS.office}
+            startOffsetMs={6000}
+            stateDurationMs={6100}
+            ariaLabel="Office — triage chat"
           />
         </section>
 
-        {/* Also here — back row */}
+        {/* Back row */}
         <section
-          aria-label="Also here"
+          className="sams-back"
+          aria-label="Back row"
           style={{
             display: 'grid',
             gap: 12,
@@ -235,40 +268,52 @@ export default function SamsInterior() {
               marginBottom: 4,
             }}
           >
-            Also here
+            Back row
           </div>
           <div
             className="sams-back-row"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: 12,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 20,
+              justifyItems: 'center',
             }}
           >
-            <Cabinet
-              label="Triage"
-              variant="triage"
-              sublabel="WORK"
-              href="/triage"
+            <ArcadeCabinet
+              marquee="TETRIS"
+              accent="#33ff33"
+              onActivate={() => setTetrisOpen(true)}
+              demo={<BlockDropDemo />}
+              scores={scores.tetris}
+              startOffsetMs={750}
+              stateDurationMs={8600}
+              ariaLabel="Tetris — playable"
             />
-            <Cabinet label="Soon" variant="covered" sublabel="—" />
-            <Cabinet label="Soon" variant="covered" sublabel="—" />
+            <ArcadeCabinet
+              marquee="HUSTLE"
+              accent="#ffd700"
+              href="/hustle"
+              demo={<HustleTickerDemo />}
+              fallbackScores={FALLBACKS.hustle}
+              startOffsetMs={2250}
+              stateDurationMs={7300}
+              ariaLabel="Hustle — client roster (coming soon)"
+            />
           </div>
         </section>
 
-        {/* Bulletin */}
-        <Bulletin cards={WHAT_I_DO} header="What I Do" />
+        {/* Operator's License — below the fold, quiet */}
+        <OperatorsLicense cards={WHAT_I_DO} />
 
-        {/* Social neons above the (figurative) door */}
+        {/* EXIT sign absorbs the social/contact links */}
         <section
           style={{
             display: 'flex',
             justifyContent: 'center',
-            paddingTop: 12,
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            paddingTop: 24,
           }}
         >
-          <SocialNeons socials={SOCIALS} />
+          <ExitSign socials={SOCIALS} email="sam@uelogy.com" />
         </section>
       </div>
 
@@ -303,22 +348,16 @@ export default function SamsInterior() {
       {tetrisOpen && <TetrisCabinetOverlay onClose={() => setTetrisOpen(false)} />}
 
       <style>{`
-        @media (min-width: 1024px) {
-          .sams-grid {
-            grid-template-columns: 1.4fr 1fr;
-            grid-template-areas:
-              "marquee marquee"
-              "cabinets bulletin"
-              "back back"
-              "socials socials";
-            gap: 32px;
+        @media (min-width: 768px) {
+          .sams-cabinets {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            justify-items: center;
           }
-          .sams-marquee { grid-area: marquee; }
-          .sams-cabinets { grid-area: cabinets; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .sams-cabinets > * { max-width: 100%; }
         }
-        @media (min-width: 1280px) {
-          .sams-cabinets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        @media (min-width: 1024px) {
+          .sams-grid { gap: 40px; }
+          .sams-cabinets { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+          .sams-cabinets > * { max-width: 100%; }
         }
       `}</style>
     </main>

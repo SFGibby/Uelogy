@@ -9,6 +9,12 @@ const vt323 = localFont({
   display: "swap",
 });
 
+const pressStart = localFont({
+  src: "../public/fonts/PressStart2P.woff2",
+  variable: "--font-press-start",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Samuel Gibson",
   description: "Director of IT & Business Systems",
@@ -23,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${vt323.variable} h-full`}>
+    <html lang="en" className={`${vt323.variable} ${pressStart.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <FaviconRandomizer />
         {children}
