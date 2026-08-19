@@ -174,45 +174,6 @@ export default function TaskCard({ task, type, adminMode, saved, onClick, previe
         </div>
       )}
 
-      {task.cost != null && task.cost > 0 && (
-        <div style={{ marginTop: 8 }}>
-          <div
-            style={{
-              fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
-              color: 'rgba(0,255,127,0.85)',
-              letterSpacing: '0.06em',
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: 4,
-            }}
-          >
-            <span>SAVINGS</span>
-            <span>
-              ${(saved ?? 0).toFixed(0)} / ${Number(task.cost).toFixed(0)}
-            </span>
-          </div>
-          <div
-            style={{
-              height: 4,
-              background: 'rgba(0,255,127,0.12)',
-              border: '1px solid rgba(0,255,127,0.3)',
-              position: 'relative',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: `${Math.min(100, ((saved ?? 0) / Number(task.cost)) * 100)}%`,
-                background: '#00ff7f',
-                boxShadow: '0 0 6px rgba(0,255,127,0.7)',
-              }}
-            />
-          </div>
-        </div>
-      )}
-
       {task.links && task.links.length > 0 && (
         <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {task.links.map((l, i) => (
