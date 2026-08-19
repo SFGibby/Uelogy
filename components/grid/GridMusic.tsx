@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMute } from '../site/MuteToggle';
 
 const YT_VIDEO_ID = 'UOYk5qT3ffo';
+const START_SECONDS = 40; // skip the silent intro on the Tron Legacy soundtrack video
 
 type YTPlayer = {
   playVideo: () => void;
@@ -15,6 +16,8 @@ type YTPlayer = {
   setVolume: (v: number) => void;
   unMute: () => void;
   mute: () => void;
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  getCurrentTime: () => number;
 };
 
 export default function GridMusic() {
@@ -42,12 +45,15 @@ export default function GridMusic() {
         width: 320,
         height: 180,
         videoId: YT_VIDEO_ID,
+        // youtube-nocookie sometimes bypasses embedding restrictions vs. youtube.com
+        host: 'https://www.youtube-nocookie.com',
         playerVars: {
           loop: 1,
           playlist: YT_VIDEO_ID,
           controls: 0,
           disablekb: 1,
           modestbranding: 1,
+          start: START_SECONDS,
           origin: typeof window !== 'undefined' ? window.location.origin : undefined,
         },
         events: {
@@ -71,9 +77,13 @@ export default function GridMusic() {
       setPlaying(false);
     } else {
       if (muted) return;
-      // Explicit unmute + volume — autoplay policies often force muted=true on load
+      // Explicit unmute + volume — autoplay policies often force muted=true on load.
+      // seekTo skips the silent intro if the player is still at t=0.
       playerRef.current.unMute();
       playerRef.current.setVolume(30);
+      if (playerRef.current.getCurrentTime() < 1) {
+        playerRef.current.seekTo(START_SECONDS, true);
+      }
       playerRef.current.playVideo();
       setPlaying(true);
     }
