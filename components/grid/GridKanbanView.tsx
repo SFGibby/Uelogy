@@ -52,9 +52,10 @@ export default function GridKanbanView() {
         style={{
           position: 'relative',
           zIndex: 2,
-          maxWidth: 1280,
+          width: '100%',
+          maxWidth: 1800,
           margin: '0 auto',
-          padding: '56px 32px 24px',
+          padding: 'clamp(24px, 4vw, 48px) clamp(16px, 2.5vw, 28px) 16px',
         }}
       >
         <div
@@ -97,9 +98,10 @@ export default function GridKanbanView() {
         style={{
           position: 'relative',
           zIndex: 2,
-          maxWidth: 1280,
+          width: '100%',
+          maxWidth: 1800,
           margin: '0 auto',
-          padding: '12px 32px 80px',
+          padding: '8px clamp(16px, 2.5vw, 28px) 80px',
         }}
       >
         <KanbanBoard adminMode={adminMode} />

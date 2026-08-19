@@ -31,8 +31,9 @@ export default function StageColumn({
     <div
       ref={setNodeRef}
       style={{
-        flexShrink: 0,
-        width: 300,
+        flex: '1 1 300px',
+        minWidth: 300,
+        maxWidth: 560,
         background: isOver ? 'rgba(0,240,255,0.04)' : 'rgba(0, 0, 0, 0.5)',
         border: `1px solid ${stage.color}44`,
         padding: '14px 12px 16px',
