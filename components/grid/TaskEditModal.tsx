@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { GridTask, GridStage, GridType, GridTaskLink } from '../../lib/supabase';
+import type { GridTask, GridStage, GridType, GridTaskLink, GridPriority } from '../../lib/supabase';
 
 interface Props {
   task: GridTask | null;       // null when creating
@@ -39,6 +39,7 @@ export default function TaskEditModal({
     task?.stage_id ?? defaultStageId ?? stages[0]?.id ?? null
   );
   const [typeId, setTypeId] = useState<string | null>(task?.type_id ?? null);
+  const [priority, setPriority] = useState<GridPriority>(task?.priority ?? 3);
   const [dueAt, setDueAt] = useState(task?.due_at ?? '');
   const [cost, setCost] = useState<string>(
     task?.cost != null ? String(task.cost) : ''
@@ -78,6 +79,7 @@ export default function TaskEditModal({
       description: description.trim() || null,
       stage_id: stageId,
       type_id: typeId,
+      priority,
       due_at: dueAt || null,
       cost: parsedCost != null && !Number.isNaN(parsedCost) ? parsedCost : null,
       links: cleanLinks,
@@ -287,9 +289,44 @@ export default function TaskEditModal({
           </div>
         </div>
 
-        {/* Type chips */}
+        {/* Priority */}
         <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Type</label>
+          <label style={labelStyle}>Priority</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {([
+              { n: 0, label: 'P0 · CRITICAL', color: '#ff2040' },
+              { n: 1, label: 'P1 · HIGH',     color: '#00f0ff' },
+              { n: 2, label: 'P2 · MID',      color: '#f0a000' },
+              { n: 3, label: 'P3 · LOW',      color: '#5a6a7a' },
+            ] as const).map((p) => {
+              const active = priority === p.n;
+              return (
+                <button
+                  key={p.n}
+                  type="button"
+                  onClick={() => setPriority(p.n as GridPriority)}
+                  style={{
+                    padding: '7px 12px',
+                    background: active ? p.color + '22' : 'transparent',
+                    border: `1px solid ${active ? p.color : CYAN_FAINT}`,
+                    color: active ? p.color : CYAN_DIM,
+                    fontFamily: MONO,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '0.18em',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Owner chips */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Owner</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             <button
               type="button"
@@ -307,7 +344,7 @@ export default function TaskEditModal({
                 cursor: 'pointer',
               }}
             >
-              None
+              Unassigned
             </button>
             {types.map((t) => {
               const active = typeId === t.id;

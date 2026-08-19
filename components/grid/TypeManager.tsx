@@ -63,7 +63,7 @@ export default function TypeManager({ types: initial, onClose, onChange }: Props
   const addType = async () => {
     const { data, error } = await supabase
       .from('grid_types')
-      .insert({ name: 'New type', color: '#9999ff' })
+      .insert({ name: 'New owner', color: '#9999ff' })
       .select()
       .single();
     if (error) {
@@ -76,7 +76,7 @@ export default function TypeManager({ types: initial, onClose, onChange }: Props
   };
 
   const deleteType = async (id: string) => {
-    if (!confirm('Delete this type? Tasks using it will become untagged.')) return;
+    if (!confirm('Delete this owner? Tasks using it will become unassigned.')) return;
     const { error } = await supabase.from('grid_types').delete().eq('id', id);
     if (error) {
       alert('Delete failed: ' + error.message);
@@ -151,7 +151,7 @@ export default function TypeManager({ types: initial, onClose, onChange }: Props
             alignItems: 'center',
           }}
         >
-          <span>Manage Types</span>
+          <span>Manage Owners</span>
           <button
             type="button"
             onClick={onClose}
@@ -238,7 +238,7 @@ export default function TypeManager({ types: initial, onClose, onChange }: Props
             fontWeight: 700,
           }}
         >
-          + Add type
+          + Add owner
         </button>
 
         <div

@@ -14,17 +14,23 @@ export interface GridStage {
   created_at: string;
 }
 
+// GridType stays as the DB shape (table is still `grid_types` + column `type_id`),
+// but semantically it now represents an Owner (person or department).
 export interface GridType {
   id: string;
   name: string;
   color: string;
   created_at: string;
 }
+export type GridOwner = GridType;
 
 export interface GridTaskLink {
   label: string;
   url: string;
 }
+
+// Priority: 0 = Critical, 1 = High, 2 = Mid, 3 = Low
+export type GridPriority = 0 | 1 | 2 | 3;
 
 export interface GridTask {
   id: string;
@@ -32,6 +38,7 @@ export interface GridTask {
   description?: string | null;
   stage_id?: string | null;
   type_id?: string | null;
+  priority: GridPriority;
   position: number;
   due_at?: string | null;
   cost?: number | null;

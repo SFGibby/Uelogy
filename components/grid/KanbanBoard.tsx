@@ -275,7 +275,7 @@ export default function KanbanBoard({ adminMode }: Props) {
             Manage Stages
           </button>
           <button type="button" onClick={() => setShowTypeManager(true)} style={toolbarBtn}>
-            Manage Types
+            Manage Owners
           </button>
         </div>
       )}

@@ -2,7 +2,34 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { GridTask, GridType } from '../../lib/supabase';
+import type { GridTask, GridType, GridPriority } from '../../lib/supabase';
+
+const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
+  0: { color: '#ff2040', label: 'P0' },
+  1: { color: '#00f0ff', label: 'P1' },
+  2: { color: '#f0a000', label: 'P2' },
+  3: { color: '#5a6a7a', label: 'P3' },
+};
+
+function PriorityBadge({ priority }: { priority: GridPriority }) {
+  const meta = PRIORITY_META[priority] ?? PRIORITY_META[3];
+  return (
+    <span
+      style={{
+        fontFamily: 'ui-monospace, monospace',
+        fontSize: 9,
+        fontWeight: 700,
+        letterSpacing: '0.12em',
+        color: meta.color,
+        border: `1px solid ${meta.color}66`,
+        padding: '2px 5px',
+        lineHeight: 1,
+      }}
+    >
+      {meta.label}
+    </span>
+  );
+}
 
 interface Props {
   task: GridTask;
@@ -55,46 +82,47 @@ export default function TaskCard({ task, type, adminMode, saved, onClick, previe
       onClick={preview ? undefined : onClick}
       {...draggableHandlers}
     >
+      {/* Meta row: priority + owner + due date */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          fontFamily: 'ui-monospace, monospace',
+          marginBottom: 6,
+          flexWrap: 'wrap',
+        }}
+      >
+        <PriorityBadge priority={task.priority} />
+        {type && (
+          <span
+            style={{
+              fontSize: 9,
+              color: accent,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+            }}
+          >
+            {type.name}
+          </span>
+        )}
+        {task.due_at && (
+          <span
+            style={{
+              fontSize: 10,
+              color: 'rgba(0,240,255,0.5)',
+              letterSpacing: '0.06em',
+            }}
+          >
+            {new Date(task.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
+        )}
+      </div>
+
       <div style={{ fontSize: 13, fontWeight: 600, color: '#f0fbff', lineHeight: 1.35 }}>
         {task.title}
       </div>
-
-      {(type || task.due_at) && (
-        <div
-          style={{
-            marginTop: 8,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            fontFamily: 'ui-monospace, monospace',
-          }}
-        >
-          {type && (
-            <span
-              style={{
-                fontSize: 9,
-                color: accent,
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                fontWeight: 700,
-              }}
-            >
-              {type.name}
-            </span>
-          )}
-          {task.due_at && (
-            <span
-              style={{
-                fontSize: 10,
-                color: 'rgba(0,240,255,0.5)',
-                letterSpacing: '0.06em',
-              }}
-            >
-              · {new Date(task.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </span>
-          )}
-        </div>
-      )}
 
       {task.cost != null && task.cost > 0 && (
         <div style={{ marginTop: 8 }}>
