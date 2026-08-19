@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
@@ -12,7 +13,8 @@ interface Props {
   adminMode: boolean;
   savedById?: Record<string, number>;
   onTaskClick: (task: GridTask) => void;
-  onAddClick?: () => void;
+  onQuickAdd?: (title: string) => Promise<void> | void;
+  onDetailsClick?: () => void;
 }
 
 export default function StageColumn({
@@ -22,8 +24,25 @@ export default function StageColumn({
   adminMode,
   savedById,
   onTaskClick,
-  onAddClick,
+  onQuickAdd,
+  onDetailsClick,
 }: Props) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const title = draft.trim();
+    if (!title || busy) return;
+    setBusy(true);
+    try {
+      await onQuickAdd?.(title);
+      setDraft('');
+      // stay in add-mode so user can type another in quick succession
+    } finally {
+      setBusy(false);
+    }
+  };
   const { setNodeRef, isOver } = useDroppable({ id: `stage:${stage.id}` });
   const typesById = Object.fromEntries(types.map((t) => [t.id, t]));
 
@@ -116,9 +135,9 @@ export default function StageColumn({
         </div>
       )}
 
-      {adminMode && onAddClick && (
+      {adminMode && !adding && (
         <button
-          onClick={onAddClick}
+          onClick={() => setAdding(true)}
           style={{
             width: '100%',
             marginTop: 6,
@@ -142,6 +161,79 @@ export default function StageColumn({
         >
           + Add task
         </button>
+      )}
+
+      {adminMode && adding && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <input
+            autoFocus
+            type="text"
+            value={draft}
+            disabled={busy}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                submit();
+              } else if (e.key === 'Escape') {
+                setAdding(false);
+                setDraft('');
+              }
+            }}
+            placeholder="Name it — Enter to add, Esc to close"
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              background: 'rgba(0,12,16,0.85)',
+              border: `1px solid ${stage.color}`,
+              color: '#f0fbff',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              outline: 'none',
+              boxSizing: 'border-box',
+              opacity: busy ? 0.5 : 1,
+            }}
+          />
+          <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
+            <button
+              type="button"
+              onClick={onDetailsClick}
+              style={{
+                background: 'transparent',
+                border: `1px solid rgba(0,240,255,0.25)`,
+                color: 'rgba(0,240,255,0.7)',
+                padding: '5px 10px',
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 9,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+            >
+              + Details
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAdding(false);
+                setDraft('');
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'rgba(0,240,255,0.4)',
+                padding: '5px 10px',
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 9,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

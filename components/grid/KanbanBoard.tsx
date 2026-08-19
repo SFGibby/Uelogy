@@ -110,6 +110,27 @@ export default function KanbanBoard({ adminMode }: Props) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const handleQuickAdd = async (stageId: string, title: string) => {
+    const list = tasksByStage[stageId] ?? [];
+    const nextPos = list.reduce((m, t) => Math.max(m, t.position), -1) + 1;
+    const { data, error } = await supabase
+      .from('grid_tasks')
+      .insert({
+        title,
+        stage_id: stageId,
+        priority: 3,
+        position: nextPos,
+        links: [],
+      })
+      .select()
+      .single();
+    if (error) {
+      alert('Quick add failed: ' + error.message);
+      return;
+    }
+    setTasks((prev) => [...prev, data as GridTask]);
+  };
+
   const handleDragStart = (e: DragStartEvent) => {
     const task = tasks.find((t) => t.id === e.active.id);
     setActiveTask(task ?? null);
@@ -303,7 +324,8 @@ export default function KanbanBoard({ adminMode }: Props) {
               adminMode={adminMode}
               savedById={savedById}
               onTaskClick={openEditModal}
-              onAddClick={adminMode ? () => openCreateModal(stage.id) : undefined}
+              onQuickAdd={adminMode ? (title) => handleQuickAdd(stage.id, title) : undefined}
+              onDetailsClick={adminMode ? () => openCreateModal(stage.id) : undefined}
             />
           ))}
         </div>
