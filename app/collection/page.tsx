@@ -13,6 +13,8 @@ type YTPlayer = {
   playVideo: () => void;
   pauseVideo: () => void;
   setVolume: (v: number) => void;
+  unMute: () => void;
+  mute: () => void;
 };
 
 export default function CollectionPage() {
@@ -37,8 +39,17 @@ export default function CollectionPage() {
     (window as Window & { onYouTubeIframeAPIReady?: () => void }).onYouTubeIframeAPIReady = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       playerRef.current = new (window as any).YT.Player(playerDivRef.current!, {
+        width: 320,
+        height: 180,
         videoId: YT_VIDEO_ID,
-        playerVars: { loop: 1, playlist: YT_VIDEO_ID, controls: 0, disablekb: 1 },
+        playerVars: {
+          loop: 1,
+          playlist: YT_VIDEO_ID,
+          controls: 0,
+          disablekb: 1,
+          modestbranding: 1,
+          origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+        },
         events: {
           onReady: (e: { target: YTPlayer }) => {
             // Click-to-play only. Browsers block autoplay anyway and unexpected
@@ -62,6 +73,9 @@ export default function CollectionPage() {
       setPlaying(false);
     } else {
       if (muted) return;
+      // Explicit unmute + volume — autoplay policies often force muted=true on load
+      playerRef.current.unMute();
+      playerRef.current.setVolume(30);
       playerRef.current.playVideo();
       setPlaying(true);
     }
@@ -71,10 +85,10 @@ export default function CollectionPage() {
     <>
       <ReturnHome variant="exit-sign" />
 
-      {/* Hidden YouTube player */}
+      {/* Off-screen but real dimensions — YouTube blocks audio on 1x1 iframes. */}
       <div
         ref={playerDivRef}
-        style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', zIndex: -1 }}
+        style={{ position: 'fixed', left: -9999, top: -9999, width: 320, height: 180, pointerEvents: 'none' }}
       />
 
       <CollectionTracker />
