@@ -11,7 +11,6 @@ import KanbanBoard from './KanbanBoard';
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
-const DISPLAY = '"Geist Mono", "JetBrains Mono", ui-monospace, monospace';
 
 export default function GridKanbanView() {
   const [adminMode, setAdminMode] = useState(false);
@@ -92,33 +91,6 @@ export default function GridKanbanView() {
             Exit
           </button>
         </div>
-        <h1
-          style={{
-            fontFamily: DISPLAY,
-            fontSize: 'clamp(48px, 8vw, 96px)',
-            margin: 0,
-            letterSpacing: '0.06em',
-            color: CYAN,
-            textShadow: '0 0 18px rgba(0,240,255,0.45)',
-            lineHeight: 0.95,
-            fontWeight: 600,
-          }}
-        >
-          THE&nbsp;GRID
-        </h1>
-        <p
-          style={{
-            color: CYAN_DIM,
-            maxWidth: 620,
-            marginTop: 18,
-            fontSize: 14,
-            lineHeight: 1.7,
-            letterSpacing: '0.02em',
-          }}
-        >
-          A self-imposed board for the projects I am actually running. Stages on the x-axis, types
-          as colored tags. Drag to move between stages. {adminMode ? '' : 'Add ?admin=1 to the URL to edit.'}
-        </p>
       </section>
 
       <section
