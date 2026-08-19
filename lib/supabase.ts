@@ -39,6 +39,7 @@ export interface GridTask {
   stage_id?: string | null;
   type_id?: string | null;
   priority: GridPriority;
+  blocked_reason?: string | null;
   position: number;
   due_at?: string | null;
   cost?: number | null;

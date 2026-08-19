@@ -6,6 +6,10 @@ alter table grid_tasks
   add column if not exists priority int not null default 3
   check (priority between 0 and 3);
 
+-- Blocker: free-text reason. NULL = not blocked.
+alter table grid_tasks
+  add column if not exists blocked_reason text;
+
 -- Wipe existing data — board was empty anyway
 delete from grid_tasks;
 delete from grid_stages;

@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { GridTask, GridType, GridPriority } from '../../lib/supabase';
+
+const BLOCKER_RED = '#ff2040';
 
 const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   0: { color: '#ff2040', label: 'P0' },
@@ -43,6 +46,9 @@ interface Props {
 }
 
 export default function TaskCard({ task, type, adminMode, saved, onClick, preview = false }: Props) {
+  const [showBlocker, setShowBlocker] = useState(false);
+  const blocked = !!task.blocked_reason?.trim();
+
   // Always call the hook — pass a non-conflicting id when preview, then ignore the result
   const sortable = useSortable({
     id: preview ? `preview-${task.id}` : task.id,
@@ -66,8 +72,9 @@ export default function TaskCard({ task, type, adminMode, saved, onClick, previe
         transition,
         opacity: isDragging ? 0.35 : 1,
         background: 'rgba(0, 16, 22, 0.85)',
-        border: `1px solid rgba(0,240,255,0.22)`,
+        border: `1px solid ${blocked ? 'rgba(255,32,64,0.35)' : 'rgba(0,240,255,0.22)'}`,
         borderLeft: `3px solid ${accent}`,
+        borderTop: blocked ? `2px solid ${BLOCKER_RED}aa` : `1px solid rgba(0,240,255,0.22)`,
         padding: '12px 14px 11px',
         marginBottom: 8,
         cursor: adminMode && !preview ? 'grab' : onClick ? 'pointer' : 'default',
@@ -118,11 +125,54 @@ export default function TaskCard({ task, type, adminMode, saved, onClick, previe
             {new Date(task.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}
+        {blocked && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowBlocker((v) => !v);
+            }}
+            title={showBlocker ? 'Hide blocker' : 'Show blocker'}
+            style={{
+              marginLeft: 'auto',
+              fontFamily: 'ui-monospace, monospace',
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              color: BLOCKER_RED,
+              border: `1px solid ${BLOCKER_RED}66`,
+              background: showBlocker ? `${BLOCKER_RED}22` : 'transparent',
+              padding: '2px 5px',
+              lineHeight: 1,
+              cursor: 'pointer',
+            }}
+          >
+            {showBlocker ? '?×' : '?'}
+          </button>
+        )}
       </div>
 
       <div style={{ fontSize: 13, fontWeight: 600, color: '#f0fbff', lineHeight: 1.35 }}>
         {task.title}
       </div>
+
+      {blocked && showBlocker && (
+        <div
+          style={{
+            marginTop: 8,
+            padding: '8px 10px',
+            border: `1px solid ${BLOCKER_RED}55`,
+            background: 'rgba(255,32,64,0.06)',
+            color: '#f6c8cf',
+            fontSize: 12,
+            lineHeight: 1.4,
+            fontFamily: 'inherit',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {task.blocked_reason}
+        </div>
+      )}
 
       {task.cost != null && task.cost > 0 && (
         <div style={{ marginTop: 8 }}>

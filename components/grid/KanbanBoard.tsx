@@ -18,6 +18,7 @@ import TaskCard from './TaskCard';
 import TaskEditModal from './TaskEditModal';
 import StageManager from './StageManager';
 import TypeManager from './TypeManager';
+import BlockersLane from './BlockersLane';
 
 interface Props {
   adminMode: boolean;
@@ -279,6 +280,12 @@ export default function KanbanBoard({ adminMode }: Props) {
           </button>
         </div>
       )}
+
+      <BlockersLane
+        tasks={tasks}
+        types={types}
+        onTaskClick={openEditModal}
+      />
 
       <DndContext
         sensors={sensors}

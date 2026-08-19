@@ -40,6 +40,7 @@ export default function TaskEditModal({
   );
   const [typeId, setTypeId] = useState<string | null>(task?.type_id ?? null);
   const [priority, setPriority] = useState<GridPriority>(task?.priority ?? 3);
+  const [blockedReason, setBlockedReason] = useState(task?.blocked_reason ?? '');
   const [dueAt, setDueAt] = useState(task?.due_at ?? '');
   const [cost, setCost] = useState<string>(
     task?.cost != null ? String(task.cost) : ''
@@ -80,6 +81,7 @@ export default function TaskEditModal({
       stage_id: stageId,
       type_id: typeId,
       priority,
+      blocked_reason: blockedReason.trim() || null,
       due_at: dueAt || null,
       cost: parsedCost != null && !Number.isNaN(parsedCost) ? parsedCost : null,
       links: cleanLinks,
@@ -251,6 +253,27 @@ export default function TaskEditModal({
             rows={3}
             style={{ ...inputStyle, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', minHeight: 70 }}
             placeholder="Optional. What does done look like?"
+          />
+        </div>
+
+        {/* Blocker — filling this out surfaces the task in the Blockers strip */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ ...labelStyle, color: blockedReason.trim() ? '#ff2040aa' : CYAN_DIM }}>
+            Blocker (optional)
+          </label>
+          <textarea
+            value={blockedReason}
+            onChange={(e) => setBlockedReason(e.target.value)}
+            rows={2}
+            style={{
+              ...inputStyle,
+              fontSize: 13,
+              fontFamily: 'inherit',
+              resize: 'vertical',
+              minHeight: 52,
+              border: `1px solid ${blockedReason.trim() ? 'rgba(255,32,64,0.45)' : CYAN_FAINT}`,
+            }}
+            placeholder="What's the question or dependency holding this up?"
           />
         </div>
 
