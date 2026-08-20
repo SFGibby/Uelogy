@@ -20,13 +20,17 @@ import StageManager from './StageManager';
 import TypeManager from './TypeManager';
 import BlockersLane from './BlockersLane';
 import NotebookPanel from './NotebookPanel';
+import BinPanel from './BinPanel';
+import CommandPalette from './CommandPalette';
 
 interface Props {
   adminMode: boolean;
   openStageManager?: boolean;
   openTypeManager?: boolean;
+  openBin?: boolean;
   onStageManagerClose?: () => void;
   onTypeManagerClose?: () => void;
+  onBinClose?: () => void;
 }
 
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
@@ -36,8 +40,10 @@ export default function KanbanBoard({
   adminMode,
   openStageManager,
   openTypeManager,
+  openBin,
   onStageManagerClose,
   onTypeManagerClose,
+  onBinClose,
 }: Props) {
   const [stages, setStages] = useState<GridStage[]>([]);
   const [types, setTypes] = useState<GridType[]>([]);
@@ -49,6 +55,8 @@ export default function KanbanBoard({
   const [error, setError] = useState<string | null>(null);
   // In-place expansion state: which project is currently expanded in its lane
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  // Cmd+K command palette
+  const [paletteOpen, setPaletteOpen] = useState(false);
   // Legacy modal state — kept as a fallback path but no longer used for click-to-edit
   const [editing, setEditing] = useState<GridTask | null>(null);
   const [creatingInStage, setCreatingInStage] = useState<string | null>(null);
@@ -69,7 +77,7 @@ export default function KanbanBoard({
     const [s, t, k, sg, st] = await Promise.all([
       supabase.from('grid_stages').select('*').order('position'),
       supabase.from('grid_types').select('*').order('created_at'),
-      supabase.from('grid_tasks').select('*').order('position'),
+      supabase.from('grid_tasks').select('*').is('archived_at', null).order('position'),
       supabase.from('grid_task_savings').select('*'),
       supabase.from('grid_subtasks').select('*').order('position'),
     ]);
@@ -91,6 +99,20 @@ export default function KanbanBoard({
   useEffect(() => {
     load();
   }, [load]);
+
+  // Global Cmd+K / Ctrl+K
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      } else if (e.key === 'Escape' && paletteOpen) {
+        setPaletteOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [paletteOpen]);
 
   const tasksByStage = stages.reduce<Record<string, GridTask[]>>((acc, s) => {
     acc[s.id] = tasks
@@ -434,6 +456,24 @@ export default function KanbanBoard({
           types={types}
           onChange={setTypes}
           onClose={closeTypeManager}
+        />
+      )}
+
+      {openBin && (
+        <BinPanel
+          onClose={() => onBinClose?.()}
+          onRestored={(t) => setTasks((prev) => [...prev, t])}
+        />
+      )}
+
+      {paletteOpen && (
+        <CommandPalette
+          tasks={tasks}
+          subtasks={subtasks}
+          owners={types}
+          stages={stages}
+          onSelectProject={(id) => setExpandedTaskId(id)}
+          onClose={() => setPaletteOpen(false)}
         />
       )}
     </>

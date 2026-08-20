@@ -17,6 +17,7 @@ export default function GridKanbanView() {
   const [adminMode, setAdminMode] = useState(false);
   const [openStageManager, setOpenStageManager] = useState(false);
   const [openTypeManager, setOpenTypeManager] = useState(false);
+  const [openBin, setOpenBin] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -79,6 +80,7 @@ export default function GridKanbanView() {
               <SettingsMenu
                 onManageStages={() => setOpenStageManager(true)}
                 onManageOwners={() => setOpenTypeManager(true)}
+                onOpenBin={() => setOpenBin(true)}
               />
             )}
             <span style={{ lineHeight: 1 }}>
@@ -123,8 +125,10 @@ export default function GridKanbanView() {
           adminMode={adminMode}
           openStageManager={openStageManager}
           openTypeManager={openTypeManager}
+          openBin={openBin}
           onStageManagerClose={() => setOpenStageManager(false)}
           onTypeManagerClose={() => setOpenTypeManager(false)}
+          onBinClose={() => setOpenBin(false)}
         />
       </section>
 

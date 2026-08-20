@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import type { GridTask, GridType, GridAttachment, GridSubtask } from '../../lib/supabase';
 import SubtaskList from './SubtaskList';
 import OwnerCombobox from './OwnerCombobox';
+import ActivityThread from './ActivityThread';
 
 interface Props {
   task: GridTask;
@@ -47,6 +48,10 @@ export default function ProjectExpanded({
   const [dueAt, setDueAt] = useState(task.due_at ?? '');
   const [attachments, setAttachments] = useState<GridAttachment[]>(task.attachments ?? []);
   const [uploading, setUploading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<string[] | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [subtaskRefreshKey, setSubtaskRefreshKey] = useState(0);
   const titleRef = useRef<HTMLInputElement>(null);
   const overdue = isOverdue(dueAt);
   const blocked = !!blockedReason.trim();
@@ -110,10 +115,13 @@ export default function ProjectExpanded({
   };
 
   const del = async () => {
-    if (!confirm('Delete this project? All tasks under it will also be removed.')) return;
-    const { error } = await supabase.from('grid_tasks').delete().eq('id', task.id);
+    if (!confirm('Send this project to the Bin? You can restore it later from Settings.')) return;
+    const { error } = await supabase
+      .from('grid_tasks')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', task.id);
     if (error) {
-      alert('Delete failed: ' + error.message);
+      alert('Archive failed: ' + error.message);
       return;
     }
     onDeleted(task.id);
@@ -148,6 +156,47 @@ export default function ProjectExpanded({
     const next = attachments.filter((_, i) => i !== index);
     setAttachments(next);
     await persist({ attachments: next });
+  };
+
+  const runAiSuggest = async () => {
+    if (aiBusy) return;
+    setAiBusy(true);
+    try {
+      const r = await fetch('/api/grid/ai/generate-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          prompt: aiPrompt.trim() || undefined,
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok || !Array.isArray(j.tasks)) {
+        alert('AI failed: ' + (j.error ?? 'unknown'));
+        return;
+      }
+      setAiSuggestions(j.tasks as string[]);
+    } catch (e) {
+      alert('AI failed: ' + (e as Error).message);
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const addAiSuggestion = async (text: string, alsoRemoveIndex: number) => {
+    const { error } = await supabase.from('grid_subtasks').insert({
+      task_id: task.id,
+      title: text,
+      priority: 3,
+      done: false,
+    });
+    if (error) {
+      alert('Add task failed: ' + error.message);
+      return;
+    }
+    setAiSuggestions((prev) => prev?.filter((_, i) => i !== alsoRemoveIndex) ?? null);
+    setSubtaskRefreshKey((k) => k + 1);
   };
 
   return (
@@ -269,12 +318,124 @@ export default function ProjectExpanded({
 
       {/* Tasks (subtasks) */}
       <SubtaskList
+        key={subtaskRefreshKey}
         taskId={task.id}
         owners={owners}
         laneColor={laneColor}
         onOwnerAdded={onOwnerAdded}
         onSubtasksChanged={onSubtasksChanged}
       />
+
+      {/* AI · Generate tasks */}
+      <div style={{ marginBottom: 10 }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 6,
+            alignItems: 'center',
+            padding: '6px 0 8px',
+          }}
+        >
+          <input
+            type="text"
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                runAiSuggest();
+              }
+            }}
+            placeholder={`AI — suggest tasks for "${title || 'this project'}"`}
+            style={{
+              flex: 1,
+              background: 'rgba(0,0,0,0.55)',
+              border: `1px solid ${laneFaint}`,
+              color: laneText,
+              padding: '7px 10px',
+              fontFamily: 'inherit',
+              fontSize: 12,
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+          <button
+            type="button"
+            onClick={runAiSuggest}
+            disabled={aiBusy}
+            style={{
+              background: aiBusy ? 'transparent' : `${laneColor}22`,
+              border: `1px solid ${laneColor}88`,
+              color: laneColor,
+              fontFamily: MONO,
+              fontSize: 10,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              padding: '7px 12px',
+              cursor: aiBusy ? 'wait' : 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {aiBusy ? 'Thinking…' : '✦ Generate'}
+          </button>
+        </div>
+        {aiSuggestions && aiSuggestions.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {aiSuggestions.map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  alignItems: 'center',
+                  padding: '6px 8px',
+                  border: `1px solid ${laneFaint}`,
+                  background: 'rgba(0,0,0,0.35)',
+                }}
+              >
+                <span style={{ flex: 1, color: laneText, fontSize: 13 }}>{s}</span>
+                <button
+                  type="button"
+                  onClick={() => addAiSuggestion(s, i)}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${laneColor}88`,
+                    color: laneColor,
+                    fontFamily: MONO,
+                    fontSize: 9,
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  + Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAiSuggestions((prev) => prev?.filter((_, idx) => idx !== i) ?? null)
+                  }
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'rgba(255,96,96,0.55)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Activity thread — Basecamp-style message board */}
+      <ActivityThread taskId={task.id} laneColor={laneColor} />
 
       {/* Attachments — project-level upload + aggregate view of everything */}
       <div style={{ marginBottom: 10 }}>
@@ -394,7 +555,7 @@ export default function ProjectExpanded({
             cursor: 'pointer',
           }}
         >
-          Delete
+          Send to Bin
         </button>
         <button
           type="button"

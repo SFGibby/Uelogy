@@ -47,6 +47,7 @@ export interface GridTask {
   due_at?: string | null;
   cost?: number | null;
   links: GridTaskLink[];
+  archived_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +79,13 @@ export interface GridNotebook {
   id: string;
   content: string;
   updated_at: string;
+}
+
+export interface GridActivity {
+  id: string;
+  task_id: string;
+  content: string;
+  created_at: string;
 }
 
 export type BudgetKind = 'income' | 'expense' | 'savings' | 'transfer';

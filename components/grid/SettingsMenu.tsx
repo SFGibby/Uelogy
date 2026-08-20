@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 interface Props {
   onManageStages: () => void;
   onManageOwners: () => void;
+  onOpenBin: () => void;
 }
 
 const CYAN = '#00f0ff';
@@ -15,7 +16,7 @@ const CYAN_DIM = 'rgba(0,240,255,0.55)';
 const CYAN_FAINT = 'rgba(0,240,255,0.22)';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
-export default function SettingsMenu({ onManageStages, onManageOwners }: Props) {
+export default function SettingsMenu({ onManageStages, onManageOwners, onOpenBin }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +86,16 @@ export default function SettingsMenu({ onManageStages, onManageOwners }: Props) 
             style={itemStyle}
           >
             Manage Owners
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onOpenBin();
+            }}
+            style={itemStyle}
+          >
+            Bin
           </button>
         </div>
       )}
