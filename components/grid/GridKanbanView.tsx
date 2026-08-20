@@ -74,34 +74,36 @@ export default function GridKanbanView() {
             gap: 16,
           }}
         >
-          <span>User Program &middot; {adminMode ? 'Admin' : 'Visitor'}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {adminMode && (
               <SettingsMenu
                 onManageStages={() => setOpenStageManager(true)}
                 onManageOwners={() => setOpenTypeManager(true)}
               />
             )}
+            <span>User Program &middot; {adminMode ? 'Admin' : 'Visitor'}</span>
+          </div>
           <button
             onClick={exitToHome}
             style={{
               background: 'transparent',
-              border: `1px solid ${CYAN_DIM}`,
-              color: CYAN_DIM,
-              padding: '6px 12px',
-              fontFamily: MONO,
-              fontSize: 9,
-              letterSpacing: '0.3em',
-              textTransform: 'uppercase',
+              border: 'none',
+              color: '#ffe1c8',
+              padding: '2px 6px',
+              fontFamily: '"Geist Mono", ui-monospace, monospace',
+              fontSize: 18,
+              fontWeight: 900,
+              letterSpacing: '0.06em',
               cursor: 'pointer',
               minHeight: 44,
-              minWidth: 44,
+              textShadow:
+                '0 0 6px #ff8a3a, 0 0 18px #ff6a18, 0 0 34px rgba(255,106,24,0.55)',
+              textTransform: 'uppercase',
             }}
             aria-label="Exit to Sam's"
           >
-            Exit
+            Sam&apos;s ←
           </button>
-          </div>
         </div>
       </section>
 

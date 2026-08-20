@@ -36,14 +36,16 @@ export default function SettingsMenu({ onManageStages, onManageOwners }: Props) 
         aria-label="Settings"
         title="Settings"
         style={{
-          background: open ? 'rgba(0,240,255,0.10)' : 'transparent',
-          border: `1px solid ${open ? CYAN : CYAN_FAINT}`,
+          background: 'transparent',
+          border: 'none',
           color: open ? CYAN : CYAN_DIM,
           fontFamily: MONO,
-          fontSize: 14,
+          fontSize: 18,
           lineHeight: 1,
-          padding: '7px 10px',
+          padding: '2px 4px',
           cursor: 'pointer',
+          textShadow: open ? `0 0 8px ${CYAN}` : 'none',
+          transition: 'text-shadow 0.15s',
         }}
       >
         ⚙
@@ -53,7 +55,7 @@ export default function SettingsMenu({ onManageStages, onManageOwners }: Props) 
           style={{
             position: 'absolute',
             top: 'calc(100% + 6px)',
-            right: 0,
+            left: 0,
             zIndex: 30,
             background: '#020608',
             border: `1px solid ${CYAN_FAINT}`,

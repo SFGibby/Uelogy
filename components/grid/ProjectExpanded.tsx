@@ -132,9 +132,9 @@ export default function ProjectExpanded({
   return (
     <div
       style={{
-        background: `linear-gradient(rgba(0,6,10,0.92), rgba(0,6,10,0.92)), ${laneColor}22`,
-        border: `1px solid ${laneColor}88`,
-        borderLeft: `3px solid ${laneColor}`,
+        background: `linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)), ${laneColor}`,
+        border: `1px solid ${laneColor}`,
+        borderLeft: `4px solid ${laneColor}`,
         padding: '14px 16px 16px',
         marginBottom: 8,
         clipPath: 'polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%)',
