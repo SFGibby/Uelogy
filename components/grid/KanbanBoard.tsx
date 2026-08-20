@@ -19,16 +19,25 @@ import TaskEditModal from './TaskEditModal';
 import StageManager from './StageManager';
 import TypeManager from './TypeManager';
 import BlockersLane from './BlockersLane';
-import SettingsMenu from './SettingsMenu';
 
 interface Props {
   adminMode: boolean;
+  openStageManager?: boolean;
+  openTypeManager?: boolean;
+  onStageManagerClose?: () => void;
+  onTypeManagerClose?: () => void;
 }
 
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
-export default function KanbanBoard({ adminMode }: Props) {
+export default function KanbanBoard({
+  adminMode,
+  openStageManager,
+  openTypeManager,
+  onStageManagerClose,
+  onTypeManagerClose,
+}: Props) {
   const [stages, setStages] = useState<GridStage[]>([]);
   const [types, setTypes] = useState<GridType[]>([]);
   const [tasks, setTasks] = useState<GridTask[]>([]);
@@ -43,9 +52,11 @@ export default function KanbanBoard({ adminMode }: Props) {
   const [editing, setEditing] = useState<GridTask | null>(null);
   const [creatingInStage, setCreatingInStage] = useState<string | null>(null);
   const [creatingDraftTitle, setCreatingDraftTitle] = useState<string>('');
-  // Manager modal flags
-  const [showStageManager, setShowStageManager] = useState(false);
-  const [showTypeManager, setShowTypeManager] = useState(false);
+  // Manager visibility is now controlled by the parent (GridKanbanView).
+  const showStageManager = !!openStageManager;
+  const showTypeManager = !!openTypeManager;
+  const closeStageManager = () => onStageManagerClose?.();
+  const closeTypeManager = () => onTypeManagerClose?.();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -328,15 +339,6 @@ export default function KanbanBoard({ adminMode }: Props) {
 
   return (
     <>
-      {adminMode && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
-          <SettingsMenu
-            onManageStages={() => setShowStageManager(true)}
-            onManageOwners={() => setShowTypeManager(true)}
-          />
-        </div>
-      )}
-
       <BlockersLane
         tasks={tasks}
         types={types}
@@ -418,7 +420,7 @@ export default function KanbanBoard({ adminMode }: Props) {
         <StageManager
           stages={stages}
           onChange={setStages}
-          onClose={() => setShowStageManager(false)}
+          onClose={closeStageManager}
         />
       )}
 
@@ -426,7 +428,7 @@ export default function KanbanBoard({ adminMode }: Props) {
         <TypeManager
           types={types}
           onChange={setTypes}
-          onClose={() => setShowTypeManager(false)}
+          onClose={closeTypeManager}
         />
       )}
     </>

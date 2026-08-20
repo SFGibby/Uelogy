@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import GridBackground from './GridBackground';
 import GridMusic from './GridMusic';
 import KanbanBoard from './KanbanBoard';
+import SettingsMenu from './SettingsMenu';
 
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
@@ -14,6 +15,8 @@ const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
 export default function GridKanbanView() {
   const [adminMode, setAdminMode] = useState(false);
+  const [openStageManager, setOpenStageManager] = useState(false);
+  const [openTypeManager, setOpenTypeManager] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -72,6 +75,13 @@ export default function GridKanbanView() {
           }}
         >
           <span>User Program &middot; {adminMode ? 'Admin' : 'Visitor'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {adminMode && (
+              <SettingsMenu
+                onManageStages={() => setOpenStageManager(true)}
+                onManageOwners={() => setOpenTypeManager(true)}
+              />
+            )}
           <button
             onClick={exitToHome}
             style={{
@@ -91,6 +101,7 @@ export default function GridKanbanView() {
           >
             Exit
           </button>
+          </div>
         </div>
       </section>
 
@@ -104,7 +115,13 @@ export default function GridKanbanView() {
           padding: '8px clamp(16px, 2.5vw, 28px) 80px',
         }}
       >
-        <KanbanBoard adminMode={adminMode} />
+        <KanbanBoard
+          adminMode={adminMode}
+          openStageManager={openStageManager}
+          openTypeManager={openTypeManager}
+          onStageManagerClose={() => setOpenStageManager(false)}
+          onTypeManagerClose={() => setOpenTypeManager(false)}
+        />
       </section>
 
       <GridMusic />

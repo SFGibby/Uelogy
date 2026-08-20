@@ -32,10 +32,17 @@ const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   3: { color: '#ff2040', label: 'P3' },
 };
 
-function isOverdue(due_at?: string | null): boolean {
-  if (!due_at) return false;
-  const d = new Date(due_at + 'T23:59:59');
-  return d.getTime() < Date.now();
+// Sam-style aging: date field represents "asked / assigned" — glow by age.
+// null / no date = neutral. Recent = cyan, stale = amber, cold = red.
+function ageMeta(due_at?: string | null): { days: number | null; color: string; label: string } {
+  if (!due_at) return { days: null, color: 'transparent', label: '' };
+  const d = new Date(due_at + 'T00:00:00');
+  const now = new Date();
+  const days = Math.floor((now.getTime() - d.getTime()) / (24 * 60 * 60 * 1000));
+  if (days < 0) return { days, color: '#00f0ff', label: `${days}d` };
+  if (days <= 7) return { days, color: '#00f0ff', label: `${days}d` };
+  if (days <= 14) return { days, color: '#f0a000', label: `${days}d` };
+  return { days, color: '#ff2040', label: `${days}d` };
 }
 
 export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksChanged }: Props) {
@@ -193,7 +200,8 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
           {rows.map((r) => {
             const owner = r.owner_id ? owners.find((o) => o.id === r.owner_id) : null;
             const p = PRIORITY_META[r.priority] ?? PRIORITY_META[3];
-            const overdue = !r.done && isOverdue(r.due_at);
+            const age = ageMeta(r.due_at);
+            const aged = !r.done && age.days !== null;
             const blocked = !!r.blocked_reason?.trim();
             const showOwnerPicker = ownerPickerFor === r.id;
             const showPriorityPicker = priorityPickerFor === r.id;
@@ -204,9 +212,9 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                 key={r.id}
                 style={{
                   padding: '6px 8px',
-                  border: `1px solid ${CYAN_FAINT}`,
+                  border: `1px solid ${aged ? age.color + '66' : CYAN_FAINT}`,
                   background: r.done ? 'rgba(0,240,255,0.04)' : 'transparent',
-                  boxShadow: overdue ? `0 0 8px ${OVERDUE}66, inset 0 0 0 1px ${OVERDUE}66` : 'none',
+                  boxShadow: aged ? `0 0 8px ${age.color}55, inset 0 0 0 1px ${age.color}55` : 'none',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -352,25 +360,41 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       </div>
                     )}
                   </div>
-                  {/* Due date */}
-                  <input
-                    type="date"
-                    value={r.due_at ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value || null;
-                      patch(r.id, { due_at: v });
-                      persist(r.id, { due_at: v });
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: `1px solid ${overdue ? OVERDUE : CYAN_FAINT}`,
-                      color: overdue ? OVERDUE : CYAN_DIM,
-                      padding: '3px 5px',
-                      fontFamily: MONO,
-                      fontSize: 10,
-                      colorScheme: 'dark',
-                    }}
-                  />
+                  {/* Assigned/asked date + age counter */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input
+                      type="date"
+                      title={aged ? `Asked ${age.days} day${age.days === 1 ? '' : 's'} ago` : 'Set the day this was asked/assigned'}
+                      value={r.due_at ?? ''}
+                      onChange={(e) => {
+                        const v = e.target.value || null;
+                        patch(r.id, { due_at: v });
+                        persist(r.id, { due_at: v });
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: `1px solid ${aged ? age.color : CYAN_FAINT}`,
+                        color: aged ? age.color : CYAN_DIM,
+                        padding: '3px 5px',
+                        fontFamily: MONO,
+                        fontSize: 10,
+                        colorScheme: 'dark',
+                      }}
+                    />
+                    {aged && (
+                      <span
+                        style={{
+                          fontFamily: MONO,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          letterSpacing: '0.08em',
+                          color: age.color,
+                        }}
+                      >
+                        {age.label}
+                      </span>
+                    )}
+                  </div>
                   {/* Attachments */}
                   <label
                     title={
