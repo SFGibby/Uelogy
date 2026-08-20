@@ -241,44 +241,31 @@ export default function ProjectExpanded({
         </div>
       </div>
 
-      {/* Blocker */}
-      <div style={{ marginBottom: 10 }}>
-        <label
-          style={{
-            ...labelStyle,
-            color: blocked ? '#ff2040aa' : laneDim,
-          }}
-        >
-          Blocker (optional)
-        </label>
-        <textarea
-          value={blockedReason}
-          onChange={(e) => setBlockedReason(e.target.value)}
-          onBlur={() => persist({ blocked_reason: blockedReason.trim() || null })}
-          rows={2}
-          placeholder="What's the question or dependency holding this up?"
-          style={{
-            ...inputBase,
-            border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : laneFaint}`,
-          }}
-        />
-        {blocked && (
-          <div style={{ marginTop: 6 }}>
-            <OwnerCombobox
-              owners={owners}
-              selectedId={blockerOwnerId}
-              variant="blocker"
-              triggerLabel="+ Waiting on…"
-              clearLabel="No one"
-              onPick={(oid) => {
-                setBlockerOwnerId(oid);
-                persist({ blocker_owner_id: oid });
-              }}
-              onOwnerCreated={onOwnerAdded}
-            />
-          </div>
-        )}
-      </div>
+      {/* Blocker — compact preview by default, click to expand */}
+      <BlockerBlock
+        blocked={blocked}
+        laneFaint={laneFaint}
+        laneDim={laneDim}
+        labelStyle={labelStyle}
+        inputBase={inputBase}
+        value={blockedReason}
+        onChange={setBlockedReason}
+        onPersist={() => persist({ blocked_reason: blockedReason.trim() || null })}
+        ownerPicker={
+          <OwnerCombobox
+            owners={owners}
+            selectedId={blockerOwnerId}
+            variant="blocker"
+            triggerLabel="+ Waiting on…"
+            clearLabel="No one"
+            onPick={(oid) => {
+              setBlockerOwnerId(oid);
+              persist({ blocker_owner_id: oid });
+            }}
+            onOwnerCreated={onOwnerAdded}
+          />
+        }
+      />
 
       {/* Tasks (subtasks) */}
       <SubtaskList
@@ -428,6 +415,119 @@ export default function ProjectExpanded({
           Done
         </button>
       </div>
+    </div>
+  );
+}
+
+// Compact-by-default blocker area. Empty state shows a small clickable strip.
+// Filled state shows a one-line preview + red flag. Click either to expand
+// the full textarea + "Waiting on…" picker. Blur collapses back.
+function BlockerBlock({
+  blocked,
+  laneFaint,
+  laneDim,
+  labelStyle,
+  inputBase,
+  value,
+  onChange,
+  onPersist,
+  ownerPicker,
+}: {
+  blocked: boolean;
+  laneFaint: string;
+  laneDim: string;
+  labelStyle: React.CSSProperties;
+  inputBase: React.CSSProperties;
+  value: string;
+  onChange: (v: string) => void;
+  onPersist: () => void;
+  ownerPicker: React.ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const firstLine = value.split('\n')[0] || '';
+
+  useEffect(() => {
+    if (expanded) requestAnimationFrame(() => taRef.current?.focus());
+  }, [expanded]);
+
+  const collapse = () => {
+    onPersist();
+    setExpanded(false);
+  };
+
+  if (!expanded) {
+    return (
+      <div style={{ marginBottom: 10 }}>
+        <div
+          onClick={() => setExpanded(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 10px',
+            border: `1px solid ${blocked ? 'rgba(255,32,64,0.55)' : laneFaint}`,
+            background: blocked ? 'rgba(255,32,64,0.08)' : 'rgba(0,0,0,0.35)',
+            cursor: 'pointer',
+            minHeight: 34,
+            boxSizing: 'border-box',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: labelStyle.fontFamily,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              color: blocked ? '#ff2040aa' : laneDim,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {blocked ? '⚑ Blocker' : 'Blocker (optional)'}
+          </span>
+          <span
+            style={{
+              flex: 1,
+              color: blocked ? '#f6c8cf' : laneDim,
+              fontSize: 12,
+              fontStyle: blocked ? 'normal' : 'italic',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              opacity: blocked ? 1 : 0.7,
+            }}
+          >
+            {blocked ? firstLine : 'Click to add a blocker'}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <label
+        style={{
+          ...labelStyle,
+          color: blocked ? '#ff2040aa' : laneDim,
+        }}
+      >
+        Blocker (optional)
+      </label>
+      <textarea
+        ref={taRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={collapse}
+        rows={2}
+        placeholder="What's the question or dependency holding this up?"
+        style={{
+          ...inputBase,
+          border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : laneFaint}`,
+        }}
+      />
+      {blocked && <div style={{ marginTop: 6 }}>{ownerPicker}</div>}
     </div>
   );
 }

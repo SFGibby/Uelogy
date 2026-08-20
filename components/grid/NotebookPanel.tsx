@@ -39,15 +39,26 @@ function ToolbarButton({
       title={title}
       style={{
         background: active ? 'rgba(0,240,255,0.14)' : 'transparent',
-        border: `1px solid ${active ? CYAN : CYAN_FAINT}`,
-        color: active ? CYAN : CYAN_DIM,
-        padding: '4px 8px',
+        border: 'none',
+        borderBottom: `2px solid ${active ? CYAN : 'transparent'}`,
+        color: active ? CYAN : 'rgba(245,245,245,0.7)',
+        width: 30,
+        height: 30,
         fontFamily: MONO,
-        fontSize: 11,
+        fontSize: 13,
         fontWeight: 700,
         cursor: 'pointer',
         lineHeight: 1,
-        minWidth: 28,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'color 0.1s, background 0.1s',
+      }}
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.color = '#fff';
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.color = 'rgba(245,245,245,0.7)';
       }}
     >
       {children}
@@ -55,29 +66,72 @@ function ToolbarButton({
   );
 }
 
+function ToolbarSep() {
+  return <span style={{ width: 1, background: CYAN_FAINT, margin: '0 4px', alignSelf: 'stretch' }} />;
+}
+
 function Toolbar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
   const chain = () => editor.chain().focus();
+  const activeHeading =
+    editor.isActive('heading', { level: 1 })
+      ? '1'
+      : editor.isActive('heading', { level: 2 })
+      ? '2'
+      : editor.isActive('heading', { level: 3 })
+      ? '3'
+      : '0';
   return (
     <div
       style={{
         display: 'flex',
-        gap: 4,
+        gap: 2,
         flexWrap: 'wrap',
-        padding: '6px 0 8px',
-        borderBottom: `1px solid ${CYAN_FAINT}`,
-        marginBottom: 8,
+        padding: '4px 4px',
+        background: 'rgba(0,0,0,0.35)',
+        border: `1px solid ${CYAN_FAINT}`,
+        borderBottom: 'none',
+        alignItems: 'stretch',
       }}
     >
+      {/* Style block dropdown (paragraph / H1 / H2 / H3) */}
+      <select
+        value={activeHeading}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === '0') chain().setParagraph().run();
+          else chain().toggleHeading({ level: Number(v) as 1 | 2 | 3 }).run();
+        }}
+        title="Text style"
+        style={{
+          background: 'transparent',
+          border: `1px solid ${CYAN_FAINT}`,
+          color: '#f5f5f5',
+          padding: '0 6px',
+          height: 30,
+          fontFamily: MONO,
+          fontSize: 11,
+          cursor: 'pointer',
+          outline: 'none',
+        }}
+      >
+        <option value="0" style={{ background: '#020608' }}>Body</option>
+        <option value="1" style={{ background: '#020608' }}>Heading 1</option>
+        <option value="2" style={{ background: '#020608' }}>Heading 2</option>
+        <option value="3" style={{ background: '#020608' }}>Heading 3</option>
+      </select>
+
+      <ToolbarSep />
+
       <ToolbarButton title="Bold (⌘B)" active={editor.isActive('bold')} onClick={() => chain().toggleBold().run()}>
-        B
+        <span style={{ fontWeight: 900 }}>B</span>
       </ToolbarButton>
       <ToolbarButton
         title="Italic (⌘I)"
         active={editor.isActive('italic')}
         onClick={() => chain().toggleItalic().run()}
       >
-        <span style={{ fontStyle: 'italic' }}>I</span>
+        <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>I</span>
       </ToolbarButton>
       <ToolbarButton
         title="Strikethrough"
@@ -91,80 +145,52 @@ function Toolbar({ editor }: { editor: Editor | null }) {
         active={editor.isActive('code')}
         onClick={() => chain().toggleCode().run()}
       >
-        {'</>'}
+        &lt;/&gt;
       </ToolbarButton>
-      <span style={{ width: 1, background: CYAN_FAINT, margin: '0 4px' }} />
-      <ToolbarButton
-        title="Heading 1"
-        active={editor.isActive('heading', { level: 1 })}
-        onClick={() => chain().toggleHeading({ level: 1 }).run()}
-      >
-        H1
-      </ToolbarButton>
-      <ToolbarButton
-        title="Heading 2"
-        active={editor.isActive('heading', { level: 2 })}
-        onClick={() => chain().toggleHeading({ level: 2 }).run()}
-      >
-        H2
-      </ToolbarButton>
-      <ToolbarButton
-        title="Heading 3"
-        active={editor.isActive('heading', { level: 3 })}
-        onClick={() => chain().toggleHeading({ level: 3 }).run()}
-      >
-        H3
-      </ToolbarButton>
-      <ToolbarButton
-        title="Paragraph"
-        active={editor.isActive('paragraph')}
-        onClick={() => chain().setParagraph().run()}
-      >
-        ¶
-      </ToolbarButton>
-      <span style={{ width: 1, background: CYAN_FAINT, margin: '0 4px' }} />
+
+      <ToolbarSep />
+
       <ToolbarButton
         title="Bulleted list"
         active={editor.isActive('bulletList')}
         onClick={() => chain().toggleBulletList().run()}
       >
-        •
+        <span style={{ fontSize: 16, lineHeight: 1 }}>≡</span>
       </ToolbarButton>
       <ToolbarButton
         title="Numbered list"
         active={editor.isActive('orderedList')}
         onClick={() => chain().toggleOrderedList().run()}
       >
-        1.
+        <span style={{ fontSize: 10, fontWeight: 900 }}>1·</span>
       </ToolbarButton>
       <ToolbarButton
-        title="Task list"
+        title="Checklist"
         active={editor.isActive('taskList')}
         onClick={() => chain().toggleTaskList().run()}
       >
-        ☐
+        <span style={{ fontSize: 14 }}>☐</span>
       </ToolbarButton>
+
+      <ToolbarSep />
+
       <ToolbarButton
-        title="Blockquote"
+        title="Quote"
         active={editor.isActive('blockquote')}
         onClick={() => chain().toggleBlockquote().run()}
       >
-        &quot;
+        <span style={{ fontSize: 16, lineHeight: 1 }}>&ldquo;</span>
       </ToolbarButton>
       <ToolbarButton
         title="Code block"
         active={editor.isActive('codeBlock')}
         onClick={() => chain().toggleCodeBlock().run()}
       >
-        {'{ }'}
+        &#123;&#125;
       </ToolbarButton>
-      <ToolbarButton
-        title="Horizontal rule"
-        onClick={() => chain().setHorizontalRule().run()}
-      >
+      <ToolbarButton title="Divider" onClick={() => chain().setHorizontalRule().run()}>
         ─
       </ToolbarButton>
-      <span style={{ width: 1, background: CYAN_FAINT, margin: '0 4px' }} />
       <ToolbarButton
         title="Link"
         active={editor.isActive('link')}
@@ -179,16 +205,17 @@ function Toolbar({ editor }: { editor: Editor | null }) {
           }
         }}
       >
-        Link
+        <span style={{ textDecoration: 'underline', textUnderlineOffset: 2 }}>A</span>
       </ToolbarButton>
-      <span style={{ width: 1, background: CYAN_FAINT, margin: '0 4px' }} />
+
+      <ToolbarSep />
+
       <ToolbarButton title="Undo (⌘Z)" onClick={() => chain().undo().run()}>
         ↶
       </ToolbarButton>
       <ToolbarButton title="Redo (⌘⇧Z)" onClick={() => chain().redo().run()}>
         ↷
       </ToolbarButton>
-      <span style={{ width: 1, background: CYAN_FAINT, margin: '0 4px' }} />
       <ToolbarButton title="Clear formatting" onClick={() => chain().unsetAllMarks().clearNodes().run()}>
         ⌫
       </ToolbarButton>
@@ -199,6 +226,7 @@ function Toolbar({ editor }: { editor: Editor | null }) {
 export default function NotebookPanel() {
   const [row, setRow] = useState<GridNotebook | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const rowRef = useRef<GridNotebook | null>(null);
 
   const editor = useEditor({
@@ -273,12 +301,16 @@ export default function NotebookPanel() {
         clipPath: 'polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%)',
       }}
     >
+      {/* Header is the click surface — no button, no words */}
       <div
+        onClick={() => setExpanded((v) => !v)}
         style={{
           display: 'flex',
           alignItems: 'baseline',
           justifyContent: 'space-between',
-          marginBottom: 8,
+          cursor: 'pointer',
+          padding: '2px 0',
+          marginBottom: expanded ? 8 : 0,
         }}
       >
         <div
@@ -287,7 +319,7 @@ export default function NotebookPanel() {
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: '0.3em',
-            color: CYAN_DIM,
+            color: expanded ? CYAN : CYAN_DIM,
             textTransform: 'uppercase',
           }}
         >
@@ -307,16 +339,21 @@ export default function NotebookPanel() {
           </div>
         )}
       </div>
-      <Toolbar editor={editor} />
-      <div
-        style={{
-          background: 'rgba(0,0,0,0.55)',
-          border: `1px solid ${CYAN_FAINT}`,
-          minHeight: 160,
-        }}
-      >
-        <EditorContent editor={editor} />
-      </div>
+      {expanded && (
+        <>
+          <Toolbar editor={editor} />
+          <div
+            style={{
+              background: 'rgba(0,0,0,0.55)',
+              border: `1px solid ${CYAN_FAINT}`,
+              borderTop: 'none',
+              minHeight: 160,
+            }}
+          >
+            <EditorContent editor={editor} />
+          </div>
+        </>
+      )}
       <style jsx global>{`
         .ProseMirror { min-height: 140px; }
         .ProseMirror:focus { outline: none; }
