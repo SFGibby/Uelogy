@@ -5,7 +5,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
 import ProjectExpanded from './ProjectExpanded';
-import type { GridStage, GridTask, GridType, GridPriority } from '../../lib/supabase';
+import type { GridStage, GridTask, GridType, GridPriority, GridSubtask } from '../../lib/supabase';
 
 interface Props {
   stage: GridStage;
@@ -17,11 +17,13 @@ interface Props {
   subtaskWorstPriority?: Record<string, number | null>;
   subtaskBlockerCount?: Record<string, number>;
   expandedTaskId?: string | null;
+  subtasksByProject?: Record<string, GridSubtask[]>;
   onTaskClick: (task: GridTask) => void;
   onCollapse?: () => void;
   onLocalUpdate?: (task: GridTask) => void;
   onDeleted?: (id: string) => void;
   onOwnerAdded?: (owner: GridType) => void;
+  onSubtasksChanged?: (projectId: string, rows: GridSubtask[]) => void;
   onQuickAdd?: (title: string) => Promise<unknown> | unknown;
   onDetailsClick?: (draftTitle: string) => void;
 }
@@ -36,11 +38,13 @@ export default function StageColumn({
   subtaskWorstPriority,
   subtaskBlockerCount,
   expandedTaskId,
+  subtasksByProject,
   onTaskClick,
   onCollapse,
   onLocalUpdate,
   onDeleted,
   onOwnerAdded,
+  onSubtasksChanged,
   onQuickAdd,
   onDetailsClick,
 }: Props) {
@@ -132,10 +136,12 @@ export default function StageColumn({
                 task={task}
                 laneColor={stage.color}
                 owners={types}
+                subtasks={subtasksByProject?.[task.id] ?? []}
                 onCollapse={() => onCollapse?.()}
                 onDeleted={(id) => onDeleted?.(id)}
                 onLocalUpdate={(t) => onLocalUpdate?.(t)}
                 onOwnerAdded={onOwnerAdded}
+                onSubtasksChanged={(rows) => onSubtasksChanged?.(task.id, rows)}
               />
             );
           }

@@ -40,6 +40,8 @@ export interface GridTask {
   type_id?: string | null;
   priority: GridPriority;
   blocked_reason?: string | null;
+  blocker_owner_id?: string | null;
+  qna?: string | null;
   attachments?: GridAttachment[];
   position: number;
   due_at?: string | null;
@@ -63,6 +65,7 @@ export interface GridSubtask {
   owner_id?: string | null;
   priority: GridPriority;
   blocked_reason?: string | null;
+  blocker_owner_id?: string | null;
   due_at?: string | null;
   attachments: GridAttachment[];
   done: boolean;

@@ -8,11 +8,13 @@ import type { GridTask, GridType, GridPriority } from '../../lib/supabase';
 const BLOCKER_RED = '#ff2040';
 const OVERDUE = '#ff2040';
 
+// Reversed convention (Sam-style, 2026-08-20):
+// P3 = Critical (worst / highest), P0 = Low (best / lowest)
 const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
-  0: { color: '#ff2040', label: 'P0' },
-  1: { color: '#00f0ff', label: 'P1' },
-  2: { color: '#f0a000', label: 'P2' },
-  3: { color: '#5a6a7a', label: 'P3' },
+  0: { color: '#5a6a7a', label: 'P0' },
+  1: { color: '#f0a000', label: 'P1' },
+  2: { color: '#00f0ff', label: 'P2' },
+  3: { color: '#ff2040', label: 'P3' },
 };
 
 interface Props {
@@ -75,8 +77,8 @@ export default function TaskCard({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.35 : 1,
-        background: 'rgba(0, 16, 22, 0.85)',
-        border: `1px solid rgba(0,240,255,0.22)`,
+        background: `linear-gradient(rgba(0,8,12,0.85), rgba(0,8,12,0.85)), ${accent}22`,
+        border: `1px solid ${accent}44`,
         borderLeft: `3px solid ${accent}`,
         padding: '12px 14px 11px',
         marginBottom: 8,

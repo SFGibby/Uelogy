@@ -5,17 +5,19 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { GridTask, GridType, GridAttachment } from '../../lib/supabase';
+import type { GridTask, GridType, GridAttachment, GridSubtask } from '../../lib/supabase';
 import SubtaskList from './SubtaskList';
 
 interface Props {
   task: GridTask;
   laneColor: string;
   owners: GridType[];
+  subtasks?: GridSubtask[];
   onCollapse: () => void;
   onDeleted: (id: string) => void;
   onLocalUpdate: (task: GridTask) => void;
   onOwnerAdded?: (owner: GridType) => void;
+  onSubtasksChanged?: (rows: GridSubtask[]) => void;
 }
 
 const CYAN = '#00f0ff';
@@ -34,20 +36,37 @@ export default function ProjectExpanded({
   task,
   laneColor,
   owners,
+  subtasks = [],
   onCollapse,
   onDeleted,
   onLocalUpdate,
   onOwnerAdded,
+  onSubtasksChanged,
 }: Props) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
   const [blockedReason, setBlockedReason] = useState(task.blocked_reason ?? '');
+  const [blockerOwnerId, setBlockerOwnerId] = useState<string | null>(task.blocker_owner_id ?? null);
+  const [qna, setQna] = useState(task.qna ?? '');
   const [dueAt, setDueAt] = useState(task.due_at ?? '');
   const [attachments, setAttachments] = useState<GridAttachment[]>(task.attachments ?? []);
   const [uploading, setUploading] = useState(false);
+  const [blockerOwnerPickerOpen, setBlockerOwnerPickerOpen] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const overdue = isOverdue(dueAt);
   const blocked = !!blockedReason.trim();
+  const blockerOwner = blockerOwnerId ? owners.find((o) => o.id === blockerOwnerId) : null;
+
+  // Aggregated attachments across the project + every task under it
+  const aggregatedFiles: Array<{ source: string; file: GridAttachment }> = [
+    ...attachments.map((f) => ({ source: 'Project', file: f })),
+    ...subtasks.flatMap((s) =>
+      (s.attachments ?? []).map((f) => ({
+        source: `Task · ${s.title || '(untitled)'}`,
+        file: f,
+      }))
+    ),
+  ];
 
   useEffect(() => {
     // Focus title only for newly-created empty projects
@@ -112,7 +131,7 @@ export default function ProjectExpanded({
   return (
     <div
       style={{
-        background: 'rgba(0, 16, 22, 0.95)',
+        background: `linear-gradient(rgba(0,6,10,0.92), rgba(0,6,10,0.92)), ${laneColor}22`,
         border: `1px solid ${laneColor}88`,
         borderLeft: `3px solid ${laneColor}`,
         padding: '14px 16px 16px',
@@ -222,57 +241,99 @@ export default function ProjectExpanded({
             border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : CYAN_FAINT}`,
           }}
         />
+        {blocked && (
+          <div style={{ marginTop: 6, position: 'relative', display: 'inline-block' }}>
+            <button
+              type="button"
+              onClick={() => setBlockerOwnerPickerOpen((v) => !v)}
+              style={{
+                fontSize: 9,
+                fontFamily: MONO,
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                background: 'transparent',
+                border: `1px solid ${blockerOwner ? blockerOwner.color : '#ff2040'}66`,
+                color: blockerOwner ? blockerOwner.color : '#ff2040bb',
+                padding: '3px 7px',
+                cursor: 'pointer',
+              }}
+            >
+              {blockerOwner ? `Waiting on ${blockerOwner.name}` : '+ Waiting on…'}
+            </button>
+            {blockerOwnerPickerOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  left: 0,
+                  zIndex: 20,
+                  background: '#020608',
+                  border: `1px solid ${CYAN_FAINT}`,
+                  padding: 6,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  minWidth: 160,
+                  maxHeight: 220,
+                  overflowY: 'auto',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBlockerOwnerId(null);
+                    persist({ blocker_owner_id: null });
+                    setBlockerOwnerPickerOpen(false);
+                  }}
+                  style={pickerOptionStyle(!blockerOwner, CYAN_DIM)}
+                >
+                  No one
+                </button>
+                {owners.map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() => {
+                      setBlockerOwnerId(o.id);
+                      persist({ blocker_owner_id: o.id });
+                      setBlockerOwnerPickerOpen(false);
+                    }}
+                    style={pickerOptionStyle(blockerOwner?.id === o.id, o.color)}
+                  >
+                    {o.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Q&A / Notebook */}
+      <div style={{ marginBottom: 10 }}>
+        <label style={labelStyle}>Q&amp;A · Notebook</label>
+        <textarea
+          value={qna}
+          onChange={(e) => setQna(e.target.value)}
+          onBlur={() => persist({ qna: qna.trim() || null })}
+          rows={3}
+          placeholder="Questions to research, open threads, stuff to ask — not blocking, just noted."
+          style={inputStyleNeutral()}
+        />
       </div>
 
       {/* Tasks (subtasks) */}
-      <SubtaskList taskId={task.id} owners={owners} onOwnerAdded={onOwnerAdded} />
+      <SubtaskList
+        taskId={task.id}
+        owners={owners}
+        onOwnerAdded={onOwnerAdded}
+        onSubtasksChanged={onSubtasksChanged}
+      />
 
-      {/* Attachments */}
+      {/* Attachments — project-level upload + aggregate view of everything */}
       <div style={{ marginBottom: 10 }}>
-        <label style={labelStyle}>Attachments</label>
-        {attachments.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
-            {attachments.map((a, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 8px',
-                  border: `1px solid ${CYAN_FAINT}`,
-                  fontFamily: MONO,
-                  fontSize: 11,
-                }}
-              >
-                <a
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ flex: 1, color: CYAN, textDecoration: 'underline', textUnderlineOffset: 2 }}
-                >
-                  {a.name}
-                </a>
-                {a.size != null && (
-                  <span style={{ color: CYAN_DIM }}>{(a.size / 1024).toFixed(0)} KB</span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeAttachment(i)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'rgba(255,96,96,0.6)',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <label style={labelStyle}>Attachments · Project</label>
         <label
           style={{
             display: 'block',
@@ -291,7 +352,7 @@ export default function ProjectExpanded({
             opacity: uploading ? 0.5 : 1,
           }}
         >
-          {uploading ? 'Uploading…' : '+ Attach file'}
+          {uploading ? 'Uploading…' : '+ Attach file to project'}
           <input
             type="file"
             style={{ display: 'none' }}
@@ -304,6 +365,71 @@ export default function ProjectExpanded({
           />
         </label>
       </div>
+
+      {/* All files rollup — files on the project + every task under it */}
+      {aggregatedFiles.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          <label style={labelStyle}>All files · {aggregatedFiles.length}</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {aggregatedFiles.map(({ source, file }, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 8px',
+                  border: `1px solid ${CYAN_FAINT}`,
+                  fontFamily: MONO,
+                  fontSize: 11,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: source === 'Project' ? laneColor : CYAN_DIM,
+                    minWidth: 90,
+                  }}
+                >
+                  {source}
+                </span>
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ flex: 1, color: CYAN, textDecoration: 'underline', textUnderlineOffset: 2 }}
+                >
+                  {file.name}
+                </a>
+                {file.size != null && (
+                  <span style={{ color: CYAN_DIM }}>{(file.size / 1024).toFixed(0)} KB</span>
+                )}
+                {source === 'Project' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const idx = attachments.findIndex((a) => a.url === file.url);
+                      if (idx >= 0) removeAttachment(idx);
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'rgba(255,96,96,0.6)',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Footer: delete */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14 }}>
@@ -384,6 +510,22 @@ const collapseBtnStyle: React.CSSProperties = {
   cursor: 'pointer',
   lineHeight: 1,
 };
+
+function pickerOptionStyle(active: boolean, color: string): React.CSSProperties {
+  return {
+    padding: '5px 8px',
+    background: active ? color + '22' : 'transparent',
+    border: `1px solid ${active ? color : 'transparent'}`,
+    color: active ? color : '#cfe9f0',
+    fontFamily: MONO,
+    fontSize: 10,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    fontWeight: 700,
+    textAlign: 'left',
+    cursor: 'pointer',
+  };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _cyanUsedElsewhere = CYAN;

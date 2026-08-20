@@ -6,12 +6,14 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { GridSubtask, GridType, GridPriority } from '../../lib/supabase';
+import type { GridSubtask, GridType, GridPriority, GridAttachment } from '../../lib/supabase';
+import { supabase as sb } from '../../lib/supabase';
 
 interface Props {
   taskId: string;
   owners: GridType[];
   onOwnerAdded?: (owner: GridType) => void;
+  onSubtasksChanged?: (rows: GridSubtask[]) => void;
 }
 
 const CYAN = '#00f0ff';
@@ -21,11 +23,13 @@ const OVERDUE = '#ff2040';
 const BLOCKER_RED = '#ff2040';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
+// Reversed convention (Sam-style, 2026-08-20):
+// P3 = Critical (worst / highest), P0 = Low (best / lowest)
 const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
-  0: { color: '#ff2040', label: 'P0' },
-  1: { color: '#00f0ff', label: 'P1' },
-  2: { color: '#f0a000', label: 'P2' },
-  3: { color: '#5a6a7a', label: 'P3' },
+  0: { color: '#5a6a7a', label: 'P0' },
+  1: { color: '#f0a000', label: 'P1' },
+  2: { color: '#00f0ff', label: 'P2' },
+  3: { color: '#ff2040', label: 'P3' },
 };
 
 function isOverdue(due_at?: string | null): boolean {
@@ -34,13 +38,19 @@ function isOverdue(due_at?: string | null): boolean {
   return d.getTime() < Date.now();
 }
 
-export default function SubtaskList({ taskId, owners, onOwnerAdded }: Props) {
+export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksChanged }: Props) {
   const [rows, setRows] = useState<GridSubtask[]>([]);
   const [loading, setLoading] = useState(true);
   const [ownerPickerFor, setOwnerPickerFor] = useState<string | null>(null);
   const [priorityPickerFor, setPriorityPickerFor] = useState<string | null>(null);
+  const [blockerOwnerPickerFor, setBlockerOwnerPickerFor] = useState<string | null>(null);
   const [blockerFor, setBlockerFor] = useState<string | null>(null);
   const [newOwnerDraft, setNewOwnerDraft] = useState('');
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+
+  const notifyChanged = (next: GridSubtask[]) => {
+    onSubtasksChanged?.(next);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -70,11 +80,19 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded }: Props) {
       alert('Add task failed: ' + error.message);
       return;
     }
-    setRows((prev) => [...prev, data as GridSubtask]);
+    setRows((prev) => {
+      const next = [...prev, data as GridSubtask];
+      notifyChanged(next);
+      return next;
+    });
   };
 
   const patch = (id: string, changes: Partial<GridSubtask>) => {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...changes } : r)));
+    setRows((prev) => {
+      const next = prev.map((r) => (r.id === id ? { ...r, ...changes } : r));
+      notifyChanged(next);
+      return next;
+    });
   };
 
   const persist = async (id: string, changes: Partial<GridSubtask>) => {
@@ -83,9 +101,44 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded }: Props) {
   };
 
   const removeRow = async (id: string) => {
-    setRows((prev) => prev.filter((r) => r.id !== id));
+    setRows((prev) => {
+      const next = prev.filter((r) => r.id !== id);
+      notifyChanged(next);
+      return next;
+    });
     const { error } = await supabase.from('grid_subtasks').delete().eq('id', id);
     if (error) alert('Delete failed: ' + error.message);
+  };
+
+  const uploadFor = async (row: GridSubtask, file: File) => {
+    setUploadingFor(row.id);
+    try {
+      const path = `tasks/${row.id}/${Date.now()}-${file.name}`;
+      const { error: upErr } = await sb.storage
+        .from('grid-attachments')
+        .upload(path, file, { cacheControl: '3600' });
+      if (upErr) throw upErr;
+      const { data: pub } = sb.storage.from('grid-attachments').getPublicUrl(path);
+      const entry: GridAttachment = {
+        name: file.name,
+        url: pub.publicUrl,
+        size: file.size,
+        uploaded_at: new Date().toISOString(),
+      };
+      const nextAttachments = [...(row.attachments ?? []), entry];
+      patch(row.id, { attachments: nextAttachments });
+      await persist(row.id, { attachments: nextAttachments });
+    } catch (e) {
+      alert('Upload failed: ' + (e as Error).message);
+    } finally {
+      setUploadingFor(null);
+    }
+  };
+
+  const removeAttachment = async (row: GridSubtask, i: number) => {
+    const nextAttachments = (row.attachments ?? []).filter((_, idx) => idx !== i);
+    patch(row.id, { attachments: nextAttachments });
+    await persist(row.id, { attachments: nextAttachments });
   };
 
   const createOwner = async (name: string, subtaskId: string) => {
@@ -318,6 +371,37 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded }: Props) {
                       colorScheme: 'dark',
                     }}
                   />
+                  {/* Attachments */}
+                  <label
+                    title={
+                      (r.attachments?.length ?? 0) > 0
+                        ? `${r.attachments!.length} file(s) attached`
+                        : 'Attach file'
+                    }
+                    style={{
+                      fontSize: 10,
+                      fontFamily: MONO,
+                      background: 'transparent',
+                      border: `1px solid ${CYAN_FAINT}`,
+                      color: (r.attachments?.length ?? 0) > 0 ? CYAN : CYAN_DIM,
+                      padding: '3px 6px',
+                      cursor: uploadingFor === r.id ? 'wait' : 'pointer',
+                      lineHeight: 1,
+                      opacity: uploadingFor === r.id ? 0.5 : 1,
+                    }}
+                  >
+                    ⎘{r.attachments && r.attachments.length > 0 ? ` ${r.attachments.length}` : ''}
+                    <input
+                      type="file"
+                      style={{ display: 'none' }}
+                      disabled={uploadingFor === r.id}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadFor(r, f);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
                   {/* Blocker toggle */}
                   <button
                     type="button"
@@ -352,27 +436,76 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded }: Props) {
                     ✕
                   </button>
                 </div>
+                {/* Attachment chips (compact) */}
+                {(r.attachments?.length ?? 0) > 0 && (
+                  <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {(r.attachments ?? []).map((a, ai) => (
+                      <div
+                        key={ai}
+                        style={{
+                          display: 'flex',
+                          gap: 6,
+                          alignItems: 'center',
+                          padding: '3px 6px',
+                          border: `1px solid ${CYAN_FAINT}`,
+                          fontSize: 10,
+                          fontFamily: MONO,
+                        }}
+                      >
+                        <a
+                          href={a.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ flex: 1, color: CYAN, textDecoration: 'underline', textUnderlineOffset: 2 }}
+                        >
+                          {a.name}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(r, ai)}
+                          style={{ background: 'transparent', border: 'none', color: 'rgba(255,96,96,0.6)', cursor: 'pointer' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {showBlocker && (
-                  <textarea
-                    value={r.blocked_reason ?? ''}
-                    onChange={(e) => patch(r.id, { blocked_reason: e.target.value })}
-                    onBlur={() => persist(r.id, { blocked_reason: (r.blocked_reason ?? '').trim() || null })}
-                    placeholder="Blocker: question or dependency"
-                    rows={2}
-                    style={{
-                      marginTop: 6,
-                      width: '100%',
-                      background: 'rgba(255,32,64,0.06)',
-                      border: `1px solid ${BLOCKER_RED}55`,
-                      color: '#f6c8cf',
-                      fontFamily: 'inherit',
-                      fontSize: 12,
-                      padding: '6px 8px',
-                      outline: 'none',
-                      resize: 'vertical',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                  <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <textarea
+                      value={r.blocked_reason ?? ''}
+                      onChange={(e) => patch(r.id, { blocked_reason: e.target.value })}
+                      onBlur={() => persist(r.id, { blocked_reason: (r.blocked_reason ?? '').trim() || null })}
+                      placeholder="Blocker: question or dependency"
+                      rows={2}
+                      style={{
+                        width: '100%',
+                        background: 'rgba(255,32,64,0.06)',
+                        border: `1px solid ${BLOCKER_RED}55`,
+                        color: '#f6c8cf',
+                        fontFamily: 'inherit',
+                        fontSize: 12,
+                        padding: '6px 8px',
+                        outline: 'none',
+                        resize: 'vertical',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <BlockerOwnerPicker
+                      row={r}
+                      owners={owners}
+                      isOpen={blockerOwnerPickerFor === r.id}
+                      onToggle={() =>
+                        setBlockerOwnerPickerFor(blockerOwnerPickerFor === r.id ? null : r.id)
+                      }
+                      onPick={(oid) => {
+                        patch(r.id, { blocker_owner_id: oid });
+                        persist(r.id, { blocker_owner_id: oid });
+                        setBlockerOwnerPickerFor(null);
+                      }}
+                    />
+                  </div>
                 )}
               </div>
             );
@@ -419,6 +552,61 @@ const pickerBoxStyle: React.CSSProperties = {
   maxHeight: 220,
   overflowY: 'auto',
 };
+
+function BlockerOwnerPicker({
+  row,
+  owners,
+  isOpen,
+  onToggle,
+  onPick,
+}: {
+  row: GridSubtask;
+  owners: GridType[];
+  isOpen: boolean;
+  onToggle: () => void;
+  onPick: (id: string | null) => void;
+}) {
+  const owner = row.blocker_owner_id ? owners.find((o) => o.id === row.blocker_owner_id) : null;
+  return (
+    <div style={{ position: 'relative', alignSelf: 'flex-start' }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{
+          fontSize: 9,
+          fontFamily: MONO,
+          fontWeight: 700,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          background: 'transparent',
+          border: `1px solid ${owner ? owner.color : BLOCKER_RED}66`,
+          color: owner ? owner.color : `${BLOCKER_RED}bb`,
+          padding: '3px 7px',
+          cursor: 'pointer',
+        }}
+      >
+        {owner ? `Waiting on ${owner.name}` : '+ Waiting on…'}
+      </button>
+      {isOpen && (
+        <div style={{ ...pickerBoxStyle, right: 'auto', left: 0 }}>
+          <button type="button" onClick={() => onPick(null)} style={pickerOptionStyle(!owner, CYAN_DIM)}>
+            No one
+          </button>
+          {owners.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => onPick(o.id)}
+              style={pickerOptionStyle(owner?.id === o.id, o.color)}
+            >
+              {o.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function pickerOptionStyle(active: boolean, color: string): React.CSSProperties {
   return {

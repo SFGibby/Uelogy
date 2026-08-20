@@ -15,17 +15,19 @@ interface Props {
 const BLOCKER_RED = '#ff2040';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
+// Reversed convention (Sam-style, 2026-08-20): P3 = Critical, P0 = Low
 const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
-  0: { color: '#ff2040', label: 'P0' },
-  1: { color: '#00f0ff', label: 'P1' },
-  2: { color: '#f0a000', label: 'P2' },
-  3: { color: '#5a6a7a', label: 'P3' },
+  0: { color: '#5a6a7a', label: 'P0' },
+  1: { color: '#f0a000', label: 'P1' },
+  2: { color: '#00f0ff', label: 'P2' },
+  3: { color: '#ff2040', label: 'P3' },
 };
 
 export default function BlockersLane({ tasks, types, onTaskClick }: Props) {
   const blocked = tasks
     .filter((t) => t.blocked_reason?.trim())
-    .sort((a, b) => a.priority - b.priority);
+    // Reversed priority: higher number = higher urgency, sort desc.
+    .sort((a, b) => b.priority - a.priority);
 
   if (blocked.length === 0) return null;
 

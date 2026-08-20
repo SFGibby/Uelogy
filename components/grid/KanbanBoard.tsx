@@ -91,15 +91,17 @@ export default function KanbanBoard({ adminMode }: Props) {
   const subtaskCounts: Record<string, { total: number; done: number }> = {};
   const subtaskWorstPriority: Record<string, number | null> = {};
   const subtaskBlockerCount: Record<string, number> = {};
+  const subtasksByProject: Record<string, typeof subtasks> = {};
   for (const st of subtasks) {
+    (subtasksByProject[st.task_id] = subtasksByProject[st.task_id] || []).push(st);
     const c = subtaskCounts[st.task_id] || { total: 0, done: 0 };
     c.total += 1;
     if (st.done) c.done += 1;
     subtaskCounts[st.task_id] = c;
 
     const worst = subtaskWorstPriority[st.task_id];
-    // priority 0 is worst (Critical); lower number = worse.
-    if (worst == null || st.priority < worst) subtaskWorstPriority[st.task_id] = st.priority;
+    // Reversed: priority 3 is worst (Critical); higher number = worse.
+    if (worst == null || st.priority > worst) subtaskWorstPriority[st.task_id] = st.priority;
 
     if (st.blocked_reason?.trim()) {
       subtaskBlockerCount[st.task_id] = (subtaskBlockerCount[st.task_id] ?? 0) + 1;
@@ -360,11 +362,18 @@ export default function KanbanBoard({ adminMode }: Props) {
               subtaskWorstPriority={subtaskWorstPriority}
               subtaskBlockerCount={subtaskBlockerCount}
               expandedTaskId={expandedTaskId}
+              subtasksByProject={subtasksByProject}
               onTaskClick={openEditModal}
               onCollapse={() => setExpandedTaskId(null)}
               onLocalUpdate={handleSaved}
               onDeleted={handleDeleted}
               onOwnerAdded={(o) => setTypes((prev) => [...prev, o])}
+              onSubtasksChanged={(projectId, rows) => {
+                setSubtasks((prev) => {
+                  const others = prev.filter((s) => s.task_id !== projectId);
+                  return [...others, ...rows];
+                });
+              }}
               onQuickAdd={adminMode ? (title) => handleQuickAdd(stage.id, title) : undefined}
               onDetailsClick={
                 adminMode
