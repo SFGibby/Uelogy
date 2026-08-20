@@ -10,11 +10,12 @@ const OVERDUE = '#ff2040';
 
 // Reversed convention (Sam-style, 2026-08-20):
 // P3 = Critical (worst / highest), P0 = Low (best / lowest)
+// Red is reserved for the Blocker box only; P3 uses magenta so it still alarms.
 const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   0: { color: '#5a6a7a', label: 'P0' },
   1: { color: '#f0a000', label: 'P1' },
   2: { color: '#00f0ff', label: 'P2' },
-  3: { color: '#ff2040', label: 'P3' },
+  3: { color: '#e91e63', label: 'P3' },
 };
 
 interface Props {

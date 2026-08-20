@@ -118,7 +118,7 @@ export default function StageColumn({
         <span
           style={{
             fontSize: 11,
-            color: 'rgba(0,240,255,0.5)',
+            color: stage.color,
             fontFamily: 'ui-monospace, monospace',
             fontWeight: 700,
           }}

@@ -16,7 +16,7 @@ const LEADERBOARD_KEY = 'lightcycle_leaderboard';
 const TOP_N = 10;
 
 type Dir = 'up' | 'down' | 'left' | 'right';
-type Phase = 'playing' | 'level-cleared' | 'game-over';
+type Phase = 'idle' | 'playing' | 'level-cleared' | 'game-over';
 
 interface CycleState {
   x: number;
@@ -137,7 +137,7 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
     ai: newCycle(COLS - 7, Math.floor(ROWS / 2), 'left'),
     level: 1,
     score: 0,
-    phase: 'playing',
+    phase: 'idle',
   });
   const [, force] = useState(0);
   const tick = useCallback(() => force((n) => n + 1), []);
@@ -248,9 +248,16 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
     p.dir = dir;
   }, []);
 
-  // Player input — keyboard
+  // Player input — keyboard (turn while playing; space to start from idle)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      if (stateRef.current.phase === 'idle') {
+        if (e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          startLevel(1);
+        }
+        return;
+      }
       if (stateRef.current.phase !== 'playing') return;
       const map: Record<string, Dir> = {
         ArrowUp: 'up',
@@ -269,7 +276,7 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [tryTurn]);
+  }, [tryTurn, startLevel]);
 
   // Game loop
   useEffect(() => {
@@ -458,6 +465,25 @@ export default function Lightcycle({ onEnd, onSkip }: Props) {
 
       {/* Overlay messages + buttons */}
       <div style={{ minHeight: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+        {state.phase === 'idle' && (
+          <>
+            <div
+              style={{
+                color: '#00f0ff',
+                fontSize: 18,
+                letterSpacing: '0.3em',
+                fontWeight: 800,
+                textShadow: '0 0 14px rgba(0,240,255,0.6)',
+                fontFamily: MONO,
+              }}
+            >
+              PRESS <span style={{ padding: '2px 10px', border: '1px solid #00f0ff', margin: '0 4px' }}>SPACE</span> TO PLAY
+            </div>
+            <button onClick={onSkip} style={btnMuted}>
+              Skip &rarr;
+            </button>
+          </>
+        )}
         {state.phase === 'playing' && (
           <button onClick={onSkip} style={btnMuted}>
             Skip &rarr;

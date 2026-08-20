@@ -20,7 +20,7 @@ const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   0: { color: '#5a6a7a', label: 'P0' },
   1: { color: '#f0a000', label: 'P1' },
   2: { color: '#00f0ff', label: 'P2' },
-  3: { color: '#ff2040', label: 'P3' },
+  3: { color: '#e91e63', label: 'P3' },
 };
 
 export default function BlockersLane({ tasks, types, onTaskClick }: Props) {

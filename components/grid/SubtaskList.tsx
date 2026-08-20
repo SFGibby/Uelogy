@@ -31,7 +31,7 @@ const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   0: { color: '#5a6a7a', label: 'P0' },
   1: { color: '#f0a000', label: 'P1' },
   2: { color: '#00f0ff', label: 'P2' },
-  3: { color: '#ff2040', label: 'P3' },
+  3: { color: '#e91e63', label: 'P3' },
 };
 
 // Sam-style aging: date field represents "asked / assigned" — glow by age.
@@ -292,10 +292,11 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
                       </div>
                     )}
                   </div>
-                  {/* Owner (searchable combobox) */}
+                  {/* Owner (searchable combobox) — chip in lane color */}
                   <OwnerCombobox
                     owners={owners}
                     selectedId={r.owner_id ?? null}
+                    chipColor={laneColor}
                     onPick={(oid) => {
                       patch(r.id, { owner_id: oid });
                       persist(r.id, { owner_id: oid });

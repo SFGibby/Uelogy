@@ -202,17 +202,6 @@ export default function ProjectExpanded({
             cursor: 'text',
           }}
         />
-        <span
-          style={{
-            fontFamily: MONO,
-            fontSize: 9,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            color: laneDim,
-          }}
-        >
-          Collapse
-        </span>
       </div>
 
       {/* Description */}

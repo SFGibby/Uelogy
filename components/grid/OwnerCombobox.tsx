@@ -17,6 +17,7 @@ interface Props {
   variant?: 'default' | 'blocker';
   triggerLabel?: string; // fallback if no selected owner
   clearLabel?: string;   // label for the "clear" row (default: Unassigned)
+  chipColor?: string;    // override the trigger chip color (e.g., lane color)
 }
 
 const CYAN = '#00f0ff';
@@ -33,6 +34,7 @@ export default function OwnerCombobox({
   variant = 'default',
   triggerLabel = '+ Owner',
   clearLabel = 'Unassigned',
+  chipColor,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -46,7 +48,7 @@ export default function OwnerCombobox({
     ? { color: `${BLOCKER_RED}bb`, border: `${BLOCKER_RED}66` }
     : { color: CYAN_DIM, border: CYAN_FAINT };
   const active = owner
-    ? { color: owner.color, border: `${owner.color}66` }
+    ? { color: chipColor ?? owner.color, border: `${chipColor ?? owner.color}66` }
     : idle;
 
   const filtered = query.trim()
