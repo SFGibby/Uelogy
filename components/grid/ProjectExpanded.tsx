@@ -201,21 +201,26 @@ export default function ProjectExpanded({
 
   return (
     <div
+      onClick={(e) => {
+        // Collapse when the click lands on the outer padding — not on any child.
+        if (e.target === e.currentTarget) onCollapse();
+      }}
       style={{
         background: `linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.72)), ${laneColor}`,
         border: `1px solid ${laneColor}`,
         borderLeft: `4px solid ${laneColor}`,
-        padding: '14px 16px 16px',
+        padding: '22px 18px 18px',
         marginBottom: 8,
         clipPath: 'polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%)',
         boxShadow: overdue
           ? `0 0 14px ${OVERDUE}66, inset 0 0 0 1px ${OVERDUE}66`
           : `0 0 12px rgba(0,0,0,0.5)`,
+        cursor: 'default',
       }}
     >
-      {/* Header row: clicking anywhere (except the title input) collapses */}
+      {/* Title-only row. Not clickable — click the padding around the card
+          (top / left / right / between sections) to collapse. */}
       <div
-        onClick={onCollapse}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -223,9 +228,7 @@ export default function ProjectExpanded({
           marginBottom: 12,
           paddingBottom: 8,
           borderBottom: `1px solid ${laneFaint}`,
-          cursor: 'pointer',
         }}
-        title="Click to collapse"
       >
         <input
           ref={titleRef}
