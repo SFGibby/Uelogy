@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { GridSubtask, GridType, GridPriority, GridAttachment } from '../../lib/supabase';
 import { supabase as sb } from '../../lib/supabase';
+import OwnerCombobox from './OwnerCombobox';
 
 interface Props {
   taskId: string;
@@ -287,79 +288,16 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       </div>
                     )}
                   </div>
-                  {/* Owner */}
-                  <div style={{ position: 'relative' }}>
-                    <button
-                      type="button"
-                      onClick={() => setOwnerPickerFor(showOwnerPicker ? null : r.id)}
-                      style={{
-                        fontSize: 9,
-                        fontFamily: MONO,
-                        fontWeight: 700,
-                        letterSpacing: '0.14em',
-                        textTransform: 'uppercase',
-                        background: 'transparent',
-                        border: `1px solid ${owner ? owner.color : CYAN_FAINT}`,
-                        color: owner ? owner.color : CYAN_DIM,
-                        padding: '3px 7px',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {owner ? owner.name : '+ Owner'}
-                    </button>
-                    {showOwnerPicker && (
-                      <div style={{ ...pickerBoxStyle, minWidth: 180 }}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            patch(r.id, { owner_id: null });
-                            persist(r.id, { owner_id: null });
-                            setOwnerPickerFor(null);
-                          }}
-                          style={pickerOptionStyle(!owner, CYAN_DIM)}
-                        >
-                          Unassigned
-                        </button>
-                        {owners.map((o) => (
-                          <button
-                            key={o.id}
-                            type="button"
-                            onClick={() => {
-                              patch(r.id, { owner_id: o.id });
-                              persist(r.id, { owner_id: o.id });
-                              setOwnerPickerFor(null);
-                            }}
-                            style={pickerOptionStyle(owner?.id === o.id, o.color)}
-                          >
-                            {o.name}
-                          </button>
-                        ))}
-                        <input
-                          type="text"
-                          value={newOwnerDraft}
-                          onChange={(e) => setNewOwnerDraft(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              createOwner(newOwnerDraft, r.id);
-                            }
-                          }}
-                          placeholder="+ new owner — Enter"
-                          style={{
-                            marginTop: 4,
-                            padding: '5px 8px',
-                            background: 'rgba(0,12,16,0.7)',
-                            border: `1px solid ${CYAN_FAINT}`,
-                            color: '#e0f4f8',
-                            fontFamily: MONO,
-                            fontSize: 10,
-                            outline: 'none',
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
+                  {/* Owner (searchable combobox) */}
+                  <OwnerCombobox
+                    owners={owners}
+                    selectedId={r.owner_id ?? null}
+                    onPick={(oid) => {
+                      patch(r.id, { owner_id: oid });
+                      persist(r.id, { owner_id: oid });
+                    }}
+                    onOwnerCreated={onOwnerAdded}
+                  />
                   {/* Assigned/asked date + age counter */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <input
@@ -516,18 +454,17 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                         boxSizing: 'border-box',
                       }}
                     />
-                    <BlockerOwnerPicker
-                      row={r}
+                    <OwnerCombobox
                       owners={owners}
-                      isOpen={blockerOwnerPickerFor === r.id}
-                      onToggle={() =>
-                        setBlockerOwnerPickerFor(blockerOwnerPickerFor === r.id ? null : r.id)
-                      }
+                      selectedId={r.blocker_owner_id ?? null}
+                      variant="blocker"
+                      triggerLabel="+ Waiting on…"
+                      clearLabel="No one"
                       onPick={(oid) => {
                         patch(r.id, { blocker_owner_id: oid });
                         persist(r.id, { blocker_owner_id: oid });
-                        setBlockerOwnerPickerFor(null);
                       }}
+                      onOwnerCreated={onOwnerAdded}
                     />
                   </div>
                 )}

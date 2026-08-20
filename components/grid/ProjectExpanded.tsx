@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { GridTask, GridType, GridAttachment, GridSubtask } from '../../lib/supabase';
 import SubtaskList from './SubtaskList';
+import OwnerCombobox from './OwnerCombobox';
 
 interface Props {
   task: GridTask;
@@ -242,70 +243,19 @@ export default function ProjectExpanded({
           }}
         />
         {blocked && (
-          <div style={{ marginTop: 6, position: 'relative', display: 'inline-block' }}>
-            <button
-              type="button"
-              onClick={() => setBlockerOwnerPickerOpen((v) => !v)}
-              style={{
-                fontSize: 9,
-                fontFamily: MONO,
-                fontWeight: 700,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                background: 'transparent',
-                border: `1px solid ${blockerOwner ? blockerOwner.color : '#ff2040'}66`,
-                color: blockerOwner ? blockerOwner.color : '#ff2040bb',
-                padding: '3px 7px',
-                cursor: 'pointer',
+          <div style={{ marginTop: 6 }}>
+            <OwnerCombobox
+              owners={owners}
+              selectedId={blockerOwnerId}
+              variant="blocker"
+              triggerLabel="+ Waiting on…"
+              clearLabel="No one"
+              onPick={(oid) => {
+                setBlockerOwnerId(oid);
+                persist({ blocker_owner_id: oid });
               }}
-            >
-              {blockerOwner ? `Waiting on ${blockerOwner.name}` : '+ Waiting on…'}
-            </button>
-            {blockerOwnerPickerOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  left: 0,
-                  zIndex: 20,
-                  background: '#020608',
-                  border: `1px solid ${CYAN_FAINT}`,
-                  padding: 6,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                  minWidth: 160,
-                  maxHeight: 220,
-                  overflowY: 'auto',
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBlockerOwnerId(null);
-                    persist({ blocker_owner_id: null });
-                    setBlockerOwnerPickerOpen(false);
-                  }}
-                  style={pickerOptionStyle(!blockerOwner, CYAN_DIM)}
-                >
-                  No one
-                </button>
-                {owners.map((o) => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => {
-                      setBlockerOwnerId(o.id);
-                      persist({ blocker_owner_id: o.id });
-                      setBlockerOwnerPickerOpen(false);
-                    }}
-                    style={pickerOptionStyle(blockerOwner?.id === o.id, o.color)}
-                  >
-                    {o.name}
-                  </button>
-                ))}
-              </div>
-            )}
+              onOwnerCreated={onOwnerAdded}
+            />
           </div>
         )}
       </div>
