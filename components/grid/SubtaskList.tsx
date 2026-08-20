@@ -13,6 +13,7 @@ import OwnerCombobox from './OwnerCombobox';
 interface Props {
   taskId: string;
   owners: GridType[];
+  laneColor?: string;
   onOwnerAdded?: (owner: GridType) => void;
   onSubtasksChanged?: (rows: GridSubtask[]) => void;
 }
@@ -46,7 +47,10 @@ function ageMeta(due_at?: string | null): { days: number | null; color: string; 
   return { days, color: '#ff2040', label: `${days}d` };
 }
 
-export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksChanged }: Props) {
+export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, onSubtasksChanged }: Props) {
+  const accent = laneColor ?? CYAN;
+  const accentDim = laneColor ? `${laneColor}aa` : CYAN_DIM;
+  const accentFaint = laneColor ? `${laneColor}44` : CYAN_FAINT;
   const [rows, setRows] = useState<GridSubtask[]>([]);
   const [loading, setLoading] = useState(true);
   const [ownerPickerFor, setOwnerPickerFor] = useState<string | null>(null);
@@ -178,7 +182,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
           fontSize: 10,
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
-          color: CYAN_DIM,
+          color: accentDim,
           fontFamily: MONO,
           fontWeight: 700,
           marginBottom: 8,
@@ -195,7 +199,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 11, color: CYAN_DIM, fontFamily: MONO }}>Loading…</div>
+        <div style={{ fontSize: 11, color: accentDim, fontFamily: MONO }}>Loading…</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {rows.map((r) => {
@@ -213,7 +217,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                 key={r.id}
                 style={{
                   padding: '6px 8px',
-                  border: `1px solid ${aged ? age.color + '66' : CYAN_FAINT}`,
+                  border: `1px solid ${aged ? age.color + '66' : accentFaint}`,
                   background: r.done ? 'rgba(0,240,255,0.04)' : 'transparent',
                   boxShadow: aged ? `0 0 8px ${age.color}55, inset 0 0 0 1px ${age.color}55` : 'none',
                 }}
@@ -226,7 +230,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       patch(r.id, { done: e.target.checked });
                       persist(r.id, { done: e.target.checked });
                     }}
-                    style={{ accentColor: CYAN, cursor: 'pointer' }}
+                    style={{ accentColor: accent, cursor: 'pointer' }}
                   />
                   <input
                     type="text"
@@ -239,7 +243,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       minWidth: 60,
                       background: 'transparent',
                       border: 'none',
-                      color: r.done ? CYAN_DIM : '#e0f4f8',
+                      color: r.done ? accentDim : '#e0f4f8',
                       textDecoration: r.done ? 'line-through' : 'none',
                       fontFamily: 'inherit',
                       fontSize: 13,
@@ -311,8 +315,8 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       }}
                       style={{
                         background: 'transparent',
-                        border: `1px solid ${aged ? age.color : CYAN_FAINT}`,
-                        color: aged ? age.color : CYAN_DIM,
+                        border: `1px solid ${aged ? age.color : accentFaint}`,
+                        color: aged ? age.color : accentDim,
                         padding: '3px 5px',
                         fontFamily: MONO,
                         fontSize: 10,
@@ -344,8 +348,8 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       fontSize: 10,
                       fontFamily: MONO,
                       background: 'transparent',
-                      border: `1px solid ${CYAN_FAINT}`,
-                      color: (r.attachments?.length ?? 0) > 0 ? CYAN : CYAN_DIM,
+                      border: `1px solid ${accentFaint}`,
+                      color: (r.attachments?.length ?? 0) > 0 ? accent : accentDim,
                       padding: '3px 6px',
                       cursor: uploadingFor === r.id ? 'wait' : 'pointer',
                       lineHeight: 1,
@@ -373,8 +377,8 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                       fontSize: 12,
                       fontFamily: MONO,
                       background: 'transparent',
-                      border: `1px solid ${blocked ? BLOCKER_RED : CYAN_FAINT}66`,
-                      color: blocked ? BLOCKER_RED : CYAN_DIM,
+                      border: `1px solid ${blocked ? BLOCKER_RED : accentFaint}66`,
+                      color: blocked ? BLOCKER_RED : accentDim,
                       padding: '2px 6px',
                       cursor: 'pointer',
                       lineHeight: 1,
@@ -409,7 +413,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                           gap: 6,
                           alignItems: 'center',
                           padding: '3px 6px',
-                          border: `1px solid ${CYAN_FAINT}`,
+                          border: `1px solid ${accentFaint}`,
                           fontSize: 10,
                           fontFamily: MONO,
                         }}
@@ -418,7 +422,7 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
                           href={a.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ flex: 1, color: CYAN, textDecoration: 'underline', textUnderlineOffset: 2 }}
+                          style={{ flex: 1, color: accent, textDecoration: 'underline', textUnderlineOffset: 2 }}
                         >
                           {a.name}
                         </a>
@@ -482,8 +486,8 @@ export default function SubtaskList({ taskId, owners, onOwnerAdded, onSubtasksCh
           marginTop: 6,
           padding: '8px',
           background: 'transparent',
-          border: `1px dashed ${CYAN_FAINT}`,
-          color: CYAN_DIM,
+          border: `1px dashed ${accentFaint}`,
+          color: accentDim,
           fontFamily: MONO,
           fontSize: 10,
           letterSpacing: '0.2em',

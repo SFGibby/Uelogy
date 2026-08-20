@@ -40,12 +40,15 @@ export default function SettingsMenu({ onManageStages, onManageOwners }: Props) 
           border: 'none',
           color: open ? CYAN : CYAN_DIM,
           fontFamily: MONO,
-          fontSize: 18,
+          fontSize: 14,
           lineHeight: 1,
-          padding: '2px 4px',
+          padding: 0,
           cursor: 'pointer',
           textShadow: open ? `0 0 8px ${CYAN}` : 'none',
           transition: 'text-shadow 0.15s',
+          alignSelf: 'baseline',
+          position: 'relative',
+          top: 1,
         }}
       >
         ⚙

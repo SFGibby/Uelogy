@@ -89,7 +89,7 @@ export default function TaskCard({
           : overdue
           ? `0 0 12px ${OVERDUE}55, inset 0 0 0 1px ${OVERDUE}55`
           : '0 1px 3px rgba(0,0,0,0.4)',
-        color: '#cfe9f0',
+        color: '#f5f5f5',
         fontFamily: 'inherit',
         userSelect: 'none',
       }}
@@ -133,7 +133,7 @@ export default function TaskCard({
           <span
             style={{
               fontSize: 10,
-              color: overdue ? OVERDUE : 'rgba(0,240,255,0.5)',
+              color: overdue ? OVERDUE : `${accent}bb`,
               letterSpacing: '0.06em',
             }}
           >
@@ -175,7 +175,7 @@ export default function TaskCard({
             marginTop: 6,
             fontFamily: 'ui-monospace, monospace',
             fontSize: 10,
-            color: subtaskDone === subtaskTotal ? '#00ff7f' : 'rgba(0,240,255,0.55)',
+            color: subtaskDone === subtaskTotal ? '#00ff7f' : `${accent}cc`,
             letterSpacing: '0.08em',
           }}
         >
@@ -213,7 +213,7 @@ export default function TaskCard({
               style={{
                 fontSize: 10,
                 fontFamily: 'ui-monospace, monospace',
-                color: 'rgba(0,240,255,0.6)',
+                color: `${accent}cc`,
                 textDecoration: 'underline',
                 textUnderlineOffset: 2,
               }}

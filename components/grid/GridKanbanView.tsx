@@ -74,14 +74,16 @@ export default function GridKanbanView() {
             gap: 16,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
             {adminMode && (
               <SettingsMenu
                 onManageStages={() => setOpenStageManager(true)}
                 onManageOwners={() => setOpenTypeManager(true)}
               />
             )}
-            <span>User Program &middot; {adminMode ? 'Admin' : 'Visitor'}</span>
+            <span style={{ lineHeight: 1 }}>
+              User Program &middot; {adminMode ? 'Admin' : 'Visitor'}
+            </span>
           </div>
           <button
             onClick={exitToHome}
@@ -102,7 +104,7 @@ export default function GridKanbanView() {
             }}
             aria-label="Exit to Sam's"
           >
-            Sam&apos;s ←
+            Sam&apos;s
           </button>
         </div>
       </section>

@@ -21,10 +21,6 @@ interface Props {
   onSubtasksChanged?: (rows: GridSubtask[]) => void;
 }
 
-const CYAN = '#00f0ff';
-const CYAN_DIM = 'rgba(0,240,255,0.55)';
-const CYAN_FAINT = 'rgba(0,240,255,0.22)';
-const BLOCKER_RED = '#ff2040';
 const OVERDUE = '#ff2040';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
@@ -52,11 +48,37 @@ export default function ProjectExpanded({
   const [dueAt, setDueAt] = useState(task.due_at ?? '');
   const [attachments, setAttachments] = useState<GridAttachment[]>(task.attachments ?? []);
   const [uploading, setUploading] = useState(false);
-  const [blockerOwnerPickerOpen, setBlockerOwnerPickerOpen] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const overdue = isOverdue(dueAt);
   const blocked = !!blockedReason.trim();
   const blockerOwner = blockerOwnerId ? owners.find((o) => o.id === blockerOwnerId) : null;
+
+  // Lane-scoped palette so the whole card reads as the lane's color, not cyan.
+  const laneDim = `${laneColor}aa`;
+  const laneFaint = `${laneColor}44`;
+  const laneText = '#f5f5f5';
+  const labelStyle: React.CSSProperties = {
+    fontSize: 10,
+    letterSpacing: '0.22em',
+    textTransform: 'uppercase',
+    color: laneDim,
+    fontFamily: MONO,
+    fontWeight: 700,
+    marginBottom: 6,
+    display: 'block',
+  };
+  const inputBase: React.CSSProperties = {
+    width: '100%',
+    background: 'rgba(0,0,0,0.55)',
+    border: `1px solid ${laneFaint}`,
+    color: laneText,
+    padding: '8px 10px',
+    fontFamily: 'inherit',
+    fontSize: 13,
+    outline: 'none',
+    boxSizing: 'border-box',
+    resize: 'vertical',
+  };
 
   // Aggregated attachments across the project + every task under it
   const aggregatedFiles: Array<{ source: string; file: GridAttachment }> = [
@@ -143,19 +165,25 @@ export default function ProjectExpanded({
           : `0 0 12px rgba(0,0,0,0.5)`,
       }}
     >
-      {/* Header row: title + collapse */}
+      {/* Header row: clicking anywhere (except the title input) collapses */}
       <div
+        onClick={onCollapse}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 8,
           marginBottom: 12,
+          paddingBottom: 8,
+          borderBottom: `1px solid ${laneFaint}`,
+          cursor: 'pointer',
         }}
+        title="Click to collapse"
       >
         <input
           ref={titleRef}
           type="text"
           value={title}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={() => {
             const t = title.trim();
@@ -166,22 +194,26 @@ export default function ProjectExpanded({
             flex: 1,
             background: 'transparent',
             border: 'none',
-            color: '#f0fbff',
+            color: laneText,
             fontFamily: 'inherit',
             fontSize: 17,
             fontWeight: 600,
             outline: 'none',
             padding: 0,
+            cursor: 'text',
           }}
         />
-        <button
-          type="button"
-          onClick={onCollapse}
-          title="Collapse"
-          style={collapseBtnStyle}
+        <span
+          style={{
+            fontFamily: MONO,
+            fontSize: 9,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: laneDim,
+          }}
         >
-          ↑
-        </button>
+          Collapse
+        </span>
       </div>
 
       {/* Description */}
@@ -193,7 +225,7 @@ export default function ProjectExpanded({
           onBlur={() => persist({ description: description.trim() || null })}
           rows={2}
           placeholder="Optional. What does done look like?"
-          style={inputStyleNeutral()}
+          style={inputBase}
         />
       </div>
 
@@ -210,10 +242,10 @@ export default function ProjectExpanded({
               persist({ due_at: v || null });
             }}
             style={{
-              ...inputStyleNeutral(),
+              ...inputBase,
               width: 'auto',
               minWidth: 160,
-              border: `1px solid ${overdue ? OVERDUE : CYAN_FAINT}`,
+              border: `1px solid ${overdue ? OVERDUE : laneFaint}`,
               color: overdue ? OVERDUE : '#e0f4f8',
               colorScheme: 'dark',
             }}
@@ -226,7 +258,7 @@ export default function ProjectExpanded({
         <label
           style={{
             ...labelStyle,
-            color: blocked ? '#ff2040aa' : CYAN_DIM,
+            color: blocked ? '#ff2040aa' : laneDim,
           }}
         >
           Blocker (optional)
@@ -238,8 +270,8 @@ export default function ProjectExpanded({
           rows={2}
           placeholder="What's the question or dependency holding this up?"
           style={{
-            ...inputStyleNeutral(),
-            border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : CYAN_FAINT}`,
+            ...inputBase,
+            border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : laneFaint}`,
           }}
         />
         {blocked && (
@@ -269,7 +301,7 @@ export default function ProjectExpanded({
           onBlur={() => persist({ qna: qna.trim() || null })}
           rows={3}
           placeholder="Questions to research, open threads, stuff to ask — not blocking, just noted."
-          style={inputStyleNeutral()}
+          style={inputBase}
         />
       </div>
 
@@ -277,6 +309,7 @@ export default function ProjectExpanded({
       <SubtaskList
         taskId={task.id}
         owners={owners}
+        laneColor={laneColor}
         onOwnerAdded={onOwnerAdded}
         onSubtasksChanged={onSubtasksChanged}
       />
@@ -290,8 +323,8 @@ export default function ProjectExpanded({
             width: '100%',
             padding: '8px',
             background: 'transparent',
-            border: `1px dashed ${CYAN_FAINT}`,
-            color: CYAN_DIM,
+            border: `1px dashed ${laneFaint}`,
+            color: laneDim,
             fontFamily: MONO,
             fontSize: 10,
             letterSpacing: '0.2em',
@@ -329,7 +362,7 @@ export default function ProjectExpanded({
                   alignItems: 'center',
                   gap: 8,
                   padding: '6px 8px',
-                  border: `1px solid ${CYAN_FAINT}`,
+                  border: `1px solid ${laneFaint}`,
                   fontFamily: MONO,
                   fontSize: 11,
                 }}
@@ -340,7 +373,7 @@ export default function ProjectExpanded({
                     fontWeight: 700,
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
-                    color: source === 'Project' ? laneColor : CYAN_DIM,
+                    color: source === 'Project' ? laneColor : laneDim,
                     minWidth: 90,
                   }}
                 >
@@ -350,12 +383,12 @@ export default function ProjectExpanded({
                   href={file.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ flex: 1, color: CYAN, textDecoration: 'underline', textUnderlineOffset: 2 }}
+                  style={{ flex: 1, color: laneColor, textDecoration: 'underline', textUnderlineOffset: 2 }}
                 >
                   {file.name}
                 </a>
                 {file.size != null && (
-                  <span style={{ color: CYAN_DIM }}>{(file.size / 1024).toFixed(0)} KB</span>
+                  <span style={{ color: laneDim }}>{(file.size / 1024).toFixed(0)} KB</span>
                 )}
                 {source === 'Project' && (
                   <button
@@ -424,58 +457,3 @@ export default function ProjectExpanded({
   );
 }
 
-const labelStyle: React.CSSProperties = {
-  fontSize: 10,
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color: CYAN_DIM,
-  fontFamily: MONO,
-  fontWeight: 700,
-  marginBottom: 6,
-  display: 'block',
-};
-
-function inputStyleNeutral(): React.CSSProperties {
-  return {
-    width: '100%',
-    background: 'rgba(0,12,16,0.7)',
-    border: `1px solid ${CYAN_FAINT}`,
-    color: '#e0f4f8',
-    padding: '8px 10px',
-    fontFamily: 'inherit',
-    fontSize: 13,
-    outline: 'none',
-    boxSizing: 'border-box',
-    resize: 'vertical',
-  };
-}
-
-const collapseBtnStyle: React.CSSProperties = {
-  background: 'transparent',
-  border: `1px solid ${CYAN_FAINT}`,
-  color: CYAN_DIM,
-  padding: '4px 8px',
-  fontFamily: MONO,
-  fontSize: 12,
-  cursor: 'pointer',
-  lineHeight: 1,
-};
-
-function pickerOptionStyle(active: boolean, color: string): React.CSSProperties {
-  return {
-    padding: '5px 8px',
-    background: active ? color + '22' : 'transparent',
-    border: `1px solid ${active ? color : 'transparent'}`,
-    color: active ? color : '#cfe9f0',
-    fontFamily: MONO,
-    fontSize: 10,
-    letterSpacing: '0.14em',
-    textTransform: 'uppercase',
-    fontWeight: 700,
-    textAlign: 'left',
-    cursor: 'pointer',
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _cyanUsedElsewhere = CYAN;
