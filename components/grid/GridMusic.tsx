@@ -7,10 +7,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMute } from '../site/MuteToggle';
 
-// "rest a while, user // Relaxing Tron Inspired Ambient Music" by Athena IV.
-// Swapped from the Daft Punk soundtrack because that video's embedding got
-// restricted mid-2026 — this one is actively uploaded ambient and plays fine.
-const YT_VIDEO_ID = 'M2xqXriTGPo';
+// Sam-picked Tron track (2026-08-19).
+const YT_VIDEO_ID = 'HbMGK5UlHj0';
 const START_SECONDS = 0;
 
 type YTPlayer = {
