@@ -11,11 +11,14 @@ import SubtaskList from './SubtaskList';
 interface Props {
   task: GridTask | null;       // null when creating
   defaultStageId?: string | null;
+  draftTitle?: string;
   stages: GridStage[];
   types: GridType[];
+  laneColor?: string;
   onClose: () => void;
   onSaved: (task: GridTask) => void;
   onDeleted: (id: string) => void;
+  onOwnerAdded?: (owner: GridType) => void;
 }
 
 const CYAN = '#00f0ff';
@@ -28,23 +31,25 @@ const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 export default function TaskEditModal({
   task,
   defaultStageId,
+  draftTitle,
   stages,
   types,
+  laneColor,
   onClose,
   onSaved,
   onDeleted,
+  onOwnerAdded,
 }: Props) {
-  const [title, setTitle] = useState(task?.title ?? '');
+  const [title, setTitle] = useState(task?.title ?? draftTitle ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
-  const [stageId, setStageId] = useState<string | null>(
+  const [stageId] = useState<string | null>(
     task?.stage_id ?? defaultStageId ?? stages[0]?.id ?? null
   );
-  const [typeId, setTypeId] = useState<string | null>(task?.type_id ?? null);
-  const [priority, setPriority] = useState<GridPriority>(task?.priority ?? 3);
   const [blockedReason, setBlockedReason] = useState(task?.blocked_reason ?? '');
   const [dueAt, setDueAt] = useState(task?.due_at ?? '');
   const [links, setLinks] = useState<GridTaskLink[]>(task?.links ?? []);
   const [saving, setSaving] = useState(false);
+  const projectAccent = laneColor ?? CYAN;
   const [isMobile, setIsMobile] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -76,8 +81,6 @@ export default function TaskEditModal({
       title: title.trim(),
       description: description.trim() || null,
       stage_id: stageId,
-      type_id: typeId,
-      priority,
       blocked_reason: blockedReason.trim() || null,
       due_at: dueAt || null,
       links: cleanLinks,
@@ -120,7 +123,7 @@ export default function TaskEditModal({
 
   const del = async () => {
     if (!task) return;
-    if (!confirm('Delete this task?')) return;
+    if (!confirm('Delete this project?')) return;
     const { error } = await supabase.from('grid_tasks').delete().eq('id', task.id);
     if (error) {
       alert('Delete failed: ' + error.message);
@@ -203,7 +206,7 @@ export default function TaskEditModal({
             alignItems: 'center',
           }}
         >
-          <span>{task ? 'Edit Task' : 'New Task'}</span>
+          <span style={{ color: projectAccent }}>{task ? 'Edit Project' : 'New Project'}</span>
           <button
             type="button"
             onClick={onClose}
@@ -273,125 +276,6 @@ export default function TaskEditModal({
           />
         </div>
 
-        {/* Stage chips */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Stage</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {stages.map((s) => {
-              const active = stageId === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setStageId(s.id)}
-                  style={{
-                    padding: '7px 12px',
-                    background: active ? s.color + '22' : 'transparent',
-                    border: `1px solid ${active ? s.color : CYAN_FAINT}`,
-                    color: active ? s.color : CYAN_DIM,
-                    fontFamily: MONO,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <span style={{ width: 7, height: 7, background: s.color, boxShadow: `0 0 6px ${s.color}aa` }} />
-                  {s.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Priority */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Priority</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {([
-              { n: 0, label: 'P0 · CRITICAL', color: '#ff2040' },
-              { n: 1, label: 'P1 · HIGH',     color: '#00f0ff' },
-              { n: 2, label: 'P2 · MID',      color: '#f0a000' },
-              { n: 3, label: 'P3 · LOW',      color: '#5a6a7a' },
-            ] as const).map((p) => {
-              const active = priority === p.n;
-              return (
-                <button
-                  key={p.n}
-                  type="button"
-                  onClick={() => setPriority(p.n as GridPriority)}
-                  style={{
-                    padding: '7px 12px',
-                    background: active ? p.color + '22' : 'transparent',
-                    border: `1px solid ${active ? p.color : CYAN_FAINT}`,
-                    color: active ? p.color : CYAN_DIM,
-                    fontFamily: MONO,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '0.18em',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Owner chips */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Owner</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            <button
-              type="button"
-              onClick={() => setTypeId(null)}
-              style={{
-                padding: '7px 12px',
-                background: typeId === null ? 'rgba(0,240,255,0.10)' : 'transparent',
-                border: `1px solid ${typeId === null ? CYAN : CYAN_FAINT}`,
-                color: typeId === null ? CYAN : CYAN_DIM,
-                fontFamily: MONO,
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-              }}
-            >
-              Unassigned
-            </button>
-            {types.map((t) => {
-              const active = typeId === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTypeId(t.id)}
-                  style={{
-                    padding: '7px 12px',
-                    background: active ? t.color + '22' : 'transparent',
-                    border: `1px solid ${active ? t.color : CYAN_FAINT}`,
-                    color: active ? t.color : CYAN_DIM,
-                    fontFamily: MONO,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {t.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Due date */}
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Due date (optional)</label>
@@ -404,7 +288,7 @@ export default function TaskEditModal({
         </div>
 
         {/* Subtasks — only for saved tasks (needs a task_id to attach to) */}
-        {task && <SubtaskList taskId={task.id} owners={types} />}
+        {task && <SubtaskList taskId={task.id} owners={types} onOwnerAdded={onOwnerAdded} />}
 
         {/* Links */}
         <div style={{ marginBottom: 20 }}>

@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { GridTask, GridType, GridPriority } from '../../lib/supabase';
 
 const BLOCKER_RED = '#ff2040';
+const OVERDUE = '#ff2040';
 
 const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   0: { color: '#ff2040', label: 'P0' },
@@ -14,26 +15,6 @@ const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
   3: { color: '#5a6a7a', label: 'P3' },
 };
 
-function PriorityBadge({ priority }: { priority: GridPriority }) {
-  const meta = PRIORITY_META[priority] ?? PRIORITY_META[3];
-  return (
-    <span
-      style={{
-        fontFamily: 'ui-monospace, monospace',
-        fontSize: 9,
-        fontWeight: 700,
-        letterSpacing: '0.12em',
-        color: meta.color,
-        border: `1px solid ${meta.color}66`,
-        padding: '2px 5px',
-        lineHeight: 1,
-      }}
-    >
-      {meta.label}
-    </span>
-  );
-}
-
 interface Props {
   task: GridTask;
   type?: GridType;
@@ -41,17 +22,33 @@ interface Props {
   saved?: number;
   subtaskTotal?: number;
   subtaskDone?: number;
+  subtaskWorstPriority?: GridPriority | null;
+  subtaskBlockerCount?: number;
   onClick?: () => void;
-  // When true, the card renders as a static preview (e.g. DragOverlay) and
-  // doesn't register itself with dnd-kit. Prevents duplicate-ref issues.
   preview?: boolean;
 }
 
-export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 0, subtaskDone = 0, onClick, preview = false }: Props) {
+function isOverdue(due_at?: string | null): boolean {
+  if (!due_at) return false;
+  const d = new Date(due_at + 'T23:59:59');
+  return d.getTime() < Date.now();
+}
+
+export default function TaskCard({
+  task,
+  type,
+  adminMode,
+  subtaskTotal = 0,
+  subtaskDone = 0,
+  subtaskWorstPriority = null,
+  subtaskBlockerCount = 0,
+  onClick,
+  preview = false,
+}: Props) {
   const [showBlocker, setShowBlocker] = useState(false);
   const blocked = !!task.blocked_reason?.trim();
+  const overdue = isOverdue(task.due_at);
 
-  // Always call the hook — pass a non-conflicting id when preview, then ignore the result
   const sortable = useSortable({
     id: preview ? `preview-${task.id}` : task.id,
     disabled: !adminMode || preview,
@@ -66,6 +63,11 @@ export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 
   const draggableHandlers =
     adminMode && !preview ? { ...sortable.attributes, ...sortable.listeners } : {};
 
+  // Difficulty = worst subtask priority + total blocker count on the whole project
+  const totalBlockers = subtaskBlockerCount + (blocked ? 1 : 0);
+  const diffMeta = subtaskWorstPriority !== null ? PRIORITY_META[subtaskWorstPriority] : null;
+  const showDiffChip = diffMeta !== null || totalBlockers > 0;
+
   return (
     <div
       ref={ref}
@@ -74,15 +76,16 @@ export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 
         transition,
         opacity: isDragging ? 0.35 : 1,
         background: 'rgba(0, 16, 22, 0.85)',
-        border: `1px solid ${blocked ? 'rgba(255,32,64,0.35)' : 'rgba(0,240,255,0.22)'}`,
+        border: `1px solid rgba(0,240,255,0.22)`,
         borderLeft: `3px solid ${accent}`,
-        borderTop: blocked ? `2px solid ${BLOCKER_RED}aa` : `1px solid rgba(0,240,255,0.22)`,
         padding: '12px 14px 11px',
         marginBottom: 8,
         cursor: adminMode && !preview ? 'grab' : onClick ? 'pointer' : 'default',
         clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)',
         boxShadow: preview
           ? `0 0 24px ${accent}, 0 0 0 1px ${accent}`
+          : overdue
+          ? `0 0 12px ${OVERDUE}55, inset 0 0 0 1px ${OVERDUE}55`
           : '0 1px 3px rgba(0,0,0,0.4)',
         color: '#cfe9f0',
         fontFamily: 'inherit',
@@ -91,7 +94,7 @@ export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 
       onClick={preview ? undefined : onClick}
       {...draggableHandlers}
     >
-      {/* Meta row: priority + owner + due date */}
+      {/* Meta row: difficulty rollup + due date + blocker flag */}
       <div
         style={{
           display: 'flex',
@@ -102,25 +105,33 @@ export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 
           flexWrap: 'wrap',
         }}
       >
-        <PriorityBadge priority={task.priority} />
-        {type && (
+        {showDiffChip && (
           <span
             style={{
               fontSize: 9,
-              color: accent,
-              letterSpacing: '0.16em',
-              textTransform: 'uppercase',
               fontWeight: 700,
+              letterSpacing: '0.12em',
+              color: diffMeta?.color ?? '#5a6a7a',
+              border: `1px solid ${(diffMeta?.color ?? '#5a6a7a')}66`,
+              padding: '2px 5px',
+              lineHeight: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
             }}
+            title="Difficulty: worst task priority · blockers"
           >
-            {type.name}
+            {diffMeta ? diffMeta.label : 'P3'}
+            {totalBlockers > 0 && (
+              <span style={{ color: BLOCKER_RED }}>· ⚑{totalBlockers}</span>
+            )}
           </span>
         )}
         {task.due_at && (
           <span
             style={{
               fontSize: 10,
-              color: 'rgba(0,240,255,0.5)',
+              color: overdue ? OVERDUE : 'rgba(0,240,255,0.5)',
               letterSpacing: '0.06em',
             }}
           >
@@ -138,18 +149,16 @@ export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 
             style={{
               marginLeft: 'auto',
               fontFamily: 'ui-monospace, monospace',
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
+              fontSize: 11,
               color: BLOCKER_RED,
               border: `1px solid ${BLOCKER_RED}66`,
               background: showBlocker ? `${BLOCKER_RED}22` : 'transparent',
-              padding: '2px 5px',
+              padding: '2px 6px',
               lineHeight: 1,
               cursor: 'pointer',
             }}
           >
-            {showBlocker ? '?×' : '?'}
+            ⚑
           </button>
         )}
       </div>
@@ -168,7 +177,7 @@ export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 
             letterSpacing: '0.08em',
           }}
         >
-          [{subtaskDone}/{subtaskTotal}] subtasks
+          [{subtaskDone}/{subtaskTotal}] tasks
         </div>
       )}
 

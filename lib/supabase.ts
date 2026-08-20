@@ -40,6 +40,7 @@ export interface GridTask {
   type_id?: string | null;
   priority: GridPriority;
   blocked_reason?: string | null;
+  attachments?: GridAttachment[];
   position: number;
   due_at?: string | null;
   cost?: number | null;
@@ -48,11 +49,22 @@ export interface GridTask {
   updated_at: string;
 }
 
+export interface GridAttachment {
+  name: string;
+  url: string;
+  size?: number;
+  uploaded_at: string;
+}
+
 export interface GridSubtask {
   id: string;
   task_id: string;
   title: string;
   owner_id?: string | null;
+  priority: GridPriority;
+  blocked_reason?: string | null;
+  due_at?: string | null;
+  attachments: GridAttachment[];
   done: boolean;
   position: number;
   created_at: string;

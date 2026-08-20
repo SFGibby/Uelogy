@@ -1,26 +1,46 @@
 'use client';
 
-// Subtask list for a single task. Renders inside TaskEditModal.
-// Each row auto-saves on blur / checkbox toggle / owner change.
+// Task list under a Project. Auto-saves per row.
+// (This file used to be called "SubtaskList" — kept the file/component name to
+// avoid a rename churn, but the UI copy is "Tasks".)
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { GridSubtask, GridType } from '../../lib/supabase';
+import type { GridSubtask, GridType, GridPriority } from '../../lib/supabase';
 
 interface Props {
   taskId: string;
   owners: GridType[];
+  onOwnerAdded?: (owner: GridType) => void;
 }
 
 const CYAN = '#00f0ff';
 const CYAN_DIM = 'rgba(0,240,255,0.55)';
 const CYAN_FAINT = 'rgba(0,240,255,0.22)';
+const OVERDUE = '#ff2040';
+const BLOCKER_RED = '#ff2040';
 const MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 
-export default function SubtaskList({ taskId, owners }: Props) {
+const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
+  0: { color: '#ff2040', label: 'P0' },
+  1: { color: '#00f0ff', label: 'P1' },
+  2: { color: '#f0a000', label: 'P2' },
+  3: { color: '#5a6a7a', label: 'P3' },
+};
+
+function isOverdue(due_at?: string | null): boolean {
+  if (!due_at) return false;
+  const d = new Date(due_at + 'T23:59:59');
+  return d.getTime() < Date.now();
+}
+
+export default function SubtaskList({ taskId, owners, onOwnerAdded }: Props) {
   const [rows, setRows] = useState<GridSubtask[]>([]);
   const [loading, setLoading] = useState(true);
   const [ownerPickerFor, setOwnerPickerFor] = useState<string | null>(null);
+  const [priorityPickerFor, setPriorityPickerFor] = useState<string | null>(null);
+  const [blockerFor, setBlockerFor] = useState<string | null>(null);
+  const [newOwnerDraft, setNewOwnerDraft] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -43,11 +63,11 @@ export default function SubtaskList({ taskId, owners }: Props) {
     const nextPos = rows.reduce((m, r) => Math.max(m, r.position), -1) + 1;
     const { data, error } = await supabase
       .from('grid_subtasks')
-      .insert({ task_id: taskId, title: '', position: nextPos, done: false })
+      .insert({ task_id: taskId, title: '', position: nextPos, done: false, priority: 3 })
       .select()
       .single();
     if (error) {
-      alert('Add subtask failed: ' + error.message);
+      alert('Add task failed: ' + error.message);
       return;
     }
     setRows((prev) => [...prev, data as GridSubtask]);
@@ -68,6 +88,26 @@ export default function SubtaskList({ taskId, owners }: Props) {
     if (error) alert('Delete failed: ' + error.message);
   };
 
+  const createOwner = async (name: string, subtaskId: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const { data, error } = await supabase
+      .from('grid_types')
+      .insert({ name: trimmed, color: '#9999ff' })
+      .select()
+      .single();
+    if (error) {
+      alert('Owner add failed: ' + error.message);
+      return;
+    }
+    const newOwner = data as GridType;
+    onOwnerAdded?.(newOwner);
+    patch(subtaskId, { owner_id: newOwner.id });
+    persist(subtaskId, { owner_id: newOwner.id });
+    setOwnerPickerFor(null);
+    setNewOwnerDraft('');
+  };
+
   const done = rows.filter((r) => r.done).length;
 
   return (
@@ -85,7 +125,7 @@ export default function SubtaskList({ taskId, owners }: Props) {
           justifyContent: 'space-between',
         }}
       >
-        <span>Subtasks</span>
+        <span>Tasks</span>
         {rows.length > 0 && (
           <span>
             {done} / {rows.length}
@@ -99,126 +139,241 @@ export default function SubtaskList({ taskId, owners }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {rows.map((r) => {
             const owner = r.owner_id ? owners.find((o) => o.id === r.owner_id) : null;
-            const showPicker = ownerPickerFor === r.id;
+            const p = PRIORITY_META[r.priority] ?? PRIORITY_META[3];
+            const overdue = !r.done && isOverdue(r.due_at);
+            const blocked = !!r.blocked_reason?.trim();
+            const showOwnerPicker = ownerPickerFor === r.id;
+            const showPriorityPicker = priorityPickerFor === r.id;
+            const showBlocker = blockerFor === r.id;
+
             return (
               <div
                 key={r.id}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
                   padding: '6px 8px',
                   border: `1px solid ${CYAN_FAINT}`,
                   background: r.done ? 'rgba(0,240,255,0.04)' : 'transparent',
+                  boxShadow: overdue ? `0 0 8px ${OVERDUE}66, inset 0 0 0 1px ${OVERDUE}66` : 'none',
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={r.done}
-                  onChange={(e) => {
-                    patch(r.id, { done: e.target.checked });
-                    persist(r.id, { done: e.target.checked });
-                  }}
-                  style={{ accentColor: CYAN, cursor: 'pointer' }}
-                />
-                <input
-                  type="text"
-                  value={r.title}
-                  onChange={(e) => patch(r.id, { title: e.target.value })}
-                  onBlur={() => persist(r.id, { title: r.title.trim() })}
-                  placeholder="Subtask title…"
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    color: r.done ? CYAN_DIM : '#e0f4f8',
-                    textDecoration: r.done ? 'line-through' : 'none',
-                    fontFamily: 'inherit',
-                    fontSize: 13,
-                    outline: 'none',
-                    padding: '2px 0',
-                  }}
-                />
-                <div style={{ position: 'relative' }}>
-                  <button
-                    type="button"
-                    onClick={() => setOwnerPickerFor(showPicker ? null : r.id)}
-                    style={{
-                      fontSize: 9,
-                      fontFamily: MONO,
-                      fontWeight: 700,
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      background: 'transparent',
-                      border: `1px solid ${owner ? owner.color : CYAN_FAINT}`,
-                      color: owner ? owner.color : CYAN_DIM,
-                      padding: '3px 7px',
-                      cursor: 'pointer',
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={r.done}
+                    onChange={(e) => {
+                      patch(r.id, { done: e.target.checked });
+                      persist(r.id, { done: e.target.checked });
                     }}
-                  >
-                    {owner ? owner.name : '+ Owner'}
-                  </button>
-                  {showPicker && (
-                    <div
+                    style={{ accentColor: CYAN, cursor: 'pointer' }}
+                  />
+                  <input
+                    type="text"
+                    value={r.title}
+                    onChange={(e) => patch(r.id, { title: e.target.value })}
+                    onBlur={() => persist(r.id, { title: r.title.trim() })}
+                    placeholder="Task title…"
+                    style={{
+                      flex: 1,
+                      minWidth: 60,
+                      background: 'transparent',
+                      border: 'none',
+                      color: r.done ? CYAN_DIM : '#e0f4f8',
+                      textDecoration: r.done ? 'line-through' : 'none',
+                      fontFamily: 'inherit',
+                      fontSize: 13,
+                      outline: 'none',
+                      padding: '2px 0',
+                    }}
+                  />
+                  {/* Priority */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPriorityPickerFor(showPriorityPicker ? null : r.id)}
                       style={{
-                        position: 'absolute',
-                        top: 'calc(100% + 4px)',
-                        right: 0,
-                        zIndex: 10,
-                        background: '#020608',
-                        border: `1px solid ${CYAN_FAINT}`,
-                        padding: 6,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 4,
-                        minWidth: 140,
-                        maxHeight: 200,
-                        overflowY: 'auto',
+                        fontSize: 9,
+                        fontFamily: MONO,
+                        fontWeight: 700,
+                        letterSpacing: '0.12em',
+                        background: 'transparent',
+                        border: `1px solid ${p.color}66`,
+                        color: p.color,
+                        padding: '3px 6px',
+                        cursor: 'pointer',
                       }}
                     >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          patch(r.id, { owner_id: null });
-                          persist(r.id, { owner_id: null });
-                          setOwnerPickerFor(null);
-                        }}
-                        style={ownerOptionStyle(!owner, CYAN_DIM)}
-                      >
-                        Unassigned
-                      </button>
-                      {owners.map((o) => (
+                      {p.label}
+                    </button>
+                    {showPriorityPicker && (
+                      <div style={pickerBoxStyle}>
+                        {([0, 1, 2, 3] as GridPriority[]).map((pv) => {
+                          const pm = PRIORITY_META[pv];
+                          return (
+                            <button
+                              key={pv}
+                              type="button"
+                              onClick={() => {
+                                patch(r.id, { priority: pv });
+                                persist(r.id, { priority: pv });
+                                setPriorityPickerFor(null);
+                              }}
+                              style={pickerOptionStyle(r.priority === pv, pm.color)}
+                            >
+                              {pm.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  {/* Owner */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setOwnerPickerFor(showOwnerPicker ? null : r.id)}
+                      style={{
+                        fontSize: 9,
+                        fontFamily: MONO,
+                        fontWeight: 700,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                        background: 'transparent',
+                        border: `1px solid ${owner ? owner.color : CYAN_FAINT}`,
+                        color: owner ? owner.color : CYAN_DIM,
+                        padding: '3px 7px',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {owner ? owner.name : '+ Owner'}
+                    </button>
+                    {showOwnerPicker && (
+                      <div style={{ ...pickerBoxStyle, minWidth: 180 }}>
                         <button
-                          key={o.id}
                           type="button"
                           onClick={() => {
-                            patch(r.id, { owner_id: o.id });
-                            persist(r.id, { owner_id: o.id });
+                            patch(r.id, { owner_id: null });
+                            persist(r.id, { owner_id: null });
                             setOwnerPickerFor(null);
                           }}
-                          style={ownerOptionStyle(owner?.id === o.id, o.color)}
+                          style={pickerOptionStyle(!owner, CYAN_DIM)}
                         >
-                          {o.name}
+                          Unassigned
                         </button>
-                      ))}
-                    </div>
-                  )}
+                        {owners.map((o) => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() => {
+                              patch(r.id, { owner_id: o.id });
+                              persist(r.id, { owner_id: o.id });
+                              setOwnerPickerFor(null);
+                            }}
+                            style={pickerOptionStyle(owner?.id === o.id, o.color)}
+                          >
+                            {o.name}
+                          </button>
+                        ))}
+                        <input
+                          type="text"
+                          value={newOwnerDraft}
+                          onChange={(e) => setNewOwnerDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              createOwner(newOwnerDraft, r.id);
+                            }
+                          }}
+                          placeholder="+ new owner — Enter"
+                          style={{
+                            marginTop: 4,
+                            padding: '5px 8px',
+                            background: 'rgba(0,12,16,0.7)',
+                            border: `1px solid ${CYAN_FAINT}`,
+                            color: '#e0f4f8',
+                            fontFamily: MONO,
+                            fontSize: 10,
+                            outline: 'none',
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {/* Due date */}
+                  <input
+                    type="date"
+                    value={r.due_at ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value || null;
+                      patch(r.id, { due_at: v });
+                      persist(r.id, { due_at: v });
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: `1px solid ${overdue ? OVERDUE : CYAN_FAINT}`,
+                      color: overdue ? OVERDUE : CYAN_DIM,
+                      padding: '3px 5px',
+                      fontFamily: MONO,
+                      fontSize: 10,
+                      colorScheme: 'dark',
+                    }}
+                  />
+                  {/* Blocker toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setBlockerFor(showBlocker ? null : r.id)}
+                    title={blocked ? 'Blocker' : 'Add blocker'}
+                    style={{
+                      fontSize: 12,
+                      fontFamily: MONO,
+                      background: 'transparent',
+                      border: `1px solid ${blocked ? BLOCKER_RED : CYAN_FAINT}66`,
+                      color: blocked ? BLOCKER_RED : CYAN_DIM,
+                      padding: '2px 6px',
+                      cursor: 'pointer',
+                      lineHeight: 1,
+                    }}
+                  >
+                    ⚑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeRow(r.id)}
+                    title="Delete task"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'rgba(255,96,96,0.6)',
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeRow(r.id)}
-                  title="Delete subtask"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'rgba(255,96,96,0.6)',
-                    fontSize: 14,
-                    cursor: 'pointer',
-                    padding: 0,
-                  }}
-                >
-                  ✕
-                </button>
+                {showBlocker && (
+                  <textarea
+                    value={r.blocked_reason ?? ''}
+                    onChange={(e) => patch(r.id, { blocked_reason: e.target.value })}
+                    onBlur={() => persist(r.id, { blocked_reason: (r.blocked_reason ?? '').trim() || null })}
+                    placeholder="Blocker: question or dependency"
+                    rows={2}
+                    style={{
+                      marginTop: 6,
+                      width: '100%',
+                      background: 'rgba(255,32,64,0.06)',
+                      border: `1px solid ${BLOCKER_RED}55`,
+                      color: '#f6c8cf',
+                      fontFamily: 'inherit',
+                      fontSize: 12,
+                      padding: '6px 8px',
+                      outline: 'none',
+                      resize: 'vertical',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                )}
               </div>
             );
           })}
@@ -243,13 +398,29 @@ export default function SubtaskList({ taskId, owners }: Props) {
           cursor: 'pointer',
         }}
       >
-        + Add subtask
+        + Add task
       </button>
     </div>
   );
 }
 
-function ownerOptionStyle(active: boolean, color: string): React.CSSProperties {
+const pickerBoxStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 'calc(100% + 4px)',
+  right: 0,
+  zIndex: 20,
+  background: '#020608',
+  border: `1px solid ${CYAN_FAINT}`,
+  padding: 6,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  minWidth: 100,
+  maxHeight: 220,
+  overflowY: 'auto',
+};
+
+function pickerOptionStyle(active: boolean, color: string): React.CSSProperties {
   return {
     padding: '5px 8px',
     background: active ? color + '22' : 'transparent',

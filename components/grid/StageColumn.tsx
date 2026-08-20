@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
-import type { GridStage, GridTask, GridType } from '../../lib/supabase';
+import type { GridStage, GridTask, GridType, GridPriority } from '../../lib/supabase';
 
 interface Props {
   stage: GridStage;
@@ -13,9 +13,11 @@ interface Props {
   adminMode: boolean;
   savedById?: Record<string, number>;
   subtaskCounts?: Record<string, { total: number; done: number }>;
+  subtaskWorstPriority?: Record<string, number | null>;
+  subtaskBlockerCount?: Record<string, number>;
   onTaskClick: (task: GridTask) => void;
   onQuickAdd?: (title: string) => Promise<void> | void;
-  onDetailsClick?: () => void;
+  onDetailsClick?: (draftTitle: string) => void;
 }
 
 export default function StageColumn({
@@ -25,6 +27,8 @@ export default function StageColumn({
   adminMode,
   savedById,
   subtaskCounts,
+  subtaskWorstPriority,
+  subtaskBlockerCount,
   onTaskClick,
   onQuickAdd,
   onDetailsClick,
@@ -111,6 +115,8 @@ export default function StageColumn({
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         {tasks.map((task) => {
           const counts = subtaskCounts?.[task.id];
+          const worst = subtaskWorstPriority?.[task.id] ?? null;
+          const blockers = subtaskBlockerCount?.[task.id] ?? 0;
           return (
             <TaskCard
               key={task.id}
@@ -120,6 +126,8 @@ export default function StageColumn({
               saved={savedById?.[task.id]}
               subtaskTotal={counts?.total ?? 0}
               subtaskDone={counts?.done ?? 0}
+              subtaskWorstPriority={worst as GridPriority | null}
+              subtaskBlockerCount={blockers}
               onClick={() => onTaskClick(task)}
             />
           );
@@ -166,7 +174,7 @@ export default function StageColumn({
             e.currentTarget.style.background = 'transparent';
           }}
         >
-          + Add task
+          + Add project
         </button>
       )}
 
@@ -204,7 +212,7 @@ export default function StageColumn({
           <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
             <button
               type="button"
-              onClick={onDetailsClick}
+              onClick={() => onDetailsClick?.(draft)}
               style={{
                 background: 'transparent',
                 border: `1px solid rgba(0,240,255,0.25)`,

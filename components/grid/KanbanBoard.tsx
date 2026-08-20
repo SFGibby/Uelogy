@@ -19,6 +19,7 @@ import TaskEditModal from './TaskEditModal';
 import StageManager from './StageManager';
 import TypeManager from './TypeManager';
 import BlockersLane from './BlockersLane';
+import SettingsMenu from './SettingsMenu';
 
 interface Props {
   adminMode: boolean;
@@ -39,6 +40,7 @@ export default function KanbanBoard({ adminMode }: Props) {
   // Modal state: editing an existing task OR creating in a specific stage
   const [editing, setEditing] = useState<GridTask | null>(null);
   const [creatingInStage, setCreatingInStage] = useState<string | null>(null);
+  const [creatingDraftTitle, setCreatingDraftTitle] = useState<string>('');
   // Manager modal flags
   const [showStageManager, setShowStageManager] = useState(false);
   const [showTypeManager, setShowTypeManager] = useState(false);
@@ -83,20 +85,28 @@ export default function KanbanBoard({ adminMode }: Props) {
     return acc;
   }, {});
 
-  // { taskId: {total, done} }
-  const subtaskCounts = subtasks.reduce<Record<string, { total: number; done: number }>>(
-    (acc, st) => {
-      const bucket = acc[st.task_id] || { total: 0, done: 0 };
-      bucket.total += 1;
-      if (st.done) bucket.done += 1;
-      acc[st.task_id] = bucket;
-      return acc;
-    },
-    {}
-  );
+  // Aggregates per project: task counts, worst task priority, blocker count.
+  const subtaskCounts: Record<string, { total: number; done: number }> = {};
+  const subtaskWorstPriority: Record<string, number | null> = {};
+  const subtaskBlockerCount: Record<string, number> = {};
+  for (const st of subtasks) {
+    const c = subtaskCounts[st.task_id] || { total: 0, done: 0 };
+    c.total += 1;
+    if (st.done) c.done += 1;
+    subtaskCounts[st.task_id] = c;
 
-  const openCreateModal = (stageId: string) => {
+    const worst = subtaskWorstPriority[st.task_id];
+    // priority 0 is worst (Critical); lower number = worse.
+    if (worst == null || st.priority < worst) subtaskWorstPriority[st.task_id] = st.priority;
+
+    if (st.blocked_reason?.trim()) {
+      subtaskBlockerCount[st.task_id] = (subtaskBlockerCount[st.task_id] ?? 0) + 1;
+    }
+  }
+
+  const openCreateModal = (stageId: string, draftTitle = '') => {
     setEditing(null);
+    setCreatingDraftTitle(draftTitle);
     setCreatingInStage(stageId);
   };
 
@@ -109,6 +119,7 @@ export default function KanbanBoard({ adminMode }: Props) {
   const closeModal = () => {
     setEditing(null);
     setCreatingInStage(null);
+    setCreatingDraftTitle('');
   };
 
   const handleSaved = (task: GridTask) => {
@@ -307,13 +318,11 @@ export default function KanbanBoard({ adminMode }: Props) {
   return (
     <>
       {adminMode && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-          <button type="button" onClick={() => setShowStageManager(true)} style={toolbarBtn}>
-            Manage Stages
-          </button>
-          <button type="button" onClick={() => setShowTypeManager(true)} style={toolbarBtn}>
-            Manage Owners
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
+          <SettingsMenu
+            onManageStages={() => setShowStageManager(true)}
+            onManageOwners={() => setShowTypeManager(true)}
+          />
         </div>
       )}
 
@@ -339,9 +348,15 @@ export default function KanbanBoard({ adminMode }: Props) {
               adminMode={adminMode}
               savedById={savedById}
               subtaskCounts={subtaskCounts}
+              subtaskWorstPriority={subtaskWorstPriority}
+              subtaskBlockerCount={subtaskBlockerCount}
               onTaskClick={openEditModal}
               onQuickAdd={adminMode ? (title) => handleQuickAdd(stage.id, title) : undefined}
-              onDetailsClick={adminMode ? () => openCreateModal(stage.id) : undefined}
+              onDetailsClick={
+                adminMode
+                  ? (draftTitle) => openCreateModal(stage.id, draftTitle)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -361,11 +376,18 @@ export default function KanbanBoard({ adminMode }: Props) {
         <TaskEditModal
           task={editing}
           defaultStageId={creatingInStage}
+          draftTitle={creatingDraftTitle}
           stages={stages}
           types={types}
+          laneColor={
+            (editing
+              ? stages.find((s) => s.id === editing.stage_id)?.color
+              : stages.find((s) => s.id === creatingInStage)?.color) ?? undefined
+          }
           onClose={closeModal}
           onSaved={handleSaved}
           onDeleted={handleDeleted}
+          onOwnerAdded={(o) => setTypes((prev) => [...prev, o])}
         />
       )}
 
