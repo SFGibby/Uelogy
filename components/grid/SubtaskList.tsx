@@ -514,7 +514,7 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
           cursor: 'pointer',
         }}
       >
-        + Add task
+        +
       </button>
     </div>
   );

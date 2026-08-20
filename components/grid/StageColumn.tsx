@@ -206,7 +206,7 @@ export default function StageColumn({
             e.currentTarget.style.background = 'transparent';
           }}
         >
-          + Add project
+          +
         </button>
       )}
 
@@ -257,7 +257,7 @@ export default function StageColumn({
                 cursor: 'pointer',
               }}
             >
-              + Details
+              +
             </button>
             <button
               type="button"
