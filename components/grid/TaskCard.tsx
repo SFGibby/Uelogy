@@ -20,6 +20,7 @@ const PRIORITY_META: Record<GridPriority, { color: string; label: string }> = {
 interface Props {
   task: GridTask;
   type?: GridType;
+  laneColor?: string;
   adminMode: boolean;
   saved?: number;
   subtaskTotal?: number;
@@ -39,6 +40,7 @@ function isOverdue(due_at?: string | null): boolean {
 export default function TaskCard({
   task,
   type,
+  laneColor,
   adminMode,
   subtaskTotal = 0,
   subtaskDone = 0,
@@ -60,7 +62,8 @@ export default function TaskCard({
   const transform = preview ? null : sortable.transform;
   const transition = preview ? undefined : sortable.transition;
   const isDragging = preview ? false : sortable.isDragging;
-  const accent = type?.color ?? '#00f0ff';
+  // The card chrome follows the lane, not the (hidden) owner.
+  const accent = laneColor ?? type?.color ?? '#00f0ff';
 
   const draggableHandlers =
     adminMode && !preview ? { ...sortable.attributes, ...sortable.listeners } : {};

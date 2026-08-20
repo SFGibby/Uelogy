@@ -390,6 +390,7 @@ export default function KanbanBoard({
             <TaskCard
               task={activeTask}
               type={types.find((t) => t.id === activeTask.type_id)}
+              laneColor={stages.find((s) => s.id === activeTask.stage_id)?.color}
               adminMode={true}
               preview
             />

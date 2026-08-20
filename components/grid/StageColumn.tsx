@@ -153,6 +153,7 @@ export default function StageColumn({
               key={task.id}
               task={task}
               type={task.type_id ? typesById[task.type_id] : undefined}
+              laneColor={stage.color}
               adminMode={adminMode}
               saved={savedById?.[task.id]}
               subtaskTotal={counts?.total ?? 0}
