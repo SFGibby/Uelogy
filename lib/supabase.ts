@@ -74,6 +74,12 @@ export interface GridSubtask {
   updated_at: string;
 }
 
+export interface GridNotebook {
+  id: string;
+  content: string;
+  updated_at: string;
+}
+
 export type BudgetKind = 'income' | 'expense' | 'savings' | 'transfer';
 export type BudgetCadence = 'monthly' | 'annual' | 'biennial';
 

@@ -44,7 +44,6 @@ export default function ProjectExpanded({
   const [description, setDescription] = useState(task.description ?? '');
   const [blockedReason, setBlockedReason] = useState(task.blocked_reason ?? '');
   const [blockerOwnerId, setBlockerOwnerId] = useState<string | null>(task.blocker_owner_id ?? null);
-  const [qna, setQna] = useState(task.qna ?? '');
   const [dueAt, setDueAt] = useState(task.due_at ?? '');
   const [attachments, setAttachments] = useState<GridAttachment[]>(task.attachments ?? []);
   const [uploading, setUploading] = useState(false);
@@ -253,66 +252,43 @@ export default function ProjectExpanded({
         </div>
       </div>
 
-      {/* Blocker + Q&A side by side */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 12,
-          marginBottom: 10,
-        }}
-      >
-        {/* Blocker */}
-        <div>
-          <label
-            style={{
-              ...labelStyle,
-              color: blocked ? '#ff2040aa' : laneDim,
-            }}
-          >
-            Blocker (optional)
-          </label>
-          <textarea
-            value={blockedReason}
-            onChange={(e) => setBlockedReason(e.target.value)}
-            onBlur={() => persist({ blocked_reason: blockedReason.trim() || null })}
-            rows={3}
-            placeholder="What's the question or dependency holding this up?"
-            style={{
-              ...inputBase,
-              border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : laneFaint}`,
-            }}
-          />
-          {blocked && (
-            <div style={{ marginTop: 6 }}>
-              <OwnerCombobox
-                owners={owners}
-                selectedId={blockerOwnerId}
-                variant="blocker"
-                triggerLabel="+ Waiting on…"
-                clearLabel="No one"
-                onPick={(oid) => {
-                  setBlockerOwnerId(oid);
-                  persist({ blocker_owner_id: oid });
-                }}
-                onOwnerCreated={onOwnerAdded}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Q&A / Notebook */}
-        <div>
-          <label style={labelStyle}>Q&amp;A · Notebook</label>
-          <textarea
-            value={qna}
-            onChange={(e) => setQna(e.target.value)}
-            onBlur={() => persist({ qna: qna.trim() || null })}
-            rows={3}
-            placeholder="Questions to research, open threads, stuff to ask — not blocking."
-            style={inputBase}
-          />
-        </div>
+      {/* Blocker */}
+      <div style={{ marginBottom: 10 }}>
+        <label
+          style={{
+            ...labelStyle,
+            color: blocked ? '#ff2040aa' : laneDim,
+          }}
+        >
+          Blocker (optional)
+        </label>
+        <textarea
+          value={blockedReason}
+          onChange={(e) => setBlockedReason(e.target.value)}
+          onBlur={() => persist({ blocked_reason: blockedReason.trim() || null })}
+          rows={2}
+          placeholder="What's the question or dependency holding this up?"
+          style={{
+            ...inputBase,
+            border: `1px solid ${blocked ? 'rgba(255,32,64,0.45)' : laneFaint}`,
+          }}
+        />
+        {blocked && (
+          <div style={{ marginTop: 6 }}>
+            <OwnerCombobox
+              owners={owners}
+              selectedId={blockerOwnerId}
+              variant="blocker"
+              triggerLabel="+ Waiting on…"
+              clearLabel="No one"
+              onPick={(oid) => {
+                setBlockerOwnerId(oid);
+                persist({ blocker_owner_id: oid });
+              }}
+              onOwnerCreated={onOwnerAdded}
+            />
+          </div>
+        )}
       </div>
 
       {/* Tasks (subtasks) */}

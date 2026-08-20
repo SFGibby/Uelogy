@@ -19,6 +19,7 @@ import TaskEditModal from './TaskEditModal';
 import StageManager from './StageManager';
 import TypeManager from './TypeManager';
 import BlockersLane from './BlockersLane';
+import NotebookPanel from './NotebookPanel';
 
 interface Props {
   adminMode: boolean;
@@ -385,6 +386,7 @@ export default function KanbanBoard({
             />
           ))}
         </div>
+        {/* wrap: DragOverlay after columns */}
         <DragOverlay>
           {activeTask && (
             <TaskCard
@@ -397,6 +399,8 @@ export default function KanbanBoard({
           )}
         </DragOverlay>
       </DndContext>
+
+      <NotebookPanel />
 
       {(editing !== null || creatingInStage !== null) && (
         <TaskEditModal
