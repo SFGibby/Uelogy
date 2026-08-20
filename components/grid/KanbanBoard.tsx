@@ -37,7 +37,9 @@ export default function KanbanBoard({ adminMode }: Props) {
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<GridTask | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Modal state: editing an existing task OR creating in a specific stage
+  // In-place expansion state: which project is currently expanded in its lane
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  // Legacy modal state — kept as a fallback path but no longer used for click-to-edit
   const [editing, setEditing] = useState<GridTask | null>(null);
   const [creatingInStage, setCreatingInStage] = useState<string | null>(null);
   const [creatingDraftTitle, setCreatingDraftTitle] = useState<string>('');
@@ -112,8 +114,8 @@ export default function KanbanBoard({ adminMode }: Props) {
 
   const openEditModal = (task: GridTask) => {
     if (!adminMode) return;
-    setCreatingInStage(null);
-    setEditing(task);
+    // In-place expansion instead of modal
+    setExpandedTaskId(task.id);
   };
 
   const closeModal = () => {
@@ -136,7 +138,7 @@ export default function KanbanBoard({ adminMode }: Props) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleQuickAdd = async (stageId: string, title: string) => {
+  const handleQuickAdd = async (stageId: string, title: string): Promise<GridTask | null> => {
     const list = tasksByStage[stageId] ?? [];
     const nextPos = list.reduce((m, t) => Math.max(m, t.position), -1) + 1;
     const { data, error } = await supabase
@@ -152,9 +154,16 @@ export default function KanbanBoard({ adminMode }: Props) {
       .single();
     if (error) {
       alert('Quick add failed: ' + error.message);
-      return;
+      return null;
     }
-    setTasks((prev) => [...prev, data as GridTask]);
+    const created = data as GridTask;
+    setTasks((prev) => [...prev, created]);
+    return created;
+  };
+
+  const createAndExpand = async (stageId: string, draftTitle: string) => {
+    const created = await handleQuickAdd(stageId, draftTitle || 'Untitled project');
+    if (created) setExpandedTaskId(created.id);
   };
 
   const handleDragStart = (e: DragStartEvent) => {
@@ -350,11 +359,16 @@ export default function KanbanBoard({ adminMode }: Props) {
               subtaskCounts={subtaskCounts}
               subtaskWorstPriority={subtaskWorstPriority}
               subtaskBlockerCount={subtaskBlockerCount}
+              expandedTaskId={expandedTaskId}
               onTaskClick={openEditModal}
+              onCollapse={() => setExpandedTaskId(null)}
+              onLocalUpdate={handleSaved}
+              onDeleted={handleDeleted}
+              onOwnerAdded={(o) => setTypes((prev) => [...prev, o])}
               onQuickAdd={adminMode ? (title) => handleQuickAdd(stage.id, title) : undefined}
               onDetailsClick={
                 adminMode
-                  ? (draftTitle) => openCreateModal(stage.id, draftTitle)
+                  ? (draftTitle) => createAndExpand(stage.id, draftTitle)
                   : undefined
               }
             />

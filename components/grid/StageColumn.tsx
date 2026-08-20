@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
+import ProjectExpanded from './ProjectExpanded';
 import type { GridStage, GridTask, GridType, GridPriority } from '../../lib/supabase';
 
 interface Props {
@@ -15,8 +16,13 @@ interface Props {
   subtaskCounts?: Record<string, { total: number; done: number }>;
   subtaskWorstPriority?: Record<string, number | null>;
   subtaskBlockerCount?: Record<string, number>;
+  expandedTaskId?: string | null;
   onTaskClick: (task: GridTask) => void;
-  onQuickAdd?: (title: string) => Promise<void> | void;
+  onCollapse?: () => void;
+  onLocalUpdate?: (task: GridTask) => void;
+  onDeleted?: (id: string) => void;
+  onOwnerAdded?: (owner: GridType) => void;
+  onQuickAdd?: (title: string) => Promise<unknown> | unknown;
   onDetailsClick?: (draftTitle: string) => void;
 }
 
@@ -29,7 +35,12 @@ export default function StageColumn({
   subtaskCounts,
   subtaskWorstPriority,
   subtaskBlockerCount,
+  expandedTaskId,
   onTaskClick,
+  onCollapse,
+  onLocalUpdate,
+  onDeleted,
+  onOwnerAdded,
   onQuickAdd,
   onDetailsClick,
 }: Props) {
@@ -114,6 +125,20 @@ export default function StageColumn({
 
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
         {tasks.map((task) => {
+          if (expandedTaskId === task.id) {
+            return (
+              <ProjectExpanded
+                key={task.id}
+                task={task}
+                laneColor={stage.color}
+                owners={types}
+                onCollapse={() => onCollapse?.()}
+                onDeleted={(id) => onDeleted?.(id)}
+                onLocalUpdate={(t) => onLocalUpdate?.(t)}
+                onOwnerAdded={onOwnerAdded}
+              />
+            );
+          }
           const counts = subtaskCounts?.[task.id];
           const worst = subtaskWorstPriority?.[task.id] ?? null;
           const blockers = subtaskBlockerCount?.[task.id] ?? 0;
