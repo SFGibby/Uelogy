@@ -12,7 +12,7 @@ import {
   closestCorners,
 } from '@dnd-kit/core';
 import { supabase } from '../../lib/supabase';
-import type { GridStage, GridType, GridTask, GridTaskSavings } from '../../lib/supabase';
+import type { GridStage, GridType, GridTask, GridTaskSavings, GridSubtask } from '../../lib/supabase';
 import StageColumn from './StageColumn';
 import TaskCard from './TaskCard';
 import TaskEditModal from './TaskEditModal';
@@ -32,6 +32,7 @@ export default function KanbanBoard({ adminMode }: Props) {
   const [types, setTypes] = useState<GridType[]>([]);
   const [tasks, setTasks] = useState<GridTask[]>([]);
   const [savedById, setSavedById] = useState<Record<string, number>>({});
+  const [subtasks, setSubtasks] = useState<GridSubtask[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<GridTask | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +50,14 @@ export default function KanbanBoard({ adminMode }: Props) {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [s, t, k, sg] = await Promise.all([
+    const [s, t, k, sg, st] = await Promise.all([
       supabase.from('grid_stages').select('*').order('position'),
       supabase.from('grid_types').select('*').order('created_at'),
       supabase.from('grid_tasks').select('*').order('position'),
       supabase.from('grid_task_savings').select('*'),
+      supabase.from('grid_subtasks').select('*').order('position'),
     ]);
+    setSubtasks((st.data as GridSubtask[]) ?? []);
     if (s.error || t.error || k.error) {
       setError(s.error?.message ?? t.error?.message ?? k.error?.message ?? 'unknown error');
     }
@@ -79,6 +82,18 @@ export default function KanbanBoard({ adminMode }: Props) {
       .sort((a, b) => a.position - b.position);
     return acc;
   }, {});
+
+  // { taskId: {total, done} }
+  const subtaskCounts = subtasks.reduce<Record<string, { total: number; done: number }>>(
+    (acc, st) => {
+      const bucket = acc[st.task_id] || { total: 0, done: 0 };
+      bucket.total += 1;
+      if (st.done) bucket.done += 1;
+      acc[st.task_id] = bucket;
+      return acc;
+    },
+    {}
+  );
 
   const openCreateModal = (stageId: string) => {
     setEditing(null);
@@ -323,6 +338,7 @@ export default function KanbanBoard({ adminMode }: Props) {
               types={types}
               adminMode={adminMode}
               savedById={savedById}
+              subtaskCounts={subtaskCounts}
               onTaskClick={openEditModal}
               onQuickAdd={adminMode ? (title) => handleQuickAdd(stage.id, title) : undefined}
               onDetailsClick={adminMode ? () => openCreateModal(stage.id) : undefined}

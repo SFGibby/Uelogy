@@ -48,6 +48,17 @@ export interface GridTask {
   updated_at: string;
 }
 
+export interface GridSubtask {
+  id: string;
+  task_id: string;
+  title: string;
+  owner_id?: string | null;
+  done: boolean;
+  position: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export type BudgetKind = 'income' | 'expense' | 'savings' | 'transfer';
 export type BudgetCadence = 'monthly' | 'annual' | 'biennial';
 

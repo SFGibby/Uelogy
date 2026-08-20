@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { GridTask, GridStage, GridType, GridTaskLink, GridPriority } from '../../lib/supabase';
+import SubtaskList from './SubtaskList';
 
 interface Props {
   task: GridTask | null;       // null when creating
@@ -402,6 +403,8 @@ export default function TaskEditModal({
           />
         </div>
 
+        {/* Subtasks — only for saved tasks (needs a task_id to attach to) */}
+        {task && <SubtaskList taskId={task.id} owners={types} />}
 
         {/* Links */}
         <div style={{ marginBottom: 20 }}>

@@ -39,13 +39,15 @@ interface Props {
   type?: GridType;
   adminMode: boolean;
   saved?: number;
+  subtaskTotal?: number;
+  subtaskDone?: number;
   onClick?: () => void;
   // When true, the card renders as a static preview (e.g. DragOverlay) and
   // doesn't register itself with dnd-kit. Prevents duplicate-ref issues.
   preview?: boolean;
 }
 
-export default function TaskCard({ task, type, adminMode, saved, onClick, preview = false }: Props) {
+export default function TaskCard({ task, type, adminMode, saved, subtaskTotal = 0, subtaskDone = 0, onClick, preview = false }: Props) {
   const [showBlocker, setShowBlocker] = useState(false);
   const blocked = !!task.blocked_reason?.trim();
 
@@ -155,6 +157,20 @@ export default function TaskCard({ task, type, adminMode, saved, onClick, previe
       <div style={{ fontSize: 13, fontWeight: 600, color: '#f0fbff', lineHeight: 1.35 }}>
         {task.title}
       </div>
+
+      {subtaskTotal > 0 && (
+        <div
+          style={{
+            marginTop: 6,
+            fontFamily: 'ui-monospace, monospace',
+            fontSize: 10,
+            color: subtaskDone === subtaskTotal ? '#00ff7f' : 'rgba(0,240,255,0.55)',
+            letterSpacing: '0.08em',
+          }}
+        >
+          [{subtaskDone}/{subtaskTotal}] subtasks
+        </div>
+      )}
 
       {blocked && showBlocker && (
         <div

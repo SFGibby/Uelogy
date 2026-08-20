@@ -12,6 +12,7 @@ interface Props {
   types: GridType[];
   adminMode: boolean;
   savedById?: Record<string, number>;
+  subtaskCounts?: Record<string, { total: number; done: number }>;
   onTaskClick: (task: GridTask) => void;
   onQuickAdd?: (title: string) => Promise<void> | void;
   onDetailsClick?: () => void;
@@ -23,6 +24,7 @@ export default function StageColumn({
   types,
   adminMode,
   savedById,
+  subtaskCounts,
   onTaskClick,
   onQuickAdd,
   onDetailsClick,
@@ -107,16 +109,21 @@ export default function StageColumn({
       </div>
 
       <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            type={task.type_id ? typesById[task.type_id] : undefined}
-            adminMode={adminMode}
-            saved={savedById?.[task.id]}
-            onClick={() => onTaskClick(task)}
-          />
-        ))}
+        {tasks.map((task) => {
+          const counts = subtaskCounts?.[task.id];
+          return (
+            <TaskCard
+              key={task.id}
+              task={task}
+              type={task.type_id ? typesById[task.type_id] : undefined}
+              adminMode={adminMode}
+              saved={savedById?.[task.id]}
+              subtaskTotal={counts?.total ?? 0}
+              subtaskDone={counts?.done ?? 0}
+              onClick={() => onTaskClick(task)}
+            />
+          );
+        })}
       </SortableContext>
 
       {tasks.length === 0 && (
