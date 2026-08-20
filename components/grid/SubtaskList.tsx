@@ -59,6 +59,7 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
   const [blockerFor, setBlockerFor] = useState<string | null>(null);
   const [newOwnerDraft, setNewOwnerDraft] = useState('');
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const [focusRowId, setFocusRowId] = useState<string | null>(null);
 
   const notifyChanged = (next: GridSubtask[]) => {
     onSubtasksChanged?.(next);
@@ -81,7 +82,7 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
     };
   }, [taskId]);
 
-  const addRow = async () => {
+  const addRow = async (autoFocus = false) => {
     const nextPos = rows.reduce((m, r) => Math.max(m, r.position), -1) + 1;
     const { data, error } = await supabase
       .from('grid_subtasks')
@@ -92,11 +93,13 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
       alert('Add task failed: ' + error.message);
       return;
     }
+    const created = data as GridSubtask;
     setRows((prev) => {
-      const next = [...prev, data as GridSubtask];
+      const next = [...prev, created];
       notifyChanged(next);
       return next;
     });
+    if (autoFocus) setFocusRowId(created.id);
   };
 
   const patch = (id: string, changes: Partial<GridSubtask>) => {
@@ -233,10 +236,24 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
                     style={{ accentColor: accent, cursor: 'pointer' }}
                   />
                   <input
+                    ref={(el) => {
+                      if (el && focusRowId === r.id) {
+                        el.focus();
+                        setFocusRowId(null);
+                      }
+                    }}
                     type="text"
                     value={r.title}
                     onChange={(e) => patch(r.id, { title: e.target.value })}
                     onBlur={() => persist(r.id, { title: r.title.trim() })}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // save the current title, then add a new blank row + focus it
+                        await persist(r.id, { title: r.title.trim() });
+                        await addRow(true);
+                      }
+                    }}
                     placeholder="Task title…"
                     style={{
                       flex: 1,
@@ -481,7 +498,7 @@ export default function SubtaskList({ taskId, owners, laneColor, onOwnerAdded, o
 
       <button
         type="button"
-        onClick={addRow}
+        onClick={() => addRow(true)}
         style={{
           width: '100%',
           marginTop: 6,
