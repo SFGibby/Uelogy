@@ -86,9 +86,6 @@ function PageHeader({ role, setRole, region, setRegion }: { role: Role; setRole:
   return (
     <div style={{ padding: '20px 28px 22px', borderBottom: `1px solid ${LINE}`, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
       <div style={{ maxWidth: 820 }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.04em', color: MUTED, marginBottom: 6 }}>
-          SP &middot; Sales Ops &middot; Pulse
-        </div>
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: TEXT, letterSpacing: '-0.005em' }}>{title}</h1>
         <p style={{ margin: '6px 0 0', fontSize: 13, color: SUBTLE, lineHeight: 1.5 }}>{purpose}</p>
       </div>
