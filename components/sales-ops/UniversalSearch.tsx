@@ -171,7 +171,7 @@ export default function UniversalSearch() {
       </svg>
       {!query && (
         <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em', pointerEvents: 'none' }}>
-          \u2318K
+          {'\u2318K'}
         </span>
       )}
 
