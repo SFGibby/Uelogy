@@ -4,8 +4,9 @@ import { NextRequest } from 'next/server';
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
 const GATES = {
-  tron:   { cookie: 'grid_auth',   env: 'TRON_PASSWORD',   fallback: 'Clue' },
-  ledger: { cookie: 'ledger_auth', env: 'LEDGER_PASSWORD', fallback: 'Antha' },
+  tron:       { cookie: 'grid_auth',      env: 'TRON_PASSWORD',       fallback: 'Clue' },
+  ledger:     { cookie: 'ledger_auth',    env: 'LEDGER_PASSWORD',     fallback: 'Antha' },
+  sales_ops:  { cookie: 'sales_ops_auth', env: 'SALES_OPS_PASSWORD',  fallback: 'Kapil' },
 } as const;
 
 type GateName = keyof typeof GATES;
