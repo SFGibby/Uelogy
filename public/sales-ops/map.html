@@ -5527,4 +5527,111 @@ render();
 
 
 
+
+<script>
+(function(){
+  var LABEL_ADJ = { 'FL': {dx: 24, dy: 10}, 'LA': {dx: 6, dy: -4}, 'MI': {dx: 0, dy: 24}, 'ID': {dx: 0, dy: 10} };
+  var NE = ['CT','DE','MA','MD','NH','NJ','RI','VT','DC'];
+  var CITY = { 'CT':'Connecticut','DE':'Delaware','MA':'Massachusetts','MD':'Maryland','NH':'New Hampshire','NJ':'New Jersey','RI':'Rhode Island','VT':'Vermont','DC':'DC' };
+
+  function api(){ return window.__api || null; }
+
+  function neutralizeFills(){
+    document.querySelectorAll('#map .st, #map .z3, #map .z5').forEach(function(p){
+      p.setAttribute('fill-opacity', '0');
+      p.removeAttribute('stroke');
+    });
+  }
+
+  function fixLabels(){
+    var svg = document.getElementById('map');
+    if (!svg) return;
+    svg.querySelectorAll('.slabel').forEach(function(el){
+      if (el.dataset.nudged === '1') return;
+      var abbr = (el.textContent || '').trim();
+      var adj = LABEL_ADJ[abbr];
+      if (!adj) return;
+      var transform = el.getAttribute('transform') || '';
+      var m = transform.match(/translate\(\s*([-\d.]+)[,\s]+([-\d.]+)\s*\)/);
+      if (!m) return;
+      var nx = parseFloat(m[1]) + (adj.dx || 0);
+      var ny = parseFloat(m[2]) + (adj.dy || 0);
+      el.setAttribute('transform', 'translate(' + nx.toFixed(2) + ', ' + ny.toFixed(2) + ')');
+      el.dataset.nudged = '1';
+    });
+  }
+
+  function mountGlow(){
+    var mapwrap = document.getElementById('mapwrap');
+    if (!mapwrap || document.getElementById('board-a-glow')) return;
+    mapwrap.style.position = 'relative';
+    var img = document.createElement('img');
+    img.id = 'board-a-glow';
+    img.src = '/sales-ops/board-a-glow.png';
+    img.alt = '';
+    mapwrap.appendChild(img);
+  }
+
+  function buildNEPopout(){
+    var mapwrap = document.getElementById('mapwrap');
+    if (!mapwrap) return;
+    var box = document.getElementById('ne-popout');
+    if (!box) { box = document.createElement('div'); box.id = 'ne-popout'; mapwrap.appendChild(box); }
+    box.innerHTML = '';
+    var head = document.createElement('div'); head.className = 'ne-head'; head.textContent = 'Operating here';
+    box.appendChild(head);
+    var A = api();
+    for (var i = 0; i < NE.length; i++) {
+      var abbr = NE[i];
+      var n = 0;
+      if (A && typeof A.get === 'function' && A.S) {
+        var S = A.S;
+        var r = A.get('S', S.win, S.ch, S.inc || 0, abbr);
+        if (r && r[0]) n = r[0];
+      }
+      var row = document.createElement('div');
+      row.className = 'ne-chip';
+      row.title = abbr + ': ' + n + ' installs';
+      (function(a){
+        row.onclick = function(){
+          var A2 = api();
+          if (A2 && typeof A2.select === 'function') { A2.select(a); return; }
+          document.querySelectorAll('#map .st').forEach(function(p){
+            var d = p.__data__;
+            if (d && d.properties && d.properties.abbr === a) {
+              p.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            }
+          });
+        };
+      })(abbr);
+      var sa = document.createElement('span'); sa.className = 'ne-abbr'; sa.textContent = abbr;
+      var sc = document.createElement('span'); sc.className = 'ne-city'; sc.textContent = CITY[abbr] || abbr;
+      var sn = document.createElement('span'); sn.className = 'ne-n'; sn.textContent = n ? n.toLocaleString() : '-';
+      row.appendChild(sa); row.appendChild(sc); row.appendChild(sn);
+      box.appendChild(row);
+    }
+  }
+
+  function run(){
+    var mapwrap = document.getElementById('mapwrap');
+    var svg = document.getElementById('map');
+    if (!mapwrap || !svg || !api()) return setTimeout(run, 120);
+    mountGlow();
+    neutralizeFills();
+    fixLabels();
+    buildNEPopout();
+    var obs = new MutationObserver(function(){ neutralizeFills(); fixLabels(); setTimeout(buildNEPopout, 20); });
+    obs.observe(svg, { subtree: true, childList: true, attributes: true, attributeFilter: ['fill','stroke','transform'] });
+    var controls = document.querySelectorAll('#chsw, #wins, #metric, #inact, #dq, #q');
+    controls.forEach(function(el){
+      el.addEventListener('change', function(){ setTimeout(function(){ neutralizeFills(); buildNEPopout(); }, 80); });
+      el.addEventListener('click',  function(){ setTimeout(function(){ neutralizeFills(); buildNEPopout(); }, 80); });
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
+
 </body></html>
