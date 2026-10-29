@@ -4,22 +4,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { REGIONS } from '../../lib/sales-ops/fake-ops-data';
 
-const SANS = 'Arial, Helvetica, sans-serif';
-const MONO = 'ui-monospace, Menlo, Consolas, monospace';
+const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
 
-const INK = '#162241';
-const SURFACE = '#1A2648';
-const SURFACE_HI = '#1D2C55';
-const LINE = '#26355f';
-const LINE_HI = '#33436e';
-const TEXT = '#ffffff';
-const TEXT_SOFT = '#e6e9f0';
-const MUTED = '#9aa3b5';
+const INK = '#0D1023';
+const SURFACE = '#171B38';
+const SURFACE_HI = '#242A58';
+const LINE_HI = 'rgba(255,255,255,0.14)';
+const LINE = 'rgba(255,255,255,0.08)';
+const TEXT = '#FFFFFF';
+const SUBTLE = '#CED3E8';
+const MUTED = '#8B91B5';
 const SUN = '#FAD646';
 
-// Static searchable registry. Reps are the illustrative names used in the fake
-// data; teams come from the merdeka roster; resources are the tabs on the
-// Finance Resource Guide.
 const REPS: string[] = [
   'Jules Lyusya', 'Jay Farrell', 'Blayne Meyer', 'Nate Battles', 'Julian Maytorena',
   'Jordan Roberts', 'Tarrie French', 'Cage Matthews', 'Adam Larue', 'Justin Clayton',
@@ -70,42 +68,17 @@ const SURFACES: Result[] = [
 
 function buildIndex(): Result[] {
   const items: Result[] = [...SURFACES];
-
   for (const r of REPS) {
-    items.push({
-      key: `rep-${r}`,
-      kind: 'rep',
-      label: r,
-      context: 'Rep scorecard',
-      href: `/sales-ops/pulse?view=regional&tab=scorecard&q=${encodeURIComponent(r)}`,
-    });
+    items.push({ key: `rep-${r}`, kind: 'rep', label: r, context: 'Rep scorecard', href: `/sales-ops/pulse?view=regional&q=${encodeURIComponent(r)}` });
   }
   for (const t of TEAMS) {
-    items.push({
-      key: `team-${t.team}`,
-      kind: 'team',
-      label: t.team,
-      context: `${t.region} \u00b7 team`,
-      href: `/sales-ops/pulse?view=regional&region=${encodeURIComponent(t.region)}&tab=scorecard&q=${encodeURIComponent(t.team)}`,
-    });
+    items.push({ key: `team-${t.team}`, kind: 'team', label: t.team, context: `${t.region} \u00b7 team`, href: `/sales-ops/pulse?view=regional&region=${encodeURIComponent(t.region)}&q=${encodeURIComponent(t.team)}` });
   }
   for (const reg of REGIONS) {
-    items.push({
-      key: `region-${reg}`,
-      kind: 'region',
-      label: reg,
-      context: 'Region',
-      href: `/sales-ops/pulse?view=regional&region=${encodeURIComponent(reg)}`,
-    });
+    items.push({ key: `region-${reg}`, kind: 'region', label: reg, context: 'Region', href: `/sales-ops/pulse?view=regional&region=${encodeURIComponent(reg)}` });
   }
   for (const r of RESOURCES) {
-    items.push({
-      key: `res-${r.tab}`,
-      kind: 'resource',
-      label: r.label,
-      context: 'Resource guide',
-      href: `/sales-ops/resources?tab=${r.tab}`,
-    });
+    items.push({ key: `res-${r.tab}`, kind: 'resource', label: r.label, context: 'Resource guide', href: `/sales-ops/resources?tab=${r.tab}` });
   }
   return items;
 }
@@ -166,7 +139,7 @@ export default function UniversalSearch() {
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', flex: 1, maxWidth: 440 }}>
+    <div ref={containerRef} style={{ position: 'relative', flex: 1, maxWidth: 480 }}>
       <input
         ref={inputRef}
         type="search"
@@ -174,14 +147,14 @@ export default function UniversalSearch() {
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Search reps, teams, resources\u2026"
+        placeholder="Search reps, teams, resources"
         style={{
           width: '100%',
-          padding: '8px 12px 8px 32px',
+          padding: '10px 42px 10px 38px',
           background: SURFACE,
           color: TEXT,
           border: `1px solid ${LINE_HI}`,
-          borderRadius: 4,
+          borderRadius: 999,
           outline: 'none',
           fontFamily: SANS,
           fontSize: 13,
@@ -190,14 +163,14 @@ export default function UniversalSearch() {
       />
       <svg
         aria-hidden
-        width="14" height="14" viewBox="0 0 24 24" fill="none"
-        style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+        width="15" height="15" viewBox="0 0 24 24" fill="none"
+        style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
       >
         <circle cx="11" cy="11" r="7" stroke={MUTED} strokeWidth="2" />
         <path d="M21 21l-4.5-4.5" stroke={MUTED} strokeWidth="2" strokeLinecap="round" />
       </svg>
       {!query && (
-        <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.06em', pointerEvents: 'none' }}>
+        <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em', pointerEvents: 'none' }}>
           \u2318K
         </span>
       )}
@@ -206,13 +179,13 @@ export default function UniversalSearch() {
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 6px)',
+            top: 'calc(100% + 8px)',
             left: 0,
             right: 0,
             background: SURFACE,
             border: `1px solid ${LINE_HI}`,
-            borderRadius: 4,
-            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            borderRadius: 10,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
             zIndex: 60,
             overflow: 'hidden',
           }}
@@ -226,25 +199,25 @@ export default function UniversalSearch() {
                 onClick={() => go(r)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '72px 1fr auto',
-                  gap: 12,
+                  gridTemplateColumns: '80px 1fr auto',
+                  gap: 14,
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px 14px',
                   textAlign: 'left',
                   background: active ? SURFACE_HI : 'transparent',
-                  color: TEXT_SOFT,
+                  color: TEXT,
                   border: 0,
                   borderTop: i === 0 ? 0 : `1px solid ${LINE}`,
                   cursor: 'pointer',
                   fontFamily: SANS,
                 }}
               >
-                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.08em', color: SUN, textTransform: 'uppercase' }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: SUN, textTransform: 'uppercase' }}>
                   {r.kind}
                 </span>
-                <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>{r.label}</span>
+                <span style={{ fontFamily: DISPLAY, fontSize: 14, color: TEXT, letterSpacing: '0.02em', textTransform: 'uppercase' }}>{r.label}</span>
                 {r.context && (
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED }}>{r.context}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.08em' }}>{r.context}</span>
                 )}
               </button>
             );
@@ -256,13 +229,13 @@ export default function UniversalSearch() {
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 6px)',
+            top: 'calc(100% + 8px)',
             left: 0,
             right: 0,
             background: SURFACE,
             border: `1px solid ${LINE_HI}`,
-            borderRadius: 4,
-            padding: '14px 16px',
+            borderRadius: 10,
+            padding: '16px 18px',
             fontFamily: SANS,
             fontSize: 12,
             color: MUTED,

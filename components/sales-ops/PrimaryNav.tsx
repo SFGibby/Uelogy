@@ -5,13 +5,15 @@ import { usePathname } from 'next/navigation';
 import SunPowerMark from './SunPowerMark';
 import UniversalSearch from './UniversalSearch';
 
-const INK = '#162241';
-const SUBTLE = '#cfd5e2';
-const MUTED = '#9aa3b5';
-const LINE = '#26355f';
+const INK = '#0D1023';
+const SUBTLE = '#CED3E8';
+const MUTED = '#8B91B5';
+const LINE = 'rgba(255,255,255,0.08)';
+const LINE_HI = 'rgba(255,255,255,0.14)';
 const SUN = '#FAD646';
-const SANS = 'Arial, Helvetica, sans-serif';
-const MONO = 'ui-monospace, Menlo, Consolas, monospace';
+const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
 
 const NAV = [
   { key: 'map', label: 'Map', href: '/sales-ops/map' },
@@ -32,10 +34,10 @@ export default function PrimaryNav() {
       style={{
         background: INK,
         borderBottom: `1px solid ${LINE}`,
-        padding: '12px 20px',
+        padding: '14px 24px',
         display: 'flex',
         alignItems: 'center',
-        gap: 20,
+        gap: 24,
         position: 'sticky',
         top: 0,
         zIndex: 50,
@@ -43,23 +45,26 @@ export default function PrimaryNav() {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <SunPowerMark height={18} />
-        <span style={{ width: 1, height: 16, background: LINE }} />
-        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.04em', color: MUTED }}>
+        <SunPowerMark height={20} />
+        <span style={{ width: 1, height: 20, background: LINE_HI }} />
+        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.28em', color: MUTED, textTransform: 'uppercase' }}>
           Sales Ops
         </span>
       </div>
 
-      <nav style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 10 }}>
+      <nav style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10 }}>
         {NAV.map(item => {
           const active = path?.startsWith(item.href) ?? false;
           const style: React.CSSProperties = {
-            padding: '8px 12px',
+            padding: '10px 16px',
+            fontFamily: DISPLAY,
             fontSize: 13,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
             textDecoration: 'none',
             color: active ? SUN : SUBTLE,
             borderBottom: active ? `2px solid ${SUN}` : '2px solid transparent',
-            fontWeight: active ? 700 : 400,
+            marginBottom: -1,
           };
           return (
             <Link key={item.key} href={item.href} style={style}>
@@ -77,12 +82,14 @@ export default function PrimaryNav() {
         onClick={lock}
         style={{
           background: 'transparent',
-          border: `1px solid ${LINE}`,
-          borderRadius: 4,
-          color: MUTED,
-          padding: '7px 12px',
-          fontFamily: SANS,
-          fontSize: 12,
+          border: `1px solid ${LINE_HI}`,
+          borderRadius: 999,
+          color: SUBTLE,
+          padding: '9px 18px',
+          fontFamily: MONO,
+          fontSize: 11,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
           cursor: 'pointer',
         }}
       >
