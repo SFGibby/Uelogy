@@ -1,14 +1,17 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>WIN · Sales Planning — install speed (10/14)</title><style>
 html{color-scheme:dark !important;} :root{--bg:#162241 !important;--surface:#1A2648 !important;--surface2:#1D2C55 !important;--border:#26355f !important;--bs:#33436e !important;--text:#e6e9f0 !important;--muted:#9aa3b5 !important;--primary:#FAD646 !important;--pl:#1D2C55 !important;--none:#1A2648 !important;--dimfill:#1A2648 !important;} header h1{display:none !important;} header{padding:12px 20px !important;}
-/* GLOW LAYER: hide heat fills so the density canvas shows through */
+/* BOARD A GLOW: hide heat choropleth, overlay the exact glow raster */
 #map .st { fill-opacity: 0 !important; stroke: #26355f !important; stroke-width: 0.7px !important; }
 #map .st[fill="var(--dimfill)"], #map .st[fill="#1A2648"], #map .st[fill="var(--none)"] {
-  fill-opacity: 0.4 !important; fill: #0e1835 !important; stroke-width: 0.5px !important;
+  fill-opacity: 0.5 !important; fill: #0e1835 !important;
 }
 #map .st:hover { stroke: #FAD646 !important; stroke-width: 1.4px !important; }
-#map .nation-outline { stroke: #56689c !important; fill: none !important; }
-#density-wrap { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: plus-lighter; }
-#density-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#board-a-glow {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  mix-blend-mode: plus-lighter;
+  object-fit: fill;
+}
 
 /* GLOW OVERRIDE: make state fills bleed as colored light instead of hard fill */
 #map .st {
@@ -5541,117 +5544,6 @@ $("#q").onkeydown = e => { if (e.key!=="Enter") return; const v=e.target.value.t
 function render(){ bar(); drawMap(); drawGrid(); $("#asof").textContent = `Snapshot ${META.as_of} · installs by install date · ${WINS.find(w=>w[0]===S.win)[1]}`; window.__S = {...S, open:[...S.open]}; }
 window.__api = { select, drill, back, S, render, get };
 render();
-})();
-</script>
-
-<script>
-(function(){
-  const SIGMA_PX = 16;       // Gaussian sigma in viewBox px
-  const GRID_SCALE = 0.5;    // half-resolution grid for perf
-  const WARM = [
-    [0.00, [20, 25, 55]],    // dark navy
-    [0.15, [40, 50, 100]],
-    [0.35, [120, 110, 60]],
-    [0.55, [200, 150, 55]],
-    [0.80, [245, 200, 70]],
-    [1.00, [250, 230, 100]]  // bright yellow
-  ];
-  function lerp(a,b,t){return a + (b - a) * t;}
-  function colorForDensity(v){
-    for (let i = 1; i < WARM.length; i++) {
-      if (v <= WARM[i][0]) {
-        const [t0, c0] = WARM[i-1];
-        const [t1, c1] = WARM[i];
-        const u = (v - t0) / (t1 - t0 || 1);
-        return [lerp(c0[0],c1[0],u), lerp(c0[1],c1[1],u), lerp(c0[2],c1[2],u)];
-      }
-    }
-    return WARM[WARM.length-1][1];
-  }
-  function run(){
-    if (!window.d3 || !window.ZIP3 || !document.getElementById('map')) {
-      return setTimeout(run, 120);
-    }
-    const svg = document.getElementById('map');
-    const mapwrap = document.getElementById('mapwrap');
-    if (!svg || !mapwrap) return;
-    const vb = svg.viewBox.baseVal;
-    const W = Math.max(1, Math.floor(vb.width * GRID_SCALE));
-    const H = Math.max(1, Math.floor(vb.height * GRID_SCALE));
-
-    let wrap = document.getElementById('density-wrap');
-    if (!wrap) {
-      wrap = document.createElement('div');
-      wrap.id = 'density-wrap';
-      mapwrap.style.position = 'relative';
-      mapwrap.appendChild(wrap);
-    }
-    let canvas = wrap.querySelector('canvas');
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      wrap.appendChild(canvas);
-    }
-    canvas.width = W; canvas.height = H;
-
-    // Project ZIP3 lat/lon via Albers USA sized to viewBox
-    const projection = d3.geoAlbersUsa().scale(1300).translate([vb.width/2, vb.height/2]);
-    const sigma = SIGMA_PX * GRID_SCALE;
-    const kernelR = Math.ceil(sigma * 3);
-    const kernel = new Float32Array((2*kernelR+1)*(2*kernelR+1));
-    let kmax = 0;
-    for (let dy=-kernelR; dy<=kernelR; dy++) {
-      for (let dx=-kernelR; dx<=kernelR; dx++) {
-        const v = Math.exp(-(dx*dx+dy*dy)/(2*sigma*sigma));
-        kernel[(dy+kernelR)*(2*kernelR+1)+(dx+kernelR)] = v;
-        if (v > kmax) kmax = v;
-      }
-    }
-
-    const grid = new Float32Array(W*H);
-    let gmax = 0;
-
-    for (const z of window.ZIP3) {
-      if (!z.lat || !z.lon || !z.n) continue;
-      const p = projection([z.lon, z.lat]);
-      if (!p) continue;
-      const px = Math.round(p[0] * GRID_SCALE);
-      const py = Math.round(p[1] * GRID_SCALE);
-      const w = Math.sqrt(z.n);
-      for (let dy=-kernelR; dy<=kernelR; dy++) {
-        const yy = py + dy;
-        if (yy < 0 || yy >= H) continue;
-        for (let dx=-kernelR; dx<=kernelR; dx++) {
-          const xx = px + dx;
-          if (xx < 0 || xx >= W) continue;
-          const g = grid[yy*W+xx] + w * kernel[(dy+kernelR)*(2*kernelR+1)+(dx+kernelR)];
-          grid[yy*W+xx] = g;
-          if (g > gmax) gmax = g;
-        }
-      }
-    }
-
-    const ctx = canvas.getContext('2d');
-    const img = ctx.createImageData(W, H);
-    for (let i=0; i<W*H; i++) {
-      const v = gmax > 0 ? grid[i]/gmax : 0;
-      const t = Math.pow(v, 0.7); // gamma for softer falloff
-      if (t < 0.015) continue;
-      const [r,g,b] = colorForDensity(t);
-      const o = i*4;
-      img.data[o] = r;
-      img.data[o+1] = g;
-      img.data[o+2] = b;
-      img.data[o+3] = Math.round(t * 255);
-    }
-    ctx.putImageData(img, 0, 0);
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', run);
-  } else {
-    run();
-  }
-  // Re-render on window resize (viewBox doesn't change but belt+suspenders)
-  window.addEventListener('resize', () => setTimeout(run, 80));
 })();
 </script>
 
