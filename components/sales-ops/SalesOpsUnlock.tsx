@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import SunPowerMark from './SunPowerMark';
 
 const SANS = 'Arial, Helvetica, sans-serif';
 const MONO = 'ui-monospace, Menlo, Consolas, monospace';
@@ -49,11 +50,8 @@ export default function SalesOpsUnlock() {
 
   return (
     <div style={{ minHeight: '100vh', background: INK, color: TEXT, fontFamily: SANS, display: 'flex', flexDirection: 'column' }}>
-      <header style={{ padding: '14px 20px', borderBottom: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ display: 'inline-block', width: 10, height: 10, background: SUN }} />
-        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em' }}>
-          SunPower<sup style={{ fontSize: 8 }}>&reg;</sup>
-        </span>
+      <header style={{ padding: '14px 20px', borderBottom: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <SunPowerMark height={18} />
         <span style={{ width: 1, height: 16, background: LINE }} />
         <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED }}>
           Sales Ops &middot; Access

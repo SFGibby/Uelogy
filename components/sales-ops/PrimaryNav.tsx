@@ -42,8 +42,8 @@ export default function PrimaryNav() {
         fontFamily: SANS,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <SunPowerMark size={13} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <SunPowerMark height={18} />
         <span style={{ width: 1, height: 16, background: LINE }} />
         <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.04em', color: MUTED }}>
           Sales Ops

@@ -1,40 +1,21 @@
 'use client';
 
-// SunPower wordmark lifted from the Finance Resource Guide HTML:
-// SUNP + yellow sun circle + WER + superscript ®.
+import Image from 'next/image';
 
-const SUN = '#FAD646';
-const TEXT = '#ffffff';
+// Real SunPower wordmark, extracted from the official EPS. White letters,
+// yellow sun ring on the O, registered mark.
+// Aspect: ~723x120 (6.025:1). Height is the input dimension; width scales.
 
-export default function SunPowerMark({ size = 14, color = TEXT }: { size?: number; color?: string }) {
+export default function SunPowerMark({ height = 18 }: { height?: number }) {
+  const width = Math.round(height * 6.025);
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        fontFamily: 'Arial Black, Arial, Helvetica, sans-serif',
-        fontWeight: 900,
-        fontSize: size,
-        letterSpacing: '0.04em',
-        color,
-        lineHeight: 1,
-      }}
-    >
-      SUNP
-      <span
-        aria-hidden
-        style={{
-          display: 'inline-block',
-          width: `${size * 0.78}px`,
-          height: `${size * 0.78}px`,
-          borderRadius: '50%',
-          background: SUN,
-          margin: `0 ${size * 0.06}px`,
-          verticalAlign: 'middle',
-        }}
-      />
-      WER
-      <sup style={{ fontSize: size * 0.4, marginLeft: 2, verticalAlign: 'super', fontWeight: 400 }}>&reg;</sup>
-    </span>
+    <Image
+      src="/sales-ops/sunpower-logo@2x.png"
+      alt="SunPower"
+      width={width}
+      height={height}
+      priority
+      style={{ display: 'block', height: `${height}px`, width: `${width}px` }}
+    />
   );
 }
