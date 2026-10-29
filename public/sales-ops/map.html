@@ -7,7 +7,7 @@ html{color-scheme:dark !important;} :root{--bg:#162241 !important;--surface:#1A2
 }
 #map .st.sel, #map .z3.sel, #map .z5.sel { stroke: #FAD646 !important; stroke-width: 1.4px !important; }
 #map .st:hover, #map .z3:hover, #map .z5:hover { stroke: rgba(250,214,70,0.5) !important; stroke-width: 1px !important; }
-#map .slabel { fill: #e6e9f0 !important; stroke: rgba(13,16,35,0.9) !important; stroke-width: 2.6px !important; paint-order: stroke; font-family: Arial, Helvetica, sans-serif !important; font-weight: 700 !important; font-size: 10.5px !important; letter-spacing: 0.04em; }
+#map .slabel { fill: #f5f0d6 !important; stroke: rgba(13,16,35,0.65) !important; stroke-width: 1.2px !important; paint-order: stroke; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif !important; font-weight: 600 !important; font-size: 10px !important; letter-spacing: 0.14em !important; text-transform: uppercase; }
 #map { background: transparent !important; }
 #mapwrap { background: #0D1023 !important; isolation: isolate; position: relative !important; }
 #board-a-glow { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; pointer-events: none !important; mix-blend-mode: plus-lighter !important; z-index: 1; }
@@ -5530,7 +5530,23 @@ render();
 
 <script>
 (function(){
-  var LABEL_ADJ = { 'FL': {dx: 24, dy: 10}, 'LA': {dx: 6, dy: -4}, 'MI': {dx: 0, dy: 24}, 'ID': {dx: 0, dy: 10} };
+  var LABEL_ADJ = {
+    'FL': {dx: 24, dy: 10},   // peninsula
+    'LA': {dx: 6,  dy: -4},   // off panhandle overlap
+    'MI': {dx: 0,  dy: 24},   // lower peninsula
+    'ID': {dx: 0,  dy: 12},   // narrow panhandle
+    'MD': {dx: -14, dy: 2},   // west of eastern shore
+    'MA': {dx: -12, dy: 0},   // off Cape Cod
+    'OK': {dx: 10, dy: 4},    // main body east of panhandle
+    'WV': {dx: 4,  dy: 6},    // irregular, nudge southeast
+    'KY': {dx: 10, dy: 0},    // long state
+    'TN': {dx: 10, dy: 0},    // long state
+    'VA': {dx: 4,  dy: 2},
+    'NC': {dx: 4,  dy: 2},
+    'NY': {dx: -4, dy: 8},    // Catskills centroid off
+    'AK': {dx: 20, dy: 0},    // composite inset
+    'HI': {dx: 10, dy: 0},    // composite inset
+  };
   var NE = ['CT','DE','MA','MD','NH','NJ','RI','VT','DC'];
   var CITY = { 'CT':'Connecticut','DE':'Delaware','MA':'Massachusetts','MD':'Maryland','NH':'New Hampshire','NJ':'New Jersey','RI':'Rhode Island','VT':'Vermont','DC':'DC' };
 
@@ -5547,9 +5563,11 @@ render();
       p.removeAttribute('fill');
     });
     document.querySelectorAll('#map text.slabel').forEach(function(el){
-      el.style.setProperty('fill', '#e6e9f0', 'important');
-      el.style.setProperty('stroke', 'rgba(13,16,35,0.9)', 'important');
-      el.style.setProperty('stroke-width', '2.6px', 'important');
+      el.style.setProperty('fill', '#f5f0d6', 'important');
+      el.style.setProperty('stroke', 'rgba(13,16,35,0.65)', 'important');
+      el.style.setProperty('stroke-width', '1.2px', 'important');
+      el.style.setProperty('letter-spacing', '0.14em', 'important');
+      el.style.setProperty('font-weight', '600', 'important');
     });
   }
 
@@ -5629,8 +5647,9 @@ render();
     var btn = document.createElement('button');
     btn.id = 'grid-toggle';
     btn.type = 'button';
-    btn.textContent = 'Hide table';
-    btn.setAttribute('aria-pressed', 'false');
+    btn.textContent = 'Show table';
+    btn.setAttribute('aria-pressed', 'true');
+    document.body.classList.add('grid-hidden');
     btn.style.cssText = 'background:transparent;color:#cfd5e2;border:1px solid #33436e;border-radius:4px;padding:5px 11px;font:600 12px Arial,Helvetica,sans-serif;cursor:pointer;margin-left:auto;';
     btn.onclick = function(){
       var collapsed = document.body.classList.toggle('grid-hidden');
