@@ -14,8 +14,8 @@ const MONO = 'var(--font-sales-ops-mono), ui-monospace, monospace';
 const NAV = [
   { key: 'map', label: 'Map', href: '/sales-ops/map' },
   { key: 'pulse', label: 'Pulse', href: '/sales-ops/pulse' },
-  { key: 'resources', label: 'Resources', href: '#', soon: true },
-  { key: 'feedback', label: 'Feedback', href: '#', soon: true },
+  { key: 'resources', label: 'Resources', href: '/sales-ops/resources' },
+  { key: 'feedback', label: 'Feedback', href: '/sales-ops/feedback' },
 ];
 
 export default function PrimaryNav() {
@@ -57,14 +57,12 @@ export default function PrimaryNav() {
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
             textDecoration: 'none',
-            color: item.soon ? MUTED : active ? SUN : TEXT,
+            color: active ? SUN : TEXT,
             borderBottom: active ? `2px solid ${SUN}` : '2px solid transparent',
-            pointerEvents: item.soon ? 'none' : 'auto',
+            pointerEvents: 'auto',
             fontWeight: active ? 600 : 400,
           };
-          return item.soon ? (
-            <span key={item.key} style={style}>{item.label} &middot; soon</span>
-          ) : (
+          return (
             <Link key={item.key} href={item.href} style={style}>
               {item.label}
             </Link>

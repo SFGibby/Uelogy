@@ -77,21 +77,12 @@ export default function HubSwagger() {
   return (
     <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <GrainOverlay />
-      <RoleBar role={role} setRole={setRole} region={region} setRegion={setRegion} />
+      <div style={{ position: 'absolute', top: 76, right: 32, zIndex: 20 }}>
+        <RoleToggle role={role} setRole={setRole} region={region} setRegion={setRegion} />
+      </div>
       {role === 'regional' ? <RegionalSwagger region={region} /> : <NationalSwagger />}
       <NextRow />
       <Footer />
-    </div>
-  );
-}
-
-function RoleBar({ role, setRole, region, setRegion }: { role: Role; setRole: (r: Role) => void; region: string; setRegion: (r: string) => void }) {
-  return (
-    <div style={{ padding: '14px 32px', display: 'flex', alignItems: 'center', gap: 20, position: 'relative', zIndex: 1, borderBottom: `1px solid ${LINE}` }}>
-      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase' }}>
-        View
-      </div>
-      <RoleToggle role={role} setRole={setRole} region={region} setRegion={setRegion} />
     </div>
   );
 }
@@ -354,10 +345,10 @@ function NextRow() {
         Next
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <NextCard href="/sales-ops/map" title="Install speed map" cta="Open" />
         <NextCard href="/sales-ops/resources" title="Resource guide" cta="Open" />
         <NextCard href="/sales-ops/feedback" title="Ask or request" cta="Open" />
-        <NextCard href="#" title="Install speed map" cta="Soon" disabled />
-        <NextCard href="#" title="Geo allocation" cta="Soon" disabled />
+        <NextCard href="/sales-ops/pulse" title="Pulse" cta="Open" />
       </div>
     </section>
   );
