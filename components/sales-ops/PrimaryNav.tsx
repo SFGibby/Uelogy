@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const INK = '#162241';
-const TEXT = '#FFFFFF';
-const MUTED = '#8A96B5';
-const LINE = 'rgba(255,255,255,0.1)';
+const TEXT = '#ffffff';
+const SUBTLE = '#cfd5e2';
+const MUTED = '#9aa3b5';
+const LINE = '#26355f';
 const SUN = '#FAD646';
-const DISPLAY = 'var(--font-sales-ops-display), "Archivo Black", Impact, sans-serif';
-const MONO = 'var(--font-sales-ops-mono), ui-monospace, monospace';
+const SANS = 'Arial, Helvetica, sans-serif';
+const MONO = 'ui-monospace, Menlo, Consolas, monospace';
 
 const NAV = [
   { key: 'map', label: 'Map', href: '/sales-ops/map' },
@@ -31,36 +32,37 @@ export default function PrimaryNav() {
       style={{
         background: INK,
         borderBottom: `1px solid ${LINE}`,
-        padding: '14px 24px',
+        padding: '12px 20px',
         display: 'flex',
         alignItems: 'center',
-        gap: 24,
+        gap: 20,
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        fontFamily: MONO,
+        fontFamily: SANS,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ display: 'inline-block', width: 12, height: 12, background: SUN }} />
-        <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
-          SunPower<sup style={{ fontSize: 8 }}>&reg;</sup> &middot; Sales Ops
+        <span style={{ display: 'inline-block', width: 10, height: 10, background: SUN }} />
+        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em', color: TEXT }}>
+          SunPower<sup style={{ fontSize: 8 }}>&reg;</sup>
+        </span>
+        <span style={{ width: 1, height: 16, background: LINE }} />
+        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.04em', color: MUTED }}>
+          Sales Ops
         </span>
       </div>
 
-      <nav style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 20 }}>
+      <nav style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 20 }}>
         {NAV.map(item => {
           const active = path?.startsWith(item.href) ?? false;
           const style: React.CSSProperties = {
-            padding: '9px 14px',
-            fontSize: 10,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
+            padding: '8px 12px',
+            fontSize: 13,
             textDecoration: 'none',
-            color: active ? SUN : TEXT,
+            color: active ? SUN : SUBTLE,
             borderBottom: active ? `2px solid ${SUN}` : '2px solid transparent',
-            pointerEvents: 'auto',
-            fontWeight: active ? 600 : 400,
+            fontWeight: active ? 700 : 400,
           };
           return (
             <Link key={item.key} href={item.href} style={style}>
@@ -77,12 +79,11 @@ export default function PrimaryNav() {
         style={{
           background: 'transparent',
           border: `1px solid ${LINE}`,
+          borderRadius: 4,
           color: MUTED,
-          padding: '8px 14px',
-          fontFamily: MONO,
-          fontSize: 10,
-          letterSpacing: '0.22em',
-          textTransform: 'uppercase',
+          padding: '7px 12px',
+          fontFamily: SANS,
+          fontSize: 12,
           cursor: 'pointer',
         }}
       >

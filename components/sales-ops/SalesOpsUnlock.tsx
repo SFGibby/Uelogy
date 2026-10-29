@@ -2,21 +2,26 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const SANS = 'var(--font-sales-ops-sans), -apple-system, system-ui, sans-serif';
-const SERIF = 'var(--font-sales-ops-serif), Georgia, serif';
-const MONO = 'var(--font-sales-ops-mono), ui-monospace, monospace';
+const SANS = 'Arial, Helvetica, sans-serif';
+const MONO = 'ui-monospace, Menlo, Consolas, monospace';
+
+const INK = '#162241';
+const SURFACE = '#1A2648';
+const LINE = '#26355f';
+const LINE_HI = '#33436e';
+const TEXT = '#ffffff';
+const SUBTLE = '#cfd5e2';
+const MUTED = '#9aa3b5';
+const SUN = '#FAD646';
 
 export default function SalesOpsUnlock() {
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
-    const id = setInterval(() => setTick(t => t + 1), 1200);
-    return () => clearInterval(id);
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -42,168 +47,84 @@ export default function SalesOpsUnlock() {
     }
   }
 
-  const stamp = new Date();
-  const timeStr = stamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#162241',
-        color: '#F3F0E8',
-        fontFamily: SANS,
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* subtle grid texture, no gradient */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'linear-gradient(transparent 95%, rgba(255,255,255,0.03) 95%), linear-gradient(90deg, transparent 95%, rgba(255,255,255,0.03) 95%)',
-          backgroundSize: '48px 48px',
-          pointerEvents: 'none',
-        }}
-      />
-
-      <header
-        style={{
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ display: 'inline-block', width: 10, height: 10, background: '#FAD646' }} />
-          <span style={{ fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-            SunPower<sup style={{ fontSize: 8, marginLeft: 1 }}>&reg;</sup>
-            <span style={{ opacity: 0.4, margin: '0 10px' }}>/</span>
-            <span>Sales Ops</span>
-          </span>
-        </div>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', color: '#8B8E99' }}>
-          {timeStr}
-          <span style={{ opacity: 0.4, margin: '0 8px' }}>·</span>
-          BETA
-          <span key={tick} style={{ marginLeft: 6, opacity: tick % 2 === 0 ? 1 : 0.2, transition: 'opacity 300ms' }}>
-            {'\u25cf'}
-          </span>
-        </div>
+    <div style={{ minHeight: '100vh', background: INK, color: TEXT, fontFamily: SANS, display: 'flex', flexDirection: 'column' }}>
+      <header style={{ padding: '14px 20px', borderBottom: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ display: 'inline-block', width: 10, height: 10, background: SUN }} />
+        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em' }}>
+          SunPower<sup style={{ fontSize: 8 }}>&reg;</sup>
+        </span>
+        <span style={{ width: 1, height: 16, background: LINE }} />
+        <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED }}>
+          Sales Ops &middot; Access
+        </span>
       </header>
 
-      <main
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 32,
-        }}
-      >
-        <form
-          onSubmit={submit}
-          style={{
-            background: '#1D2A4F',
-            border: '1px solid rgba(255,255,255,0.06)',
-            padding: '42px 44px 36px',
-            width: 'min(480px, 100%)',
-            position: 'relative',
-          }}
-        >
-          <div style={{ fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#8B8E99', marginBottom: 18 }}>
-            Access &mdash; Internal
+      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <form onSubmit={submit} style={{ width: 'min(420px, 100%)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.04em', marginBottom: 10 }}>
+            Internal access required
           </div>
-
-          <h1
-            style={{
-              fontFamily: SERIF,
-              fontSize: 44,
-              lineHeight: 1,
-              margin: '0 0 10px',
-              letterSpacing: '-0.01em',
-              fontWeight: 400,
-            }}
-          >
-            Where the floor stands,<br />
-            <span style={{ fontStyle: 'italic', color: '#FAD646' }}>today</span>.
+          <h1 style={{ margin: '0 0 10px', fontSize: 24, fontWeight: 700, color: TEXT, letterSpacing: '-0.005em' }}>
+            Sales Ops
           </h1>
-          <p style={{ margin: '0 0 28px', fontSize: 13, color: '#B6B8C0', lineHeight: 1.55, maxWidth: 360 }}>
-            Beta surface for sales execs and regionals. Numbers refresh on sign-in.
+          <p style={{ margin: '0 0 22px', fontSize: 13, color: SUBTLE, lineHeight: 1.5 }}>
+            Beta surface for Direct Ops transparency. Numbers refresh on sign-in.
           </p>
 
+          <label htmlFor="password" style={{ display: 'block', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.04em', marginBottom: 6 }}>
+            Password
+          </label>
           <input
+            id="password"
             ref={inputRef}
             type="password"
             autoComplete="off"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Password"
             style={{
               display: 'block',
               width: '100%',
-              padding: '14px 14px',
-              background: '#162241',
-              color: '#F3F0E8',
-              border: '1px solid rgba(255,255,255,0.08)',
+              padding: '12px 14px',
+              background: SURFACE,
+              color: TEXT,
+              border: `1px solid ${LINE_HI}`,
+              borderRadius: 4,
               outline: 'none',
-              fontFamily: MONO,
-              fontSize: 15,
-              letterSpacing: '0.16em',
+              fontFamily: SANS,
+              fontSize: 14,
               marginBottom: 14,
               boxSizing: 'border-box',
             }}
           />
 
           {error && (
-            <div style={{ color: '#F43F5E', fontSize: 12, marginBottom: 14, letterSpacing: '0.02em' }}>{error}</div>
+            <div style={{ color: '#ff8a8a', fontSize: 12, marginBottom: 14 }}>{error}</div>
           )}
 
           <button
             type="submit"
             disabled={busy || !value}
             style={{
-              background: '#FAD646',
-              border: 'none',
-              color: '#162241',
-              padding: '14px 20px',
+              background: SUN,
+              color: INK,
+              border: 0,
+              borderRadius: 4,
+              padding: '12px 22px',
               fontFamily: SANS,
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: '0.22em',
-              textTransform: 'uppercase',
+              fontSize: 14,
+              fontWeight: 700,
               cursor: busy || !value ? 'not-allowed' : 'pointer',
               opacity: busy || !value ? 0.5 : 1,
               width: '100%',
-              transition: 'transform 120ms ease',
             }}
           >
-            {busy ? 'Checking' : 'Step onto the floor'}
+            {busy ? 'Checking\u2026' : 'Enter'}
           </button>
 
-          <div
-            style={{
-              marginTop: 28,
-              paddingTop: 18,
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontFamily: MONO,
-              fontSize: 10,
-              letterSpacing: '0.14em',
-              color: '#6b6e78',
-              textTransform: 'uppercase',
-            }}
-          >
+          <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${LINE}`, display: 'flex', justifyContent: 'space-between', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.04em' }}>
             <span>Confidential</span>
-            <span>Not for external use</span>
+            <span>Internal use only</span>
           </div>
         </form>
       </main>
