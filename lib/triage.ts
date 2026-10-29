@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 export type Mode = 'in_appt' | 'about_to' | 'prepping' | 'router' | 'extra_support';
 export type Status = 'bot' | 'escalated' | 'taken_over' | 'closed';
