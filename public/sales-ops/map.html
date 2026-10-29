@@ -1,40 +1,19 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>WIN · Sales Planning — install speed (10/14)</title><style>
 html{color-scheme:dark !important;} :root{--bg:#162241 !important;--surface:#1A2648 !important;--surface2:#1D2C55 !important;--border:#26355f !important;--bs:#33436e !important;--text:#e6e9f0 !important;--muted:#9aa3b5 !important;--primary:#FAD646 !important;--pl:#1D2C55 !important;--none:#1A2648 !important;--dimfill:#1A2648 !important;} header h1{display:none !important;} header{padding:12px 20px !important;}
-/* BOARD A GLOW: hide heat choropleth, overlay the exact glow raster */
-#map .st { fill-opacity: 0 !important; stroke: #26355f !important; stroke-width: 0.7px !important; }
-#map .st[fill="var(--dimfill)"], #map .st[fill="#1A2648"], #map .st[fill="var(--none)"] {
-  fill-opacity: 0.5 !important; fill: #0e1835 !important;
-}
-#map .st:hover { stroke: #FAD646 !important; stroke-width: 1.4px !important; }
-/* GLOW OVERRIDE: make state fills bleed as colored light instead of hard fill */
-#map .st {
-  mix-blend-mode: screen !important;
-  filter: blur(10px) saturate(1.8) brightness(1.4) !important;
-  stroke: #26355f !important;
-  stroke-width: 0.5px !important;
-}
-#map .st[fill="var(--dimfill)"], #map .st[fill="#1A2648"] {
-  filter: none !important;
-  mix-blend-mode: normal !important;
-  fill: #1A2648 !important;
-  opacity: 0.55 !important;
-}
-#map .st[fill="var(--none)"] {
-  filter: none !important;
-  mix-blend-mode: normal !important;
-  fill: #1A2648 !important;
-  opacity: 0.35 !important;
-}
-#map .st:hover {
-  filter: none !important;
-  mix-blend-mode: normal !important;
-  stroke: #FAD646 !important;
-  stroke-width: 1.5px !important;
-}
-/* Keep ZIP3 and ZIP5 drill views crisp (no glow at drill levels) */
-#map .z3, #map .z5 { mix-blend-mode: normal !important; filter: none !important; }
-/* Nation outline for grounding */
-#map .nation-outline, #map path[d*="M "] + path { pointer-events: none; }
+/* MATCH PNG: no state outlines, no fills, let the glow raster be the only thing */
+#map .st, #map .z3, #map .z5 { stroke: none !important; fill-opacity: 0 !important; }
+#map .st:hover, #map .z3:hover, #map .z5:hover { stroke: rgba(250,214,70,0.6) !important; stroke-width: 1.2px !important; }
+#map .slabel { fill: #e6e9f0 !important; stroke: rgba(13,16,35,0.8) !important; stroke-width: 2.5px !important; paint-order: stroke; font-family: Arial, Helvetica, sans-serif !important; font-weight: 700 !important; font-size: 10px !important; letter-spacing: 0.04em; }
+#map { background: transparent !important; }
+#mapwrap { background: #0D1023 !important; }
+#board-a-glow { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; mix-blend-mode: plus-lighter; }
+#ne-popout { position: absolute; top: 32px; right: 24px; display: flex; flex-direction: column; gap: 6px; z-index: 10; font-family: Arial, Helvetica, sans-serif; }
+#ne-popout .ne-head { font-size: 10px; letter-spacing: 0.2em; color: #9aa3b5; text-transform: uppercase; margin-bottom: 2px; }
+#ne-popout .ne-chip { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 7px 10px; background: rgba(26, 38, 72, 0.9); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e6e9f0; font-size: 12px; cursor: pointer; min-width: 150px; }
+#ne-popout .ne-chip:hover { border-color: #FAD646; }
+#ne-popout .ne-chip .ne-abbr { font-weight: 700; color: #FAD646; letter-spacing: 0.04em; }
+#ne-popout .ne-chip .ne-city { color: #9aa3b5; font-size: 11px; }
+#ne-popout .ne-chip .ne-n { font-variant-numeric: tabular-nums; color: #e6e9f0; font-weight: 700; }
 
 :root{--bg:#f5f7fa;--surface:#fff;--surface2:#f0f4f8;--border:#e2e8f0;--bs:#c8d4e0;--text:#1a202c;--muted:#64748b;--primary:#0070c0;--pl:#e6f0fa;--none:#f1f3f5;--dimfill:#f7f8fa;color-scheme:light;
  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -5541,25 +5520,5 @@ render();
 </script>
 
 
-
-<script>
-(function(){
-  function mount(){
-    const mapwrap = document.getElementById('mapwrap');
-    const svg = document.getElementById('map');
-    if (!mapwrap || !svg) return setTimeout(mount, 100);
-    if (document.getElementById('board-a-glow')) return;
-    mapwrap.style.position = 'relative';
-    const img = document.createElement('img');
-    img.id = 'board-a-glow';
-    img.src = '/sales-ops/board-a-glow.png';
-    img.alt = '';
-    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;mix-blend-mode:plus-lighter;';
-    mapwrap.appendChild(img);
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
-  else mount();
-})();
-</script>
 
 </body></html>
