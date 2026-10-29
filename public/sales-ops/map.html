@@ -5612,11 +5612,35 @@ render();
     }
   }
 
-  function run(){
+  function mountToggle(){
+    if (document.getElementById('grid-toggle')) return;
+    var header = document.querySelector('header');
+    if (!header) return;
+    var btn = document.createElement('button');
+    btn.id = 'grid-toggle';
+    btn.type = 'button';
+    btn.textContent = 'Hide table';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.style.cssText = 'background:transparent;color:#cfd5e2;border:1px solid #33436e;border-radius:4px;padding:5px 11px;font:600 12px Arial,Helvetica,sans-serif;cursor:pointer;margin-left:auto;';
+    btn.onclick = function(){
+      var collapsed = document.body.classList.toggle('grid-hidden');
+      btn.textContent = collapsed ? 'Show table' : 'Hide table';
+      btn.setAttribute('aria-pressed', String(collapsed));
+    };
+    // Place at end of first .row (controls)
+    var row = header.querySelector('.row');
+    if (row) row.appendChild(btn); else header.appendChild(btn);
+    var style = document.createElement('style');
+    style.textContent = 'body.grid-hidden main { grid-template-columns: 1fr !important; } body.grid-hidden section[aria-label="Grid"] { display: none !important; }';
+    document.head.appendChild(style);
+  }
+
+    function run(){
     var mapwrap = document.getElementById('mapwrap');
     var svg = document.getElementById('map');
     if (!mapwrap || !svg || !api()) return setTimeout(run, 120);
     mountGlow();
+    mountToggle();
     neutralizeFills();
     fixLabels();
     buildNEPopout();
