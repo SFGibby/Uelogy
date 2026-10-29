@@ -5541,157 +5541,22 @@ render();
 </script>
 
 
+
 <script>
 (function(){
-  // Dynamic density raster that mirrors install-speed's current filters.
-  // Reads S (channel/window/metric), ZIP3 metadata, and AGG via get() so it
-  // re-rasters whenever the user flips a toggle or opens a drill.
-  const GRID_SCALE = 0.5;       // half-resolution canvas for performance
-  const SIGMA_PX = 22;          // Gaussian sigma in viewBox px (board A sized)
-  const GAMMA = 0.6;            // output gamma
-  const WARM = [
-    [0.00, [10, 14, 32]],
-    [0.08, [40, 20, 20]],
-    [0.22, [120, 50, 20]],
-    [0.42, [210, 110, 30]],
-    [0.65, [245, 170, 50]],
-    [0.85, [252, 215, 90]],
-    [1.00, [255, 245, 150]],
-  ];
-  function lerp(a,b,t){return a + (b-a)*t;}
-  function colorFor(v){
-    for (let i=1; i<WARM.length; i++) {
-      if (v <= WARM[i][0]) {
-        const [t0,c0] = WARM[i-1];
-        const [t1,c1] = WARM[i];
-        const u = (v - t0) / (t1 - t0 || 1);
-        return [lerp(c0[0],c1[0],u), lerp(c0[1],c1[1],u), lerp(c0[2],c1[2],u)];
-      }
-    }
-    return WARM[WARM.length-1][1];
-  }
-
-  let lastKey = '';
-  let kernelCache = null;
-
-  function kernel(sigma){
-    if (kernelCache && kernelCache.sigma === sigma) return kernelCache;
-    const r = Math.ceil(sigma * 3);
-    const size = 2*r + 1;
-    const k = new Float32Array(size*size);
-    for (let dy=-r; dy<=r; dy++) {
-      for (let dx=-r; dx<=r; dx++) {
-        k[(dy+r)*size + (dx+r)] = Math.exp(-(dx*dx+dy*dy)/(2*sigma*sigma));
-      }
-    }
-    kernelCache = { sigma, r, size, k };
-    return kernelCache;
-  }
-
   function mount(){
+    const mapwrap = document.getElementById('mapwrap');
     const svg = document.getElementById('map');
-    const wrap = document.getElementById('mapwrap');
-    if (!svg || !wrap || !window.d3 || !window.ZIP3 || !window.AGG || !window.S) {
-      return setTimeout(mount, 120);
-    }
-    wrap.style.position = 'relative';
-    let canvas = document.getElementById('density-canvas');
-    if (!canvas) {
-      canvas = document.createElement('canvas');
-      canvas.id = 'density-canvas';
-      canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:plus-lighter;';
-      wrap.appendChild(canvas);
-    }
-
-    function render(){
-      const vb = svg.viewBox.baseVal;
-      const W = Math.max(1, Math.floor(vb.width * GRID_SCALE));
-      const H = Math.max(1, Math.floor(vb.height * GRID_SCALE));
-      canvas.width = W; canvas.height = H;
-
-      // Resolve window.inc helper, fallback no-op
-      const incFn = (typeof window.inc === 'function') ? window.inc : (() => 0);
-      const key = [window.S.ch, window.S.win, window.S.metric, window.S.st || '', window.S.z3 || '', incFn(window.S.ch)].join('|');
-      lastKey = key;
-
-      const projection = d3.geoAlbersUsa().scale(1300).translate([vb.width/2, vb.height/2]);
-      const K = kernel(SIGMA_PX * GRID_SCALE);
-      const grid = new Float32Array(W*H);
-      let gmax = 0;
-
-      // Weight by sqrt(install count); window.S filters are read via get()
-      const inc = incFn(window.S.ch);
-      for (const z of window.ZIP3) {
-        if (!z.lat || !z.lon || !z.p) continue;
-        // Fetch install count for this ZIP3 under the current filter
-        const r = window.get('Z3', window.S.win, window.S.ch, inc, z.p);
-        if (!r) continue;
-        const count = Array.isArray(r) ? (r[0] || 0) : (typeof r === 'number' ? r : 0);
-        if (count <= 0) continue;
-        // Honor drill: if a state is selected, only ZIPs within it; same for ZIP3
-        if (window.S.st && z.st !== window.S.st) continue;
-        if (window.S.z3 && z.p !== window.S.z3) continue;
-
-        const p = projection([z.lon, z.lat]);
-        if (!p) continue;
-        const cx = Math.round(p[0] * GRID_SCALE);
-        const cy = Math.round(p[1] * GRID_SCALE);
-        const w = Math.sqrt(count);
-        for (let dy=-K.r; dy<=K.r; dy++) {
-          const yy = cy + dy;
-          if (yy < 0 || yy >= H) continue;
-          const rowK = (dy+K.r) * K.size;
-          const rowG = yy * W;
-          for (let dx=-K.r; dx<=K.r; dx++) {
-            const xx = cx + dx;
-            if (xx < 0 || xx >= W) continue;
-            const v = grid[rowG + xx] + w * K.k[rowK + (dx+K.r)];
-            grid[rowG + xx] = v;
-            if (v > gmax) gmax = v;
-          }
-        }
-      }
-
-      const ctx = canvas.getContext('2d');
-      const img = ctx.createImageData(W, H);
-      if (gmax > 0) {
-        for (let i=0; i<W*H; i++) {
-          const n = grid[i] / gmax;
-          const g = Math.pow(n, GAMMA);
-          if (g < 0.012) continue;
-          const [r,gg,b] = colorFor(g);
-          const o = i*4;
-          img.data[o] = r;
-          img.data[o+1] = gg;
-          img.data[o+2] = b;
-          img.data[o+3] = Math.round(Math.min(1, g*1.2) * 255);
-        }
-      }
-      ctx.putImageData(img, 0, 0);
-    }
-
-    function scheduleIfChanged(){
-      const incFn = (typeof window.inc === 'function') ? window.inc : (() => 0);
-      const key = [window.S.ch, window.S.win, window.S.metric, window.S.st || '', window.S.z3 || '', incFn(window.S.ch)].join('|');
-      if (key !== lastKey) { lastKey = key; render(); }
-    }
-
-    render();
-
-    // Hook into every control that mutates S
-    const controls = document.querySelectorAll('#chsw, #wins, #metric, #inact, #dq, #q');
-    controls.forEach(el => {
-      el.addEventListener('change', () => setTimeout(render, 30));
-      el.addEventListener('click', () => setTimeout(scheduleIfChanged, 30));
-    });
-    // Clicks on state/zip paths change S.st / S.z3
-    svg.addEventListener('click', () => setTimeout(scheduleIfChanged, 50));
-    // Esc for drill-up
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setTimeout(scheduleIfChanged, 50); });
-    // Belt + suspenders: poll every 400ms for state drift
-    setInterval(scheduleIfChanged, 400);
+    if (!mapwrap || !svg) return setTimeout(mount, 100);
+    if (document.getElementById('board-a-glow')) return;
+    mapwrap.style.position = 'relative';
+    const img = document.createElement('img');
+    img.id = 'board-a-glow';
+    img.src = '/sales-ops/board-a-glow.png';
+    img.alt = '';
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;mix-blend-mode:plus-lighter;';
+    mapwrap.appendChild(img);
   }
-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
 })();

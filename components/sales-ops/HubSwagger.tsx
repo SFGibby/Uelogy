@@ -103,18 +103,17 @@ export default function HubSwagger() {
               style={{
                 margin: 0,
                 fontFamily: DISPLAY,
-                fontSize: 'clamp(56px, 10vw, 128px)',
-                lineHeight: 0.88,
-                letterSpacing: '-0.03em',
+                fontSize: 'clamp(44px, 7vw, 88px)',
+                lineHeight: 0.92,
+                letterSpacing: '-0.02em',
                 textTransform: 'uppercase',
                 color: TEXT,
               }}
             >
-              Own<br />
-              the <span style={{ color: SUN }}>floor.</span>
+              {activeBucket.label}
             </h1>
-            <p style={{ marginTop: 20, maxWidth: 540, fontSize: 15, lineHeight: 1.6, color: SUBTLE }}>
-              One tap, one answer. Pick a metric below; reps rank live. Open a row to see the full card.
+            <p style={{ marginTop: 16, maxWidth: 540, fontSize: 15, lineHeight: 1.6, color: SUBTLE }}>
+              One metric, one answer. Pick a different chip to re-rank. Tap a row to open the full card.
             </p>
           </div>
 

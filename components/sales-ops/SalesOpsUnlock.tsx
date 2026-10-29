@@ -72,8 +72,8 @@ export default function SalesOpsUnlock() {
           <div style={{ fontFamily: MONO, fontSize: 11, color: SUN, letterSpacing: '0.3em', marginBottom: 14, textTransform: 'uppercase' }}>
             Internal access
           </div>
-          <h1 style={{ margin: '0 0 16px', fontFamily: DISPLAY, fontSize: 'clamp(48px, 8vw, 88px)', lineHeight: 0.9, letterSpacing: '-0.03em', textTransform: 'uppercase', color: TEXT }}>
-            Own the<br /><span style={{ color: SUN }}>floor.</span>
+          <h1 style={{ margin: '0 0 16px', fontFamily: DISPLAY, fontSize: 'clamp(44px, 7vw, 80px)', lineHeight: 0.92, letterSpacing: '-0.02em', textTransform: 'uppercase', color: TEXT }}>
+            Sales Ops
           </h1>
           <p style={{ margin: '0 0 28px', fontSize: 15, color: SUBTLE, lineHeight: 1.55, maxWidth: 420 }}>
             Beta surface for Direct Ops transparency. Password lands you on the live map.
@@ -127,7 +127,7 @@ export default function SalesOpsUnlock() {
               width: '100%',
             }}
           >
-            {busy ? 'Checking\u2026' : 'Step onto the floor'}
+            {busy ? 'Checking\u2026' : 'Enter'}
           </button>
 
           <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${LINE_HI}`, display: 'flex', justifyContent: 'space-between', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
