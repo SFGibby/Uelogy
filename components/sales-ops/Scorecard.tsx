@@ -17,16 +17,21 @@ export default function Scorecard({ theme, region, limit = 25 }: { theme: Shared
   const [cadence, setCadence] = useState<Cadence>('month');
   const [sortKey, setSortKey] = useState<SortKey>('overall');
   const [sortAsc, setSortAsc] = useState(false);
+  const [query, setQuery] = useState('');
 
   const rows = useMemo(() => {
     const data = buildScorecards(cadence, region);
-    const sorted = [...data].sort((a, b) => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? data.filter(r => r.rep.toLowerCase().includes(q) || r.team.toLowerCase().includes(q))
+      : data;
+    const sorted = [...filtered].sort((a, b) => {
       const av = a[sortKey as keyof ScorecardRow] as number;
       const bv = b[sortKey as keyof ScorecardRow] as number;
       return sortAsc ? av - bv : bv - av;
     });
     return sorted.slice(0, limit);
-  }, [cadence, region, sortKey, sortAsc, limit]);
+  }, [cadence, region, sortKey, sortAsc, limit, query]);
 
   const avg = useMemo(() => {
     if (rows.length === 0) return 0;
@@ -56,9 +61,51 @@ export default function Scorecard({ theme, region, limit = 25 }: { theme: Shared
         <CadenceToggle theme={theme} cadence={cadence} onChange={setCadence} />
       </div>
 
-      <p style={{ fontFamily: theme.sans, fontSize: 13, color: theme.subtle, maxWidth: 760, marginTop: 0, marginBottom: 16, fontStyle: 'italic' }}>
+      <p style={{ fontFamily: theme.sans, fontSize: 13, color: theme.subtle, maxWidth: 760, marginTop: 0, marginBottom: 14, fontStyle: 'italic' }}>
         Equal weighting across 8 buckets. Knocks + sits come from Enzy; closes, pull-through, installs from Salesforce; recruited and retention from HR. All values illustrative for the beta.
       </p>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search reps or teams\u2026"
+          style={{
+            flex: 1,
+            maxWidth: 320,
+            padding: '9px 12px',
+            background: theme.surface ?? 'transparent',
+            color: theme.text,
+            border: `1px solid ${theme.line}`,
+            borderRadius: 4,
+            outline: 'none',
+            fontFamily: theme.sans,
+            fontSize: 13,
+          }}
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            style={{
+              background: 'transparent',
+              color: theme.muted,
+              border: `1px solid ${theme.line}`,
+              borderRadius: 4,
+              padding: '8px 12px',
+              fontFamily: theme.mono,
+              fontSize: 11,
+              letterSpacing: '0.04em',
+              cursor: 'pointer',
+            }}
+          >
+            Clear
+          </button>
+        )}
+        <div style={{ marginLeft: 'auto', fontFamily: theme.mono, fontSize: 11, color: theme.muted }}>
+          {rows.length} {rows.length === 1 ? 'row' : 'rows'}
+        </div>
+      </div>
 
       <div style={{ border: `1px solid ${theme.line}`, background: theme.surface ?? 'transparent', overflow: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: theme.sans, fontSize: 13 }}>
