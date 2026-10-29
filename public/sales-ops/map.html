@@ -5537,9 +5537,19 @@ render();
   function api(){ return window.__api || null; }
 
   function neutralizeFills(){
-    document.querySelectorAll('#map .st, #map .z3, #map .z5').forEach(function(p){
-      p.setAttribute('fill-opacity', '0');
-      p.removeAttribute('stroke');
+    document.querySelectorAll('#map path').forEach(function(p){
+      // skip the nation outline (it only has stroke, no fill)
+      if (p.classList.contains('slabel')) return;
+      p.style.setProperty('fill', 'transparent', 'important');
+      p.style.setProperty('fill-opacity', '0', 'important');
+      p.style.setProperty('stroke', 'none', 'important');
+      p.style.setProperty('stroke-width', '0', 'important');
+      p.removeAttribute('fill');
+    });
+    document.querySelectorAll('#map text.slabel').forEach(function(el){
+      el.style.setProperty('fill', '#e6e9f0', 'important');
+      el.style.setProperty('stroke', 'rgba(13,16,35,0.9)', 'important');
+      el.style.setProperty('stroke-width', '2.6px', 'important');
     });
   }
 
@@ -5644,8 +5654,14 @@ render();
     neutralizeFills();
     fixLabels();
     buildNEPopout();
-    var obs = new MutationObserver(function(){ neutralizeFills(); fixLabels(); setTimeout(buildNEPopout, 20); });
-    obs.observe(svg, { subtree: true, childList: true, attributes: true, attributeFilter: ['fill','stroke','transform'] });
+    var obs = new MutationObserver(function(){
+      try { obs.disconnect(); } catch(e){}
+      neutralizeFills();
+      fixLabels();
+      obs.observe(svg, { subtree: true, childList: true, attributes: true, attributeFilter: ['fill','stroke','transform','class'] });
+      setTimeout(buildNEPopout, 20);
+    });
+    obs.observe(svg, { subtree: true, childList: true, attributes: true, attributeFilter: ['fill','stroke','transform','class','style'] });
     var controls = document.querySelectorAll('#chsw, #wins, #metric, #inact, #dq, #q');
     controls.forEach(function(el){
       el.addEventListener('change', function(){ setTimeout(function(){ neutralizeFills(); buildNEPopout(); }, 80); });
