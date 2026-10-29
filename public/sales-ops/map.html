@@ -1,5 +1,35 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>WIN · Sales Planning — install speed (10/14)</title><style>
 html{color-scheme:dark !important;} :root{--bg:#162241 !important;--surface:#1A2648 !important;--surface2:#1D2C55 !important;--border:#26355f !important;--bs:#33436e !important;--text:#e6e9f0 !important;--muted:#9aa3b5 !important;--primary:#FAD646 !important;--pl:#1D2C55 !important;--none:#1A2648 !important;--dimfill:#1A2648 !important;} header h1{display:none !important;} header{padding:12px 20px !important;}
+/* GLOW OVERRIDE: make state fills bleed as colored light instead of hard fill */
+#map .st {
+  mix-blend-mode: screen !important;
+  filter: blur(10px) saturate(1.8) brightness(1.4) !important;
+  stroke: #26355f !important;
+  stroke-width: 0.5px !important;
+}
+#map .st[fill="var(--dimfill)"], #map .st[fill="#1A2648"] {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  fill: #1A2648 !important;
+  opacity: 0.55 !important;
+}
+#map .st[fill="var(--none)"] {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  fill: #1A2648 !important;
+  opacity: 0.35 !important;
+}
+#map .st:hover {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  stroke: #FAD646 !important;
+  stroke-width: 1.5px !important;
+}
+/* Keep ZIP3 and ZIP5 drill views crisp (no glow at drill levels) */
+#map .z3, #map .z5 { mix-blend-mode: normal !important; filter: none !important; }
+/* Nation outline for grounding */
+#map .nation-outline, #map path[d*="M "] + path { pointer-events: none; }
+
 :root{--bg:#f5f7fa;--surface:#fff;--surface2:#f0f4f8;--border:#e2e8f0;--bs:#c8d4e0;--text:#1a202c;--muted:#64748b;--primary:#0070c0;--pl:#e6f0fa;--none:#f1f3f5;--dimfill:#f7f8fa;color-scheme:light;
  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1117;--surface:#1a1d23;--surface2:#22262e;--border:#2d3139;--bs:#3d4250;--text:#e2e8f0;--muted:#94a3b8;--primary:#4aa3e8;--pl:#0c2340;--none:#2a2e36;--dimfill:#1f232a;color-scheme:dark}}
