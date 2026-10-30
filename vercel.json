@@ -3,10 +3,6 @@
     {
       "path": "/api/newsletter",
       "schedule": "0 15 * * 1"
-    },
-    {
-      "path": "/api/triage/daily-report",
-      "schedule": "0 1 * * *"
     }
   ]
 }

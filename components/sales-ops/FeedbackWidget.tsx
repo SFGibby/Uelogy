@@ -21,38 +21,15 @@ interface Message {
   id: string;
   from: 'user' | 'bot';
   text: string;
-  link?: { href: string; label: string };
   ts: number;
 }
-
-interface Intent {
-  keywords: string[];
-  response: string;
-  link?: { href: string; label: string };
-}
-
-const INTENTS: Intent[] = [
-  { keywords: ['adder', 'adders'], response: 'Adders Guide has every option by financier.', link: { href: '/sales-ops/resources?tab=adders', label: 'Open Adders Guide' } },
-  { keywords: ['finance', 'financier', 'lender', 'loan', 'ppa', 'lease'], response: 'Finance Resource Guide \u2014 full lender matrix.', link: { href: '/sales-ops/resources?tab=finance', label: 'Open Finance Guide' } },
-  { keywords: ['calc', 'calculator', 'payment', 'monthly'], response: 'Financing Calculator estimates monthly payment by lender.', link: { href: '/sales-ops/resources?tab=calc', label: 'Open Calculator' } },
-  { keywords: ['panel', 'inverter', 'battery', 'powerwall', 'equipment', 'spec', 'warranty'], response: 'Equipment Guide: every SKU, warranty, spec.', link: { href: '/sales-ops/resources?tab=equipment', label: 'Open Equipment Guide' } },
-  { keywords: ['contact', 'phone', 'call', 'email', 'hours', 'directory'], response: 'Ops contacts, hours, emails are in the Contact Guide.', link: { href: '/sales-ops/resources?tab=sales', label: 'Open Contact Guide' } },
-  { keywords: ['faq', 'faqs'], response: 'FAQ covers the common questions.', link: { href: '/sales-ops/resources?tab=faqs', label: 'Open FAQs' } },
-  { keywords: ['map', 'install speed', 'zip', 'state'], response: 'Install-speed map on the Map tab.', link: { href: '/sales-ops/map', label: 'Open Map' } },
-  { keywords: ['pulse', 'kpi', 'bookings', 'leaderboard', 'scorecard'], response: 'Leader numbers live on Pulse.', link: { href: '/sales-ops/pulse', label: 'Open Pulse' } },
-];
 
 const COMMON = [
   'Where are the adders?',
   'Who do I call for a deal question?',
-  'Where is the leaderboard?',
+  'What panels do we offer?',
+  'How do I escalate a stuck install?',
 ];
-
-function matchIntent(text: string): Intent | null {
-  const t = text.toLowerCase();
-  for (const intent of INTENTS) for (const kw of intent.keywords) if (t.includes(kw)) return intent;
-  return null;
-}
 
 function uid() { return Math.random().toString(36).slice(2); }
 
@@ -60,7 +37,7 @@ export default function FeedbackWidget() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => [
-    { id: uid(), from: 'bot', text: 'Ask me where something lives \u2014 or send a note.', ts: Date.now() },
+    { id: uid(), from: 'bot', text: 'Hi. I\u2019m the Sales Ops shortcut \u2014 ask me anything about Direct Ops, contacts, financing, equipment, or SLAs.', ts: Date.now() },
   ]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -80,15 +57,35 @@ export default function FeedbackWidget() {
     const user: Message = { id: uid(), from: 'user', text: text.trim(), ts: Date.now() };
     setMessages(m => [...m, user]);
     setDraft('');
-    const intent = matchIntent(text);
-    await new Promise(r => setTimeout(r, 320));
-    if (intent) {
-      setMessages(m => [...m, { id: uid(), from: 'bot', text: intent.response, link: intent.link, ts: Date.now() }]);
-    } else {
-      setMessages(m => [...m, { id: uid(), from: 'bot', text: 'Got it \u2014 passing it to Sam.', ts: Date.now() }]);
-      void fetch('/api/sales-ops/feedback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: text.trim(), ts: Date.now() }) }).catch(() => {});
+
+    try {
+      const res = await fetch('/api/sales-ops/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ question: text.trim() }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      const answer = (payload?.answer as string | undefined)?.trim();
+      if (res.ok && answer) {
+        setMessages(m => [...m, { id: uid(), from: 'bot', text: answer, ts: Date.now() }]);
+      } else {
+        setMessages(m => [...m, { id: uid(), from: 'bot', text: 'Got it \u2014 I\u2019ll pass this along to Sam.', ts: Date.now() }]);
+        void fetch('/api/sales-ops/feedback', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ text: text.trim(), ts: Date.now() }),
+        }).catch(() => {});
+      }
+    } catch {
+      setMessages(m => [...m, { id: uid(), from: 'bot', text: 'Chat is briefly offline. I logged your note for Sam.', ts: Date.now() }]);
+      void fetch('/api/sales-ops/feedback', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: text.trim(), ts: Date.now() }),
+      }).catch(() => {});
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   }
 
   return (
@@ -96,7 +93,7 @@ export default function FeedbackWidget() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Open feedback chat"
+          aria-label="Open Sales Ops chat"
           style={{
             position: 'fixed',
             bottom: 24, right: 24,
@@ -139,7 +136,7 @@ export default function FeedbackWidget() {
             <span style={{ display: 'inline-block', width: 10, height: 10, background: SUN, borderRadius: '50%' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: TEXT }}>Sales Ops shortcut</div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em', marginTop: 2, textTransform: 'uppercase' }}>Ask or note</div>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em', marginTop: 2, textTransform: 'uppercase' }}>Ask anything</div>
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -153,7 +150,7 @@ export default function FeedbackWidget() {
           <div ref={scrollRef} style={{ flex: 1, padding: '14px 16px', overflowY: 'auto' }}>
             {messages.map(m => <ChatRow key={m.id} m={m} />)}
             {sending && (
-              <div style={{ padding: '6px 0', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em' }}>Typing{'\u2026'}</div>
+              <div style={{ padding: '6px 0', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em' }}>Thinking{'\u2026'}</div>
             )}
 
             {messages.length <= 1 && (
@@ -247,33 +244,11 @@ function ChatRow({ m }: { m: Message }) {
           fontSize: 13,
           lineHeight: 1.5,
           borderRadius: 12,
+          whiteSpace: 'pre-wrap',
         }}
       >
         {m.text}
       </div>
-      {m.link && !isUser && (
-        <a
-          href={m.link.href}
-          style={{
-            marginTop: 6,
-            padding: '8px 14px',
-            background: 'transparent',
-            border: `1px solid ${SUN}`,
-            borderRadius: 999,
-            color: SUN,
-            fontFamily: DISPLAY,
-            fontSize: 11,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          {m.link.label} {'\u2192'}
-        </a>
-      )}
     </div>
   );
 }

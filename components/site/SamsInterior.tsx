@@ -240,12 +240,12 @@ export default function SamsInterior() {
           <ArcadeCabinet
             marquee="OFFICE"
             accent="#ffb020"
-            href="/triage"
+            href="/sales-ops"
             demo={<OfficeChatDemo />}
             fallbackScores={FALLBACKS.office}
             startOffsetMs={6000}
             stateDurationMs={6100}
-            ariaLabel="Office — triage chat"
+            ariaLabel="Office — Sales Ops hub"
           />
         </section>
 
