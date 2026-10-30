@@ -11,9 +11,9 @@ const MUTED = '#8B91B5';
 const LINE = 'rgba(255,255,255,0.08)';
 const LINE_HI = 'rgba(255,255,255,0.14)';
 const SUN = '#FAD646';
-const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
-const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
-const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
+const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
 
 const NAV = [
   { key: 'map', label: 'Map', href: '/sales-ops/map' },

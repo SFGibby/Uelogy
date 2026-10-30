@@ -6,10 +6,10 @@ import { buildScorecards, REGIONS, type Cadence, type ScorecardRow } from '../..
 
 type Role = 'exec' | 'regional';
 
-// Swagger design tokens.
-const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
-const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
-const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
+// Gibson design tokens.
+const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
 
 const INK = '#0D1023';
 const SURFACE = '#171B38';
@@ -45,7 +45,7 @@ const BUCKETS: { key: BucketKey; label: string; format: (r: ScorecardRow) => str
   { key: 'retention',        label: 'Retention',  format: r => `${r.retention}%` },
 ];
 
-export default function HubSwagger() {
+export default function HubGibson() {
   const params = useSearchParams();
   const initialRole = (params.get('view') as Role | null) ?? null;
   const initialRegion = params.get('region');

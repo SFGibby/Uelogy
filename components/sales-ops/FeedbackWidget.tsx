@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
-const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
-const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
-const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
+const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
 
 const INK = '#0D1023';
 const SURFACE = '#171B38';

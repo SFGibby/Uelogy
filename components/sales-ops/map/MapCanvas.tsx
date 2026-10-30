@@ -13,7 +13,7 @@ import { useUsTopo, useZip3Topo } from './useMapData';
 const VIEW_W = 975;
 const VIEW_H = 610;
 
-// SunPower swagger palette.
+// Gibson palette.
 const INK = '#0D1023';
 const SUN = '#FAD646';
 const OUTLINE_ACTIVE = 'rgba(205,215,235,0.55)';   // states we operate in
@@ -295,7 +295,7 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
             right: 12,
             background: SUN,
             color: INK,
-            fontFamily: 'var(--font-swagger-mono), ui-monospace, monospace',
+            fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: '0.2em',

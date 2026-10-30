@@ -1,0 +1,1387 @@
+{
+  "updatedAt": "2026-10-30T21:01:21.127Z",
+  "tabs": [
+    {
+      "key": "sales",
+      "label": "Contact Guide",
+      "hero": {
+        "title": "Contact Guide",
+        "subtitle": "Your one-stop reference for contacts"
+      },
+      "sections": [
+        {
+          "kind": "cards",
+          "id": "sec-sec_getting_started",
+          "title": "Getting Started",
+          "cards": [
+            {
+              "title": "Onboarding / Team Changes / HR Questions",
+              "body": "Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:saleshr@sunpower.com\">saleshr@sunpower.com</a>",
+              "highlight": false
+            },
+            {
+              "title": "Sales Tool Logins (Troubleshooting)",
+              "body": "<i>Enerflo · Aurora · Financier Portals · Merdeka</i><br><br>Phone: 385-206-3409 Option 1<br>Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a><br><br>Sales Tool Onboarding: Click Here to Get Started",
+              "highlight": false
+            },
+            {
+              "title": "Email Troubleshooting",
+              "body": "CSM Phone: 385-206-3409 Option 2<br>CSM Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:help@sunpower.com\">help@sunpower.com</a>",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_inhome_deal",
+          "title": "In-Home & Deal Submission Support",
+          "cards": [
+            {
+              "title": "Pro Tip",
+              "body": "Use Enerflo Chat or Aurora Chat for the fastest response on deal questions.",
+              "highlight": true
+            },
+            {
+              "title": "Process",
+              "body": "<i>Lead, Deal submission → Contract signed</i>",
+              "highlight": false
+            },
+            {
+              "title": "Alternative Contact",
+              "body": "Phone: 385-206-3409 Option 1<br>Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a>",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_after_signs",
+          "title": "After Customer Signs",
+          "cards": [
+            {
+              "title": "Pro Tip",
+              "body": "Use Project Chat in Merdeka for the fastest response (~2–4 min turnaround).",
+              "highlight": true
+            },
+            {
+              "title": "Project Updates",
+              "body": "Go to Merdeka → Projects Section",
+              "highlight": false
+            },
+            {
+              "title": "Need More Detail?",
+              "body": "CSM Phone: 385-206-3409 Option 2<br>CSM Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:csm.sunpower@sunpower.com\">csm.sunpower@sunpower.com</a>",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_site_survey",
+          "title": "Site Survey",
+          "cards": [
+            {
+              "title": "Steps",
+              "body": "<ol><li>Review Site Survey Training Guide in Merdeka &gt; SunderHub &gt; SunderHQ</li><li>Review Site Survey Training Guide in Enerflo Deal Flow &gt; Site Survey Section</li></ol>",
+              "highlight": false
+            },
+            {
+              "title": "SITE SURVEY GUIDE",
+              "body": "Click to edit this section.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_adders",
+          "title": "Adders",
+          "cards": [
+            {
+              "title": "Pro Tip",
+              "body": "Project Chat in Merdeka is the fastest way to get answers on adder questions.",
+              "highlight": true
+            },
+            {
+              "title": "How You'll Be Notified",
+              "body": "You'll receive notifications via Text, Email, and Enerflo.",
+              "highlight": false
+            },
+            {
+              "title": "Review Final Adders",
+              "body": "Check Merdeka → Project Details",
+              "highlight": false
+            },
+            {
+              "title": "Contacts",
+              "body": "Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:csm.sunpower@sunpower.com\">csm.sunpower@sunpower.com</a><br>CSM Phone: 385-206-3409 Option 2<br>CSM Text: 855-676-6344",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_change_orders",
+          "title": "Change Orders",
+          "cards": [
+            {
+              "title": "Process",
+              "body": "1. Review Change Order process in Merdeka &gt; SunderHub &gt; SunderHQ<br><br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:ChangeOrders@sunpower.com\">ChangeOrders@sunpower.com</a><br>Change Order Process: Click Here",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_equipment",
+          "title": "Equipment by Market",
+          "cards": [
+            {
+              "title": "Review Product by Market",
+              "body": "Review Product by Market links in Enerflo Deal Flow &gt; Equipment Check section.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_market_questions",
+          "title": "Market Questions (Zip Codes)",
+          "cards": [
+            {
+              "title": "Contacts",
+              "body": "Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a><br>Phone: 385-206-3409 Option 1<br>Text: 855-676-6344",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_commissions",
+          "title": "Commissions",
+          "cards": [
+            {
+              "title": "Contact",
+              "body": "Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:Commissions@sunpower.com\">Commissions@sunpower.com</a>",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "sec-sec_general_questions",
+          "title": "General Questions",
+          "cards": [
+            {
+              "title": "Pro Tip",
+              "body": "General Questions: Start with your Sales Manager first!<br>Deal Process and Error Questions: Start with Enerflo or Aurora Chat. They are able to support most process and error questions!",
+              "highlight": true
+            },
+            {
+              "title": "Sales Support",
+              "body": "Phone: 385-206-3409 Option 1<br>Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a>",
+              "highlight": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "finance",
+      "label": "Finance",
+      "hero": {
+        "title": "Finance Partner Resource Guide",
+        "subtitle": "Underwriting rules, NTP requirements, and support contacts for every financing partner, plus links out to each partner's full resource center and document packet."
+      },
+      "pills": [
+        {
+          "key": "all",
+          "label": "All partners"
+        },
+        {
+          "key": "concert",
+          "label": "Concert Finance / Propel"
+        },
+        {
+          "key": "goodleap",
+          "label": "GoodLeap TPO"
+        },
+        {
+          "key": "lightreach",
+          "label": "LightReach (Palmetto)"
+        },
+        {
+          "key": "enfin",
+          "label": "EnFin"
+        },
+        {
+          "key": "sungage",
+          "label": "Sungage Financial"
+        },
+        {
+          "key": "paykeeper",
+          "label": "PayKeeper (Escrow)"
+        }
+      ],
+      "sections": [
+        {
+          "kind": "table",
+          "title": "Quick comparison",
+          "description": "All partners, side by side.",
+          "content": {
+            "headings": [
+              "Category",
+              "Concert Finance / Propel",
+              "GoodLeap TPO",
+              "LightReach (Palmetto)",
+              "EnFin",
+              "Sungage Financial",
+              "PayKeeper (Escrow)"
+            ],
+            "rows": [
+              [
+                "FICO",
+                "660+ (680 in TX &amp; FL)",
+                "680+",
+                "670+ (680+ in FL and TX)",
+                "620+",
+                "640+",
+                "N/A – Escrow service, not a lender"
+              ],
+              [
+                "Bureaus",
+                "Transunion",
+                "Experian, Transunion, Equifax",
+                "Transunion and Equifax",
+                "Transunion",
+                "Experian",
+                "N/A"
+              ],
+              [
+                "DTI",
+                "No DTI",
+                "No DTI check if credit over 700",
+                "No DTI",
+                "No DTI",
+                "640–659 (40% limit) · 660–679 (50% limit) · 680–699 (65% limit) · No DTI over 700",
+                "N/A"
+              ],
+              [
+                "Max Pricing",
+                "$135k",
+                "680–699: up to $75k · 700–739: up to $100k · 740+: up to $135k",
+                "No max system price, but monthly payment cannot exceed $500/month",
+                "N/A",
+                "700 and below: $80k · 740+: $100k",
+                "N/A"
+              ],
+              [
+                "Co-Applicants",
+                "Must be an owner that resides on the property",
+                "No restrictions",
+                "Must be immediate family, no residency required",
+                "Must reside on property and must pass all credit checks",
+                "Must be a resident. If second home, applicant must be on the deed.",
+                "N/A"
+              ],
+              [
+                "Home Type Restrictions",
+                "No mobile homes unless permanent foundation present. Propel: no new construction before borrower occupancy; system must be on roof, garage, or ADU.",
+                "No mobile homes unless permanent foundation present.",
+                "No townhomes, commercial buildings, condos, carports, home additions, ground mounts, or mobile homes.",
+                "No ground mounts and mobile homes.",
+                "No mobile homes outside of CA and TX, commercial properties, or townhomes.",
+                "N/A"
+              ],
+              [
+                "NTP Requirements",
+                "Digital Terms of Acceptance · ACH · Utility Bill",
+                "Customer Verification Survey · Utility Bill · Ownership Verification · Occupancy Verification",
+                "Account Set-Up · Identification · Title Verification · Utility Bill · Clear Facts Disclosure · ACH Information",
+                "Utility Bill · Video Welcome Call · Proposal",
+                "Proof of ID · Welcome Call · ACH Form",
+                "N/A – Releases milestone payments, not project NTP"
+              ],
+              [
+                "Finance Options",
+                "Solar+Loan (Concert) · Pre-Paid Lease (Propel)",
+                "PPA",
+                "PPA and Lease",
+                "PPA and Lease",
+                "Sunrise · Brightstart DPP · Brightstart Level Pay",
+                "Milestone Escrow (Loan/Cash deals)"
+              ],
+              [
+                "Support Number",
+                "855-925-4890",
+                "844-562-6725",
+                "855-339-1831",
+                "833-586-3675",
+                "844-786-4243",
+                "801-406-6711"
+              ],
+              [
+                "Active States",
+                "CA, CO, FL, ID, IL, IN, KS, MA, MI, MN, MO, NC, OH, OR, SC, TX, UT, VA, WA, WI (Concert) · CA, CO, CT, ME, MA, OH, PA, TX (Propel)",
+                "CA, CO, ID, KS, MA, MI, MO, OH, OR, TX, VA, WA, WI",
+                "CA, CO, CT, FL, IL, MA, MD, MI, NC, NV, OH, OR, PA, SC, TX, VA",
+                "CA, IL, MA, PA, TX",
+                "CO, CT, GA, ID, IL, KS, KY, NH, NC, OH, OK, OR, MA, MI, MO, PA, TX, UT, WA",
+                "N/A"
+              ],
+              [
+                "Battery Only Option",
+                "Battery only option available (Loan)",
+                "No battery only option",
+                "Battery only option available (TPO)",
+                "No battery only option",
+                "Battery only option available (Loan)",
+                "Battery only option available (Same as cash)"
+              ]
+            ]
+          }
+        },
+        {
+          "kind": "financier",
+          "id": "fin-concert",
+          "title": "Concert Finance / Propel",
+          "meta": "Support: (855) 925-4890 (call/text)",
+          "cards": [
+            {
+              "title": "Underwriting Information",
+              "body": "<b>FICO Requirement:</b> 660+ (680 in TX &amp; FL)<br><b>Credit approval</b> is valid 180 days from approval date<br><b>DTI</b> is not considered<br><b>Co-Applicants</b> must reside on the property",
+              "highlight": false
+            },
+            {
+              "title": "2nd Systems and Home Types",
+              "body": "2nd systems will only be approved if it has its own components, gateway, POI, and monitoring. It may not share ANY components with the existing system. (CA and HI only)<br><br><i>Approved Home Types:</i> Multi-family, rental/vacation property, mobile home with permanent foundation.",
+              "highlight": false
+            },
+            {
+              "title": "NTP Requirements",
+              "body": "The contract must be signed. System design is submitted in the portal and reviewed in the Greentech portal. Once system design is reviewed and approved, NTP will be granted and the project can move toward installation.",
+              "highlight": false
+            },
+            {
+              "title": "Welcome Call and Stips",
+              "body": "A welcome call won't be required. Stipulations: Photo ID and Verification of Income. If the property is a Mobile Home, Title Verification will be required as well.",
+              "highlight": false
+            },
+            {
+              "title": "Early Buyout Option",
+              "body": "At year 5, 6.5, and year 8; the customer has the option to purchase the system, or terminate the ESA. The 3rd party owner will provide limited warranty and asset management services until the end of year 25, <i>if</i> the EBO is exercised. If they choose <u>NOT</u> to exercise the EBO, at the end of the 25 year loan:<ul><li>They can purchase the system for fair market value.</li><li>They can renew the agreement for 10 additional one-year terms.</li><li>They can have the system removed at their expense.</li></ul>",
+              "highlight": false
+            },
+            {
+              "title": "What is Propel?",
+              "body": "Propel pairs an Energy Services Agreement with a loan to provide a predictable monthly payment with an Early Buyout Option (EBO).",
+              "highlight": false
+            },
+            {
+              "title": "Underproduction",
+              "body": "The ESA includes a 5-year production guarantee. Customer will receive a refund if the system doesn't meet production.",
+              "highlight": false
+            },
+            {
+              "title": "Home Sale",
+              "body": "In the event of a home sale, the loan must be transferred, paid off, or included in the sale of the home. After year 5, the loan must be paid off. ESA cannot be transferred.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "financier",
+          "id": "fin-goodleap",
+          "title": "GoodLeap TPO",
+          "meta": "Support: Application Support: 1-844-562-6725 · Account Support: 1-800-345-9372",
+          "cards": [
+            {
+              "title": "Underwriting Information",
+              "body": "<b>FICO Requirement:</b> 650+<br><b>Credit approval</b> is valid 240 days from initial approval<br><b>DTI</b> is not checked if credit is over 700<br><b>Co-applicants</b> can be anyone",
+              "highlight": false
+            },
+            {
+              "title": "2nd Systems and Home Types",
+              "body": "2nd systems on a home with existing PV Solar are <u>NOT approved</u>.<br><br><i>Approved Home Types:</i> Single Family, Townhome, Condos, and Manufactured Homes with a permanent foundation, but cannot be located in a mobile home park.",
+              "highlight": false
+            },
+            {
+              "title": "Change Order",
+              "body": "The proposal will be submitted to GoodLeap for a production check, prior to installation. During the check, if the production falls out of (-5% or +15%), the customer will need to sign a <u>change order</u> addendum.",
+              "highlight": false
+            },
+            {
+              "title": "Welcome Call",
+              "body": "The GoodLeap welcome call is completed via a Project Verification Survey. This is a video survey that will take a few minutes to complete. If failed, the customer will get an email detailing the corrections needed and a link to retake the survey.",
+              "highlight": false
+            },
+            {
+              "title": "NTP Requirements",
+              "body": "<ul><li><b>Utility Bill Review:</b> The bill needs to be dated within the last year, have at least one month of usage, a usage graph showing, and the service address needs to match what is in GoodLeap.</li><li><b>Project Verification Survey:</b> Needs to be completed and 100% correct.</li><li><b>ACH Verification:</b> Needs Autopay setup and ACH Validation needs to be approved by GoodLeap. <i>This is required.</i></li><li><b>Ownership Verification and Occupancy Verification</b> may also be applicable.</li></ul>",
+              "highlight": false
+            },
+            {
+              "title": "Max Offset",
+              "body": "Max approved offset is 110%. This can be increased to 150% with customer approval.",
+              "highlight": true
+            }
+          ]
+        },
+        {
+          "kind": "financier",
+          "id": "fin-lightreach",
+          "title": "LightReach (Palmetto)",
+          "meta": "Support: 855-339-1831",
+          "cards": [
+            {
+              "title": "Underwriting Requirements",
+              "body": "<b>FICO Requirements:</b> 670+ (680+ in FL and TX)<br><b>Credit Requirements:</b> No bankruptcies in the last 7 years<br><b>Credit approval</b> is valid 160 days after contract has been signed<br><b>Co-applicant</b> must be an immediate family member with their own email.",
+              "highlight": false
+            },
+            {
+              "title": "2nd Systems and Home Type",
+              "body": "2nd Systems are approved if they are entirely separate.<br><br><i>Approved Home Types:</i> Single Family, ADU, Detached garages. Townhomes, Duplex/Triplex homes are approved if the system is entirely installed on the customer's property (this means the meter must be on their property).",
+              "highlight": false
+            },
+            {
+              "title": "Change Order",
+              "body": "Any production change within -5% and +10 will need a new contract signed. Any address, utility, pricing, or customer name changes will also require a re-signature of the contract. If the system size changes 25% or more, re-signature will also be required.",
+              "highlight": false
+            },
+            {
+              "title": "Stipulations",
+              "body": "Stipulations will appear on a project by project basis.<br><b>CAR:</b> Customer will need to login to their portal to complete this.<br><b>Consumer Compliance:</b> A recorded welcome call will need to be submitted.",
+              "highlight": false
+            },
+            {
+              "title": "NTP Requirements",
+              "body": "<ul><li><b>Customer Account Creation:</b> The customer will receive an email to create the login to their customer portal.</li><li><b>ID Check:</b> Using the customer portal, the customer will need to upload a photo of their valid ID or passport.</li><li><b>Title Verification:</b> If this doesn't initially pass auto-verification, it will need to be cleared with a Deed/Deed of Trust, Recent property tax bill, or Mortgage statement dated within the last 60 days.</li><li><b>Valid Utility Bill:</b> Needs to be dated within the last 60 days; with the name and address, account balance, rate plan and usage clearly visible.</li></ul>",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "financier",
+          "id": "fin-enfin",
+          "title": "EnFin",
+          "meta": "Support: (833) 586-3675",
+          "cards": [
+            {
+              "title": "Underwriting Requirements",
+              "body": "<b>FICO Requirements:</b> 620+<br><b>Credit Check:</b> Hard credit pull at installation. Quantity and date of recent credit is checked. One applicant must be on the Title and BOTH must pass credit.<br><b>Credit approval</b> is valid for 180 days after initial approval",
+              "highlight": false
+            },
+            {
+              "title": "2nd Systems and Home Types",
+              "body": "2nd Systems are approved.<br><br><i>Approved Home Types:</i> Multi-unit, and manufactured with a permanent foundation.",
+              "highlight": false
+            },
+            {
+              "title": "Change Order",
+              "body": "In order to move the project toward installation, the proposal and plan set will be reviewed by EnFin. If production falls outside of tolerances (-3% or +10%), the customer will need to sign a change order form.",
+              "highlight": false
+            },
+            {
+              "title": "Welcome Call",
+              "body": "EnFin requires a Video Welcome call as well as a valid photo ID. The customer will need to have their camera enabled on the device and a good Wi-Fi connection. Video call should only take a few minutes and is completed from the portal.",
+              "highlight": false
+            },
+            {
+              "title": "NTP Requirements",
+              "body": "<ul><li><b>Utility bill:</b> Must be dated within the last 12 months. Service address and account number need to be visible on the bill. At least one month of usage must also be present. Utility payments cannot be past due.</li><li><b>Video Welcome Call:</b> The customer will need a valid photo ID, camera enabled on device and solid internet connection.</li><li><b>Proposal:</b> The proposal will need to be checked to verify that the production, consumption and Pre-Solar Rate are accurate.</li></ul>",
+              "highlight": false
+            },
+            {
+              "title": "Levelized PPA",
+              "body": "Monthly bill is based on estimated annual production instead of actual production.",
+              "highlight": false
+            },
+            {
+              "title": "Address Accuracy",
+              "body": "Address listed in EnFin must be correct. If the address is incorrect, the project will need to be cancelled and restarted.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "financier",
+          "id": "fin-sungage",
+          "title": "Sungage Financial",
+          "meta": "Support: 844-786-4243",
+          "cards": [
+            {
+              "title": "Underwriting Information",
+              "body": "<b>FICO Requirement:</b> 640+<br><b>Credit approval</b> is valid for 180 days before expiration<br><b>DTI</b> is not checked if the FICO is over 700<br><b>Co-Applicants</b> must reside on the property at least 50% of the year.",
+              "highlight": false
+            },
+            {
+              "title": "2nd Systems and Home Types",
+              "body": "2nd systems are approved if the system is entirely separate from the existing system.<br><br><i>Approved home types:</i> Multi-unit, second homes, and ground mounts.",
+              "highlight": false
+            },
+            {
+              "title": "Change Order",
+              "body": "<ol><li>If the homeowner has not signed the loan documents, changes to the term and interest rates can be made in the Sungage Homeowner Portal.</li><li>As soon as a change order is submitted for a new project, Sungage produces new loan docs and the homeowner can sign off on these documents in their Homeowner Portal.</li><li>Multiple change orders can be submitted until the homeowner confirms install.</li><li>If the homeowner has signed the loan documents, then a new contract needs to be uploaded to make a change.</li><li>A change order cannot be processed once the project is installed.</li></ol>",
+              "highlight": false
+            },
+            {
+              "title": "Welcome Call and Stips",
+              "body": "A welcome call will need to be completed through 844-SUNGAGE. Stipulations: Proof of ownership, Proof of ID, and Proof of Income may be required.",
+              "highlight": false
+            },
+            {
+              "title": "NTP Requirements",
+              "body": "<b>Proof of ID:</b> Driver's license or passport photo will need to be uploaded to the portal.<br><br><b>Complete Welcome Call:</b> Customer needs to call into the welcome call line to complete the Sungage welcome call.<br><br><b>Complete ACH Form:</b> Customer needs to opt in or out of autopay.<br><br>Complete any additional stipulations.",
+              "highlight": false
+            },
+            {
+              "title": "Sungage Brightstart DPP",
+              "body": "Low initial monthly payment. Payment can be deferred between 0–36 months.",
+              "highlight": false
+            },
+            {
+              "title": "Sungage Sunrise",
+              "body": "Solar escalator loan with a 2.9% annual payment designed to increase below typical utility rate.",
+              "highlight": false
+            },
+            {
+              "title": "Sungage Brightstart Level Pay",
+              "body": "Monthly payment will remain the same instead of increasing gradually.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "financier",
+          "id": "fin-paykeeper",
+          "title": "PayKeeper (Escrow)",
+          "meta": "Support: 801-406-6711",
+          "cards": [
+            {
+              "title": "What is PayKeeper?",
+              "body": "PayKeeper's Automated Escrow protects both the homeowner's payment and the project. Escrow is a neutral third party that holds funds securely until agreed-upon conditions are met, so the contractor can begin work with confidence they'll be paid on time, and the homeowner can relax knowing their money is safe until the work is done.",
+              "highlight": false
+            },
+            {
+              "title": "How It Works",
+              "body": "<ol><li><b>Create and Fund Your Account:</b> The homeowner's escrow account is held in their name and is FDIC-insured up to $250,000.</li><li><b>Payouts as Milestones Are Met:</b> PayKeeper verifies milestone completion before payments are sent to the contractor.</li><li><b>Homeowner Approves Final Payout:</b> Once the homeowner is satisfied and approves the last milestone, the final payment is released to the contractor.</li></ol>",
+              "highlight": false
+            },
+            {
+              "title": "FDIC Insurance & Licensing",
+              "body": "Funds are FDIC-insured up to $250,000. PayKeeper is a Licensed Escrow Agent, NMLS #2401821.",
+              "highlight": true
+            },
+            {
+              "title": "Contact PayKeeper",
+              "body": "Phone: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"tel:8014066711\">801-406-6711</a>",
+              "highlight": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "calc",
+      "label": "Calculator",
+      "hero": {
+        "title": "Calculator",
+        "subtitle": "Compare loan, lease/PPA, and cash options side by side. Enter the homeowner's system cost and approved rate, pick which financiers to compare, and show the 25-year bill picture."
+      },
+      "sections": [
+        {
+          "kind": "cards",
+          "title": "Comparison calculator",
+          "cards": [
+            {
+              "title": "Open the full calculator",
+              "body": "<p>The interactive financing comparison lives in the legacy guide — <a href=\"/sales-ops/resources.html#page-calc\">open it in a new tab</a>. A native version is on the roadmap once the inputs stabilize.</p>",
+              "highlight": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "adders",
+      "label": "Adders",
+      "hero": {
+        "title": "Adders Guide",
+        "subtitle": "What each adder is, why it's needed, and what's included. No pricing here; for current pricing, see the official adder sheet from Sales Ops."
+      },
+      "pills": [
+        {
+          "key": "all",
+          "label": "All"
+        }
+      ],
+      "sections": [
+        {
+          "kind": "cards",
+          "id": "adders-add_roof_structural",
+          "title": "Roof & Structural",
+          "cards": [
+            {
+              "title": "Roof Pitch ≥ 36° (9/12 pitch)",
+              "body": "<b>Why it's needed:</b> Steep roofs require additional fall-protection gear and slow the crew down significantly.<br><b>What's included:</b> Extra harnesses/roof jacks and the added labor time for a safe, steep-roof install.",
+              "highlight": false
+            },
+            {
+              "title": "Critter Guard",
+              "body": "<b>Why it's needed:</b> Open space under panels invites birds and rodents, which can chew wiring and cause damage or fire risk over time.<br><b>What's included:</b> Mesh guard material and installation around the full perimeter of the array.",
+              "highlight": false
+            },
+            {
+              "title": "Metal Roof",
+              "body": "<b>Why it's needed:</b> Metal roofing requires different mounting hardware and flashing than standard shingle roofs to avoid leaks and maintain warranty.<br><b>What's included:</b> Metal-roof-specific mounts, sealing, and the extra labor for that install method.",
+              "highlight": false
+            },
+            {
+              "title": "Tile Roof",
+              "body": "<b>Why it's needed:</b> Tile is fragile and requires careful removal/replacement plus specialized flashing (tile hooks) to avoid cracking tiles during install.<br><b>What's included:</b> Tile hooks/flashing and the added time this install method takes.",
+              "highlight": false
+            },
+            {
+              "title": "Flat Roof Ballast",
+              "body": "<b>Why it's needed:</b> Flat roofs have no pitch to rack panels against gravity, so the system needs to be weighted down instead of angled and bolted like a pitched roof.<br><b>What's included:</b> Ballasted (weighted) tilt-racking system so panels don't need roof penetrations for support.",
+              "highlight": false
+            },
+            {
+              "title": "Ground Mount (More or Less than 6kW)",
+              "body": "<b>Why it's needed:</b> Ground mounts need their own foundation, dedicated racking, and a trenched conduit run back to the home, none of which a roof mount requires.<br><b>What's included:</b> Foundation work, ground-mount racking, and the conduit run. Smaller systems (under 6kW) carry a higher per-watt rate since foundation/setup costs don't scale down with system size.",
+              "highlight": false
+            },
+            {
+              "title": "Site Survey",
+              "body": "<b>Why it's needed:</b> Some sites need a dedicated in-person technician visit beyond the standard remote/virtual assessment to confirm the project is feasible as designed.<br><b>What's included:</b> A technician site visit and the resulting documentation used to finalize design.",
+              "highlight": false
+            },
+            {
+              "title": "Multiple Planes (every plane over 3)",
+              "body": "<b>Why it's needed:</b> Each additional roof plane needs its own design pass, mounting layout, and wiring run; it isn't just \"more of the same.\"<br><b>What's included:</b> The added engineering and installation time for each plane beyond the third.",
+              "highlight": false
+            },
+            {
+              "title": "Small System (under 4.5kW / under 3kW)",
+              "body": "<b>Why it's needed:</b> Very small systems still carry the same fixed costs (permitting, crew mobilization, a site visit) that a larger system spreads across more watts.<br><b>What's included:</b> Covers those fixed project costs that a small system otherwise can't absorb on its own. Systems under 3kW also require Ops approval before they can be sold.",
+              "highlight": false
+            },
+            {
+              "title": "Reroof",
+              "body": "<b>Why it's needed:</b> If the existing roof needs to be replaced before solar can go on it, that work has to happen first and is scoped separately.<br><b>What's included:</b> Custom quoted based on the roofer's assessment of what the reroof requires.",
+              "highlight": false
+            },
+            {
+              "title": "Structural Upgrades",
+              "body": "<b>Why it's needed:</b> If the roof or attic framing can't support the added weight of the system, it needs to be reinforced to meet code and keep the install safe.<br><b>What's included:</b> Custom quoted based on the structural engineer's assessment.",
+              "highlight": false
+            },
+            {
+              "title": "Smoke Detectors",
+              "body": "<b>Why it's needed:</b> Some jurisdictions require code-compliant smoke detectors to be installed or updated as a condition of the solar permit.<br><b>What's included:</b> Included at no separate charge to the customer when the AHJ requires it.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-add_electrical",
+          "title": "Electrical",
+          "cards": [
+            {
+              "title": "⚠️ Before you add an electrical adder on a TPO deal",
+              "body": "On <b>Loan and Cash</b> deals, an electrical adder that turns out to be unneeded can simply be reallocated back to commission: quick and painless.<br><br>On <b>TPO deals (Lease/PPA)</b>, the financier underwrites and funds based on the full scope submitted. If an adder like an MPU isn't actually needed, it takes a formal change order to remove it, which is slow and a poor customer experience.<br><br><b>Rule of thumb:</b> don't add a \"just in case\" electrical adder to a TPO deal unless you're highly confident it's needed. If there's real uncertainty, submit without it and let Operations' site review confirm whether it's required before install.",
+              "highlight": true
+            },
+            {
+              "title": "MPU Avoidance (PCS)",
+              "body": "<b>Why it's needed:</b> A Power Control System lets the home safely add solar without needing a full Main Panel Upgrade.<br><b>What's included:</b> The PCS device and the labor to install it in place of a panel replacement.",
+              "highlight": false
+            },
+            {
+              "title": "Main Breaker Derate",
+              "body": "<b>Why it's needed:</b> Some panels can legally accommodate solar without a full upgrade if the main breaker is \"derated\" per code (NEC 120% rule).<br><b>What's included:</b> The engineering assessment and labor to perform the derate.",
+              "highlight": false
+            },
+            {
+              "title": "Relocate",
+              "body": "<b>Why it's needed:</b> Sometimes the electrical panel needs to physically move to make room for new solar equipment or meet code clearances.<br><b>What's included:</b> Labor and materials to relocate the panel.",
+              "highlight": false
+            },
+            {
+              "title": "Subpanel (incl. Colorado)",
+              "body": "<b>Why it's needed:</b> Added when the existing panel doesn't have room (breaker slots) for the new solar circuits.<br><b>What's included:</b> The subpanel itself and the wiring/labor to tie it in. Colorado has its own line item due to local code/labor differences.",
+              "highlight": false
+            },
+            {
+              "title": "AC Relocate (<10ft)",
+              "body": "<b>Why it's needed:</b> The AC disconnect or related equipment sometimes needs to move a short distance for code clearance or space reasons.<br><b>What's included:</b> Relocation labor for moves under 10 feet.",
+              "highlight": false
+            },
+            {
+              "title": "Meter Main Combo",
+              "body": "<b>Why it's needed:</b> Combines the meter and main panel into a single unit when the existing setup can't support a clean solar interconnection.<br><b>What's included:</b> The combo panel/meter unit and its installation.",
+              "highlight": false
+            },
+            {
+              "title": "Panel Upgrade/Replacement",
+              "body": "<b>Why it's needed:</b> The home's main service panel doesn't have the capacity, or is too outdated, to safely support the new solar system.<br><b>What's included:</b> A new panel and all associated labor to bring the service up to code.",
+              "highlight": false
+            },
+            {
+              "title": "Hawaiian Tie-In",
+              "body": "<b>Why it's needed:</b> A \"Hawaiian Tie-in\" is an electrical technique used to connect solar systems to older homes without costly main panel upgrades. It involves moving existing household load breakers from the main panel into a newly added subpanel. This clears the main panel's busbar so the solar inverter can connect directly to it.<br><b>What's included:</b> The specialized tie-in hardware and labor required.",
+              "highlight": false
+            },
+            {
+              "title": "Full Service Upgrade",
+              "body": "<b>Why it's needed:</b> The entire electrical service (panel, meter, and service entrance) needs upgrading to support the system, beyond what a simple panel swap covers.<br><b>What's included:</b> The complete service upgrade, materials and labor.",
+              "highlight": false
+            },
+            {
+              "title": "EV Combiner Box",
+              "body": "<b>Why it's needed:</b> Lets an EV charger circuit be safely added alongside the solar system's electrical scope.<br><b>What's included:</b> The combiner box and associated wiring.",
+              "highlight": false
+            },
+            {
+              "title": "EV Charger",
+              "body": "<b>Why it's needed:</b> Added when the customer wants a home EV charger installed as part of their project.<br><b>What's included:</b> The charger unit and its installation.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-add_trenching",
+          "title": "Trenching & Site Access",
+          "cards": [
+            {
+              "title": "Dirt < 50 Feet",
+              "body": "<b>Why it's needed:</b> Underground conduit is required to run power between a ground mount, detached structure, or subpanel and the home.<br><b>What's included:</b> Trenching and conduit placement in dirt for runs up to 50 feet.",
+              "highlight": false
+            },
+            {
+              "title": "Dirt > 50 Feet",
+              "body": "<b>Why it's needed:</b> Same as above, just a longer run; longer trenches take proportionally more crew time and equipment.<br><b>What's included:</b> A fixed base cost for the setup plus an incremental per-foot cost for footage beyond 50 feet.",
+              "highlight": false
+            },
+            {
+              "title": "Grass/Gravel/Rock",
+              "body": "<b>Why it's needed:</b> These surfaces are harder to trench through than plain dirt and may need different equipment or restoration after the work.<br><b>What's included:</b> Custom quoted based on the specific terrain and scope.",
+              "highlight": false
+            },
+            {
+              "title": "Asphalt/Concrete",
+              "body": "<b>Why it's needed:</b> Cutting through hardscape requires saw-cutting and patching/repair afterward, which dirt trenching doesn't.<br><b>What's included:</b> Custom quoted based on the cutting and patch-repair scope.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-add_travel",
+          "title": "Travel",
+          "cards": [
+            {
+              "title": "Zone 0 (0–59 Miles)",
+              "body": "<b>Why it's needed:</b> This is standard travel distance from the install hub, so no added travel cost applies.",
+              "highlight": false
+            },
+            {
+              "title": "Zone 1 (60–89 Miles)",
+              "body": "<b>Why it's needed:</b> Covers the crew's added drive time and fuel for mid-range jobs outside the standard service area.",
+              "highlight": false
+            },
+            {
+              "title": "Zone 2 (90+ Miles)",
+              "body": "<b>Why it's needed:</b> Covers the crew's added drive time, fuel, and other potentials cost incurred.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-add_batteries",
+          "title": "Batteries",
+          "cards": [
+            {
+              "title": "Enphase 5P Grid-Tied Battery (PV+Battery)",
+              "body": "<b>Why it's needed:</b> Lets a customer add battery storage alongside solar without full whole/partial-home backup capability; it's grid-tied only.<br><b>What's included:</b> One battery unit and installation. Each additional unit is priced as an add-on if more capacity is needed.",
+              "highlight": false
+            },
+            {
+              "title": "Enphase 5P Back Up Battery (PV+Battery)",
+              "body": "<b>Why it's needed:</b> Adds backup power capability so selected home circuits can stay powered during a grid outage.<br><b>What's included:</b> One backup-capable battery unit, plus the installation/configuration needed for backup functionality.",
+              "highlight": false
+            },
+            {
+              "title": "Enphase 10C (PV+Battery / Battery Only)",
+              "body": "<b>Why it's needed:</b> A higher-capacity all-in-one battery option for customers who want more storage than the 5P provides, sold either alongside new solar or as a standalone Battery-Only project.<br><b>What's included:</b> One battery unit, hardware, and installation.",
+              "highlight": false
+            },
+            {
+              "title": "Tesla PW3 (PV+Battery / Battery Only)",
+              "body": "<b>Why it's needed:</b> Tesla's Powerwall 3 as an alternative to Enphase storage, also available paired with new solar or as a standalone Battery-Only project.<br><b>What's included:</b> One Powerwall 3 unit, hardware, and installation. <i>Note:</i> PW3 currently must be paired with a supported inverter (see the Equipment Guide) since the built-in inverter configuration isn't yet supported.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-add_panels_equipment",
+          "title": "Panels & Equipment",
+          "cards": [
+            {
+              "title": "Standard Panels (JA 440)",
+              "body": "<b>Why it's needed:</b> This is the baseline panel option, used when the customer doesn't need a higher-wattage or Domestic Content panel.<br><b>What's included:</b> JA Solar 440W panels for the project.",
+              "highlight": false
+            },
+            {
+              "title": "Premium Panels (Non-DC REC 460s/470s)",
+              "body": "<b>Why it's needed:</b> For customers who want higher wattage/efficiency per panel (fewer panels for the same output), even though these don't qualify for the Domestic Content credit.<br><b>What's included:</b> REC 460W or 470W panels.",
+              "highlight": false
+            },
+            {
+              "title": "Domestic Content Panels (REC 460s/470s, Qcell 410s/430s)",
+              "body": "<b>Why it's needed:</b> These panels are manufactured to meet Domestic Content sourcing requirements, which can help the customer's system qualify for a larger federal tax credit (ITC) boost.<br><b>What's included:</b> The Domestic-Content-qualified panel at the selected wattage.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-add_smart_home",
+          "title": "Smart Home",
+          "cards": [
+            {
+              "title": "Vivint Smart Home – Essentials Basic Package",
+              "body": "<b>Why it's needed:</b> A lighter-weight smart home option for customers who want basic coverage. See the equipment guide for more details on what is contained.&nbsp;<br><b>What's included:</b> Vivint's Essentials-tier devices and service plan.",
+              "highlight": false
+            },
+            {
+              "title": "Vivint Smart Home – Savings Package",
+              "body": "<b>Why it's needed:</b> For customers who want to receive savings on their current Vivint services.<br><b>What's included:</b>&nbsp;Monthly discount on Vivint services",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "adders-adders_td68kfs",
+          "title": "Important Note",
+          "cards": [
+            {
+              "title": "A NOTE ON SCOPE",
+              "body": "SunPower reserves the right to pass through additional costs if, once work begins, more extensive upgrades or additional work are found to be required beyond what was originally scoped.",
+              "highlight": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "equipment",
+      "label": "Equipment",
+      "hero": {
+        "title": "Equipment Guide",
+        "subtitle": "Panels, inverters, batteries, and other equipment reference."
+      },
+      "pills": [
+        {
+          "key": "all",
+          "label": "All"
+        }
+      ],
+      "sections": [
+        {
+          "kind": "cards",
+          "id": "equip-eq_panels",
+          "title": "Panels",
+          "cards": [
+            {
+              "title": "Domestic Content Panels: REC Alpha Pure-RX-DC (460W/470W)",
+              "body": "<b>Overview:</b> The Domestic Content version of REC's Alpha Pure-RX line, same heterojunction (HJT) cell technology, assembled with domestic components.<br><br><b>Efficiency:</b> Up to 22.6%, same as the standard Pure-RX.<br><br><b>Warranty:</b> Same triple 25-year REC ProTrust warranty (product, power, and labor) when installed by an REC Certified Professional.<br><br><b>Domestic Content:</b> Compatible with AVLs indicating Domestic Content adder eligibility. Confirm the \"-DC\" product code is what's actually being quoted, the standard Pure-RX does not qualify.<br><br><b>Inverter Pairing:</b> Paired with Enphase IQ8X (DOM) Inverters<br><br><b>More:</b> <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blueravensolar-my.sharepoint.com/:b:/g/personal/colten_ellertson_sunpower_com/IQAlC46LE_TGQIeS9PGHHVpYAVEIpwNBhE5iRi1vdx2ImCU?e=YCBXg8\" target=\"_blank\" rel=\"noopener\">REC Sales Deck</a>",
+              "highlight": true
+            },
+            {
+              "title": "Standard Panels: JA Solar 440W",
+              "body": "<b>Overview:</b> JA Solar's Deep Blue 4.0 Pro n-type bifacial panel (JAM54D41 MB), the baseline option when a customer doesn't need higher wattage or Domestic Content eligibility.<br><br><b>Efficiency:</b> 21.3% to 22.5% depending on wattage (415W to 440W).<br><br><b>Warranty:</b> 25-year product warranty and a 30-year linear power warranty, with 87.4% output still guaranteed at year 30.<br><br><b>Best fit:</b> A dependable, budget-friendly baseline for standard installs.<br><br><b>Inverter Pairing:</b><span> Paired with Enphase IQ8MC Inverters</span>",
+              "highlight": false
+            },
+            {
+              "title": "Premium Panels: REC 460W / 470W (Non-DC)",
+              "body": "<b>Overview:</b> REC's Alpha Pure-RX line, using heterojunction (HJT) cell technology, one of the highest-efficiency panels on the market.<br><br><b>Efficiency:</b> Up to 22.6%.<br><br><b>Warranty:</b> Triple 25-year REC ProTrust warranty (product, power, and labor) when installed by an REC Certified Professional, with over 92% power still guaranteed in year 25.<br><br><b>Durability:</b> Rated to withstand 55mm hail, worth mentioning in hail-prone markets.<br><br><b>Domestic Content:</b> Not eligible for the ITC boost. See the Pure-RX-DC card below for the domestic content version of this same panel.<br><br><b>Inverter Pairing:</b><span> Paired with Enphase IQ8X Inverters</span>",
+              "highlight": false
+            },
+            {
+              "title": "Domestic Content Panels: Qcell (410W/430W)",
+              "body": "<b>Overview:</b> Two Qcells lines depending on the wattage quoted.<br><br><b><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blueravensolar-my.sharepoint.com/:b:/g/personal/colten_ellertson_sunpower_com/IQDGEZBxz1hySpN2OFAztLn1AXUyTSokw0b8_mSo-jge600?e=xY1DH1\" target=\"_blank\" rel=\"noopener\">410W</a>:</b> Q.PEAK DUO BLK ML-G10+ line (395W to 420W range), up to 21.4% efficiency.<br><br><b><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blueravensolar-my.sharepoint.com/:b:/g/personal/colten_ellertson_sunpower_com/IQDd1lWvh7B8RJsckIuotMk2AduBILJO9_J7A-XY-bvhyKM?e=x2ocNp\" target=\"_blank\" rel=\"noopener\">430W</a>:</b> Q.TRON BLK M-G2+ line (420W to 440W range), up to 22.5% efficiency.<br><br><b>Warranty:</b> 25-year product and performance warranty on both lines.<br><br><b>Domestic Content:</b> Only the \"Y\" suffix SKUs (C, D, or H) qualify for the Domestic Content adder. Always confirm the specific SKU quoted is the domestic content version.<br><br><b>Inverter Pairing:</b><span> Paired with Enphase IQ8HC Inverters</span>",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "equip-eq_batteries",
+          "title": "Batteries",
+          "cards": [
+            {
+              "title": "Enphase 10C: PV+Battery or Battery Only",
+              "body": "<b>Overview:</b> A higher-capacity all-in-one option. Can be sold with new solar or as a standalone Battery-Only project.<br><br><b>Capacity &amp; Output:</b> 10.0 kWh usable capacity, up to 7.08 kVA continuous output.<br><br><b>Warranty:</b> 15 years.<br><br><b>Install note:</b> Ships as two 5 kWh units (about 126 lbs each) rather than one large battery, noticeably easier to carry and mount than a single big unit.<br><br><b>More:</b> <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blueravensolar-my.sharepoint.com/:b:/g/personal/colten_ellertson_sunpower_com/IQC-LKS88VRsRIRJCgp1eHTqAYSOviuNGsxzwzIkcbUAwz4?e=p2Dn6N\" target=\"_blank\" rel=\"noopener\">10C Details</a>",
+              "highlight": true
+            },
+            {
+              "title": "Enphase 5P: Grid-Tied or Backup",
+              "body": "<b>Overview:</b> Available as a Grid-Tied unit (storage only, no outage backup) or a Back Up unit (keeps selected circuits powered during an outage). Additional units can be added for more capacity.<br><br><b>Capacity &amp; Output:</b> 5.0 kWh usable capacity, up to 3.84 kVA continuous output (240V).<br><br><b>Warranty:</b> 15 years.<br><br><b>Chemistry:</b> Cobalt-free lithium iron phosphate (LFP), a safer chemistry than standard lithium-ion.<br><br><b>More:</b> <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blueravensolar-my.sharepoint.com/:b:/g/personal/colten_ellertson_sunpower_com/IQB1T3OP-MsJSKgodAI5uXZNAc-_-frFUZvtaFpb9YXT8MM?e=Jn4Qhg\" target=\"_blank\" rel=\"noopener\">5P Details</a>",
+              "highlight": false
+            },
+            {
+              "title": "Tesla Powerwall 3 (PW3): PV+Battery or Battery Only",
+              "body": "<b>Availability:</b> Launched across all SunPower markets. Can be sold as a battery-only attachment (no solar) or paired with a new PV system.<br><br><b>Capacity &amp; Output:</b> 13.5 kWh of storage and up to 11.04 kW continuous AC output per unit (up to 15.4 kW peak). Up to 4 units can be stacked together.<br><br><b>Warranty:</b> 10 years, shorter than Enphase's 15-year battery warranty, worth setting expectations on with the customer.<br><br><b>Inverter requirement:</b> The Powerwall 3 built-in inverter is <u>not yet supported</u> in Enerflo. Until that support is released, PW3 must be paired with a separate, supported inverter (currently Enphase).<br><br><b>Sizing:</b> With an Enphase inverter, one Powerwall unit supports up to 7.65 kW AC of solar before an additional battery unit is required (each added unit supports another 7.65 kW). Once the Tesla built-in inverter is available, one unit will support up to 20 kW DC across 3 MPPTs, with additional units needed in 20 kW DC increments.<br><br><b>Backup requirement:</b> Backup/outage functionality requires a Backup Gateway 2.<br><br><b>Domestic Content impact (Sunrun &amp; LightReach financing):</b> Pairing PW3 with the Tesla built-in inverter is <u>not</u> eligible for the Panel Domestic Content boost (Storage DC boost still applies). Pairing PW3 with Enphase microinverters keeps both the Panel <i>and</i> Battery Domestic Content boosts.",
+              "highlight": false
+            },
+            {
+              "title": "Battery-Only Proposals",
+              "body": "<b>Process:</b> Battery-only deals follow a dedicated Enerflo workflow, set Installer to \"SunPower\" and Deal Template to \"SunPower - Battery Only\" when starting the deal.<br><br><b>Status:</b> This is a temporary interim process while the formal Merdeka training is updated; check with Sales Ops for the current step-by-step.",
+              "highlight": false
+            },
+            {
+              "title": "WHERE BATTERIES CAN GO",
+              "body": "Batteries can be installed indoors or outdoors — indoors (like the garage) is preferred when the space qualifies (fire-rated drywall + self-closing fire door), since it's better protected from extreme temperatures. California is the common exception, where outdoor installs are typical. Avoid south-facing walls outdoors. In cold weather, the battery will shut down at -4°F to protect itself, and at -13°F the cells can suffer permanent damage that isn't covered under warranty. In very cold markets (below -13°F) without an insulated space, the location may not qualify at all.",
+              "highlight": false
+            },
+            {
+              "title": "HOW MANY BATTERIES DO I NEED?",
+              "body": "Simple rule of thumb for the Enphase 10C: one battery covers everyday circuits plus most small AC units; two batteries doubles that coverage and handles larger/multiple AC units; three or four batteries can cover any load in the home and add extra runtime. Exact amperage specs in the below link",
+              "highlight": false
+            },
+            {
+              "title": "WHAT'S THE METER COLLAR?",
+              "body": "A small adapter installed between the utility meter and the panel that can enable whole-home backup without needing a separate backup load panel. During an outage it disconnects the home from the grid so the battery can safely power it, then reconnects automatically once utility power is back.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "equip-eq_inverters",
+          "title": "Inverters",
+          "cards": [
+            {
+              "title": "Enphase Microinverters",
+              "body": "<b>Overview:</b> The currently supported inverter pairing for battery setups, including Tesla Powerwall 3, until Tesla's built-in inverter is released in Enerflo.<br><br><b>Warranty:</b> 25 years, industry-leading, versus 10 to 15 years for typical string inverters.<br><br><b>Key advantage:</b> Each panel operates independently, so one issue doesn't take down the whole array. IQ8 models also enable Sunlight Backup: essential loads like lights, fans, and phones can run during a daytime outage even without a battery, something string inverters can't do.<br><br><b>More:</b> <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blueravensolar-my.sharepoint.com/:b:/g/personal/colten_ellertson_sunpower_com/IQAZTbF8kH5CSaIXkrWN5duVATJT-NHgIeozlUVUqOVan9A?e=QGQCZl\" target=\"_blank\" rel=\"noopener\">IQ Microinverter Advantage</a>",
+              "highlight": false
+            },
+            {
+              "title": "Tesla Built-In Inverter (future state)",
+              "body": "<b>Status:</b> Not yet available. Enerflo support is in development.<br><br><b>Specs (once available):</b> Will support up to 20 kW DC of solar per unit across 3 MPPTs, with additional units required in 20 kW DC increments for larger systems.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "equip-eq_ev_chargers",
+          "title": "EV Chargers",
+          "cards": [
+            {
+              "title": "EV Charger",
+              "body": "<b>Overview:</b> A home EV charger installed as part of the project when requested by the customer.<br><br><b>Charging:</b> If quoting Enphase's IQ EV Charger 2, configurable 6 to 32A charging, up to 7.4 kW.<br><br><b>Warranty:</b> 5 years.<br><br><b>Key advantage:</b> Dynamic load balancing adjusts charging power to the home's actual usage, often avoiding the need for a panel upgrade.",
+              "highlight": false
+            },
+            {
+              "title": "EV Combiner Box (Enphase IQ Combiner)",
+              "body": "<b>Overview:</b> This is Enphase's IQ Combiner, not an EV-specific box. It's a single enclosure that consolidates connections for solar, battery, and an EV charger, so separate junction boxes aren't needed.<br><br><b>Key advantage:</b> Integrated current transformers (CTs) and enhanced PLC communication reduce installation complexity and wiring time, saving labor and creating a cleaner, faster setup. Also supports load control for smarter energy management.<br><br><b>Compatibility:</b> The IQ Combiner 6C pairs with the IQ Battery 10C; the IQ Combiner 5C pairs with the IQ Battery 5P. Confirm which combiner matches the battery being quoted.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "equip-eq_racking",
+          "title": "Racking & Mounting",
+          "cards": [
+            {
+              "title": "Standard Roof Mount",
+              "body": "<b>Use case:</b> Used for most comp-shingle roof installs.<br><br><b>Note:</b> Metal and tile roofing require different, roof-specific mounting hardware (see the Adders Guide).",
+              "highlight": false
+            },
+            {
+              "title": "Flat Roof Ballast System",
+              "body": "<b>Use case:</b> Used on flat roofs with no pitch.<br><br><b>How it works:</b> Panels are held down with weighted ballast instead of angled and penetration-mounted.",
+              "highlight": false
+            },
+            {
+              "title": "Ground Mount",
+              "body": "<b>Use case:</b> Used when the roof can't support solar or the customer prefers ground placement.<br><br><b>Requirements:</b> Requires its own foundation, racking, and a trenched conduit run to the home.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "equip-eq_smart_home",
+          "title": "Smart Home",
+          "cards": [
+            {
+              "title": "Vivint Smart Home: Essentials Basic Package",
+              "body": "<b>Best fit:</b> Customers who want a fuller smart home security/automation bundle alongside their solar install.<br><b>Included:</b> One year of Vivint service, the Vivint Smart Hub, four door/window sensors, a doorbell camera, and a smart thermostat.",
+              "highlight": false
+            }
+          ]
+        },
+        {
+          "kind": "cards",
+          "id": "equip-eq_additional_resources",
+          "title": "Additional Resources",
+          "cards": [
+            {
+              "title": "Enphase Brochure",
+              "body": "General Enphase brand overview. Good leave-behind when the customer wants the big picture on the equipment brand.",
+              "highlight": false
+            },
+            {
+              "title": "Enphase Energy System",
+              "body": "How the full stack works together: microinverters, battery, and combiner as one system.",
+              "highlight": false
+            },
+            {
+              "title": "Enphase Energy System Configurations",
+              "body": "System layout options for solar-only, solar plus battery, and backup configurations.",
+              "highlight": false
+            },
+            {
+              "title": "Enphase Stats",
+              "body": "Company reliability and track record numbers. Useful when a customer asks whether the brand will be around for the warranty.",
+              "highlight": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "faqs",
+      "label": "FAQs",
+      "hero": {
+        "title": "FAQs",
+        "subtitle": "Sales rep reference"
+      },
+      "pills": [
+        {
+          "key": "all",
+          "label": "All"
+        }
+      ],
+      "sections": [
+        {
+          "kind": "faq",
+          "title": "FAQs",
+          "content": {
+            "items": [
+              {
+                "id": "faq-faq_pj3vk8k",
+                "question": "What's the difference between a lease and a PPA?",
+                "answer": "Both are TPO (third-party-owned) products: a financier owns the system, not the homeowner. A <b>lease</b> charges a fixed monthly payment for use of the system regardless of how much it actually produces. A <b>PPA</b> charges the homeowner per kWh the system actually produces, so the bill scales up or down with production. Neither one makes the homeowner eligible for the federal tax credit, since they don't own the system."
+              },
+              {
+                "id": "faq-faq_maegwar",
+                "question": "What is Concert Propel?",
+                "answer": "Propel pairs an Energy Services Agreement (ESA) with a loan to give the homeowner one predictable monthly payment, plus an Early Buyout Option (EBO). See the Finance Resource Guide's Concert one-pager for full underwriting details."
+              },
+              {
+                "id": "faq-faq_gjhbl2a",
+                "question": "What is an Early Buyout Option (EBO)?",
+                "answer": "An EBO lets the customer buy out the system at set milestones in the contract (for example, years 5, 6.5, and 8 on Concert Propel) instead of continuing payments through the full term."
+              },
+              {
+                "id": "faq-faq_hb7ww30",
+                "question": "Why do some financiers cap the monthly payment instead of the system price?",
+                "answer": "Financiers like LightReach underwrite around affordability, not just system cost, so instead of a hard dollar cap on system price, they cap what the monthly payment can be (e.g., LightReach caps around $500/month) regardless of system size."
+              },
+              {
+                "id": "faq-faq_0ygvzoh",
+                "question": "What is \"Domestic Content\" and why does it matter to a deal?",
+                "answer": "Domestic Content refers to panels (and other equipment) manufactured to meet U.S. sourcing requirements. Systems built with qualifying Domestic Content equipment can be eligible for an additional boost on top of the base federal tax credit. This only matters for TPO systems, since loan/cash customers no longer receive a tax credit."
+              },
+              {
+                "id": "faq-faq_0e1m88z",
+                "question": "Does a lease or PPA customer get the federal tax credit?",
+                "answer": "No. In a TPO deal (lease or PPA), the financier owns the system and is the one eligible to claim any tax credit, not the homeowner."
+              },
+              {
+                "id": "faq-faq_sutcmff",
+                "question": "Do all battery/inverter combinations qualify for the Domestic Content boost?",
+                "answer": "No, it depends on the equipment pairing. For example, pairing a Tesla Powerwall 3 with its own built-in inverter is <u>not</u> eligible for the Panel Domestic Content boost (though the Storage boost still applies), while pairing PW3 with Enphase microinverters keeps <i>both</i> the Panel and Battery Domestic Content boosts intact."
+              },
+              {
+                "id": "faq-faq_9zixfp4",
+                "question": "Which panels currently qualify as Domestic Content?",
+                "answer": "Per the current adder sheet: REC 460W/470W and Qcell 410W/430W panels are the Domestic-Content-qualified options. Standard JA 440W and non-DC REC panels do not qualify."
+              },
+              {
+                "id": "faq-faq_hbou94s",
+                "question": "Why can't we just remove an unused MPU adder on a TPO deal the way we do on loan/cash?",
+                "answer": "On loan/cash deals, there's no financier funding the project, so an adder that turns out to be unneeded can simply be reallocated back to commission. TPO deals are underwritten and funded based on the <i>full scope submitted</i>, so removing scope after the fact requires a formal change order to the financier, which is slower and creates friction."
+              },
+              {
+                "id": "faq-faq_hywqgim",
+                "question": "I'm not sure if a TPO deal needs an electrical upgrade. What should I do?",
+                "answer": "Don't add it \"just in case.\" Submit the deal on TPO financing without the adder, and let Operations' standard site review confirm whether it's actually required. It's far less painful to add a confirmed requirement afterward (via change order, before install) than to try to remove an unconfirmed one after the fact."
+              },
+              {
+                "id": "faq-faq_n3uezbf",
+                "question": "Can I sell a Tesla Powerwall 3 with its built-in inverter?",
+                "answer": "Not yet. Enerflo doesn't support that configuration. Until it does, PW3 has to be paired with a separate supported inverter (currently Enphase)."
+              },
+              {
+                "id": "faq-faq_5ikschq",
+                "question": "How much solar can one Tesla Powerwall 3 support?",
+                "answer": "Paired with an Enphase inverter, one PW3 unit supports up to 7.65 kW AC of solar before a second battery unit is required (each additional unit adds another 7.65 kW). Once Tesla's built-in inverter is supported, one unit will support up to 20 kW DC instead."
+              },
+              {
+                "id": "faq-faq_2n9e5qn",
+                "question": "What's the difference between a \"PV+Battery\" and a \"Battery Only\" adder line?",
+                "answer": "\"PV+Battery\" pricing applies when the battery is being added alongside a new solar system on the same deal. \"Battery Only\" applies when the battery is being sold as a standalone project, with no new solar attached."
+              },
+              {
+                "id": "faq-faq_xd6w6nr",
+                "question": "Which financiers are \"integrated\" in Enerflo vs. which need their own portal?",
+                "answer": "Integrated financiers (like Lightreach and Paykeeper) are run entirely inside Enerflo. Non-integrated financiers (like Concert) require navigating out to their own portal to complete financing steps, then bringing the resulting numbers back into Enerflo."
+              },
+              {
+                "id": "faq-faq_u1jhr3p",
+                "question": "What generally needs to happen before a project gets NTP (Notice to Proceed)?",
+                "answer": "It varies by financier, but generally: a signed contract, an approved system design, and any required stipulations (ID verification, a utility bill, sometimes a welcome call). Check the financier's one-pager in the Finance Resource Guide for the exact list."
+              },
+              {
+                "id": "faq-faq_rp4f4b0",
+                "question": "What is Recheck Certified, and do I need it?",
+                "answer": "It's an industry credential (built on the existing Recheck ID system) that Lightreach now requires for reps selling in IL, MI, PA, and TX, effective August 1, 2026. It requires signing a code of conduct, passing a background check, and completing ethics training. Even reps outside those four states are encouraged to get certified early since the requirement is expected to expand to more states and financiers through 2026."
+              },
+              {
+                "id": "faq-faq_qvf7n86",
+                "question": "What happens if a certified rep gets a misconduct report?",
+                "answer": "Certification isn't a one-time event: certified reps are continuously monitored, and unresolved misconduct reports can result in loss of Recheck Certified status."
+              },
+              {
+                "id": "faq-faq_2c9ktsj",
+                "question": "How do I locate my user access in Enerflo?",
+                "answer": "In the left corner of the Enerflo home page, click \"Your Roles.\" It will show all the roles and access you have in Enerflo.<br><br>Need help? Email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a>, call (855) 522-3996, or text (855) 676-6344."
+              },
+              {
+                "id": "faq-faq_vhgdb9i",
+                "question": "Where can I check for account progression?",
+                "answer": "<b>Pre-sale</b> (contract not yet signed, deal not submitted): check the customer's progress on Enerflo's \"Deals\" page. Email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a> or call (855) 522-3996 if you run into trouble.<br><br><b>Post-sale</b> (contract signed, deal submitted): check project progression on Merdeka. Email the relevant CSM team (e.g. <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:csm.sunpower@sunpower.com\">csm.sunpower@sunpower.com</a>) or call (833) 380-9751.<br><br>You can find the account by searching the customer's name or site address. Either way, you can also text (855) 676-6344."
+              },
+              {
+                "id": "faq-faq_la4fj6d",
+                "question": "How do I make a design in Aurora?",
+                "answer": "From the \"Designs\" stage of the customer's Enerflo deal page, click \"New Design,\" then choose \"Aurora Design.\" This creates a new design account for the customer's house in Aurora. Click \"Sales Mode\" to get pushed into the Aurora platform and start the design.<br><br>Once in Aurora, choose \"Run Aurora AI Roof\" to design it yourself, or \"Request Expert Model\" to have Aurora's design team build an initial design (about 30 minutes), which you can then adjust manually.<br><br>For help inside Aurora, click the \"(?)\" icon in the top right and choose \"Live Chat.\""
+              },
+              {
+                "id": "faq-faq_fysqfyt",
+                "question": "Where do I find information on funding with LightReach?",
+                "answer": "Check LightReach's <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://help.palmetto.finance/en/\" target=\"_blank\" rel=\"noopener\">Palmetto Installer Guides</a> page. You can also use their chatbot (bottom right of the page) or email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:help@palmetto.com\">help@palmetto.com</a>."
+              },
+              {
+                "id": "faq-faq_wjlj5qs",
+                "question": "Which types of roofs can we install on for which financiers?",
+                "answer": "For <b>LightReach</b>, eligible home and roof types are strictly defined, they're generally our tightest constraint on approved roof types. See their <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://help.palmetto.finance/en/articles/8708580-solar-energy-plan-eligible-sites\" target=\"_blank\" rel=\"noopener\">Eligible Sites Documentation</a> for specifics.<br><br>For <b>all other financiers</b>, we have significantly more flexibility. Installs are generally fine as long as the roof passes a standard structural review, though prefabricated/manufactured homes frequently don't meet that bar. Outside of those exceptions and highly unconventional roof designs, most roofing materials are workable.<br><br>Still unsure? Email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a> or text (855) 676-6344."
+              },
+              {
+                "id": "faq-faq_ayh36p0",
+                "question": "Which home types can we install on for which financiers?",
+                "answer": "Residential, single-family homes are approved with all financiers. Detached garages/guest suites, duplexes/triplexes, and Accessory Dwelling Units (ADUs) are approved when conditions are met. Townhomes are approved specifically with Palmetto LightReach and Concert Propel.<br><br>The customer must own the property, and it must be built on a permanent foundation.<br><br>For more confirmation, email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a> or text (855) 676-6344."
+              },
+              {
+                "id": "faq-faq_xw67tz1",
+                "question": "What are the headshot guidelines for onboarding?",
+                "answer": "A clear photo of the rep's face looking directly at the camera. No other people in the photo, no inappropriate clothing or behavior, no filters, and not a mirror photo. It doesn't need to be cropped to avoid a busy background.<br><br>Questions? Email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:saleshr@sunpower.com\">saleshr@sunpower.com</a>."
+              },
+              {
+                "id": "faq-faq_rl3mybd",
+                "question": "Soft Credit Check vs Hard Credit Check?",
+                "answer": "All financiers feature a soft credit check, with no impact to the homeowner's credit score. The PPA also does not report as debt. There is no consequence to simply seeing if a homeowner qualifies."
+              },
+              {
+                "id": "faq-faq_wdbx6pk",
+                "question": "Homeowner has frozen credit?",
+                "answer": "The homeowner must unfreeze directly with the bureau(s) before proceeding.<br>"
+              },
+              {
+                "id": "faq-faq_2cyyeax",
+                "question": "Credit Results: Applicant Not Found",
+                "answer": "This typically happens when only the last 4 SSN digits were used. Retry with the full SSN (still a soft check, no impact). In some cases, homeowners with no credit history may not return a result at all."
+              },
+              {
+                "id": "faq-faq_ah05np4",
+                "question": "Credit Results: Error",
+                "answer": "Special characters in the application cause errors (commas, periods, asterisks, hyphens, etc.).<br>Acceptable: \"St Petersburg\" or \"Saint Petersburg\"<br>Unacceptable: \"St. Petersburg\""
+              },
+              {
+                "id": "faq-faq_fvvuhmf",
+                "question": "Can a customer re-apply after their score improves?",
+                "answer": "Customers can re-apply at any time as credit reports update periodically. However, very recent changes may not be immediately reflected after a credit event."
+              },
+              {
+                "id": "faq-faq_nlhbclp",
+                "question": "Is ITIN accepted?",
+                "answer": "No, ITIN is not accepted for credit applications."
+              },
+              {
+                "id": "faq-faq_fcl53y0",
+                "question": "Can recent credit inquiries hurt qualification?",
+                "answer": "No. The credit check is a soft pull with no impact. Recent inquiries on the homeowner's personal credit report won't affect approval."
+              },
+              {
+                "id": "faq-faq_j9azm8n",
+                "question": "What if the homeowner disputes a bureau's information?",
+                "answer": "If a homeowner disputes information on their credit report, they must contact the bureau directly. We pull current bureau data. Disputes must be resolved with the bureau before reapplying."
+              },
+              {
+                "id": "faq-faq_36jveqi",
+                "question": "Can we override a failed credit check?",
+                "answer": "No. Credit decisions are automated based on FICO score. There is no manual override for credit rejection if the score falls below minimum thresholds."
+              },
+              {
+                "id": "faq-faq_w1iyrda",
+                "question": "What's the difference between primary and co-applicant?",
+                "answer": "Primary Applicant: Account holder, receives email communications, appears first on documents.<br>Co-Applicant: Second owner on title, shares liability, their higher FICO score is used for payment cap if applicable."
+              },
+              {
+                "id": "faq-faq_tpfrsks",
+                "question": "Can we pull credit without the customer's knowledge?",
+                "answer": "No. Credit pulls require proper authorization and should only be run with customer consent."
+              },
+              {
+                "id": "faq-faq_f4j410n",
+                "question": "What email domain should primary applicant use?",
+                "answer": "Any valid email domain is acceptable. Gmail, Outlook, corporate emails, etc. are all fine. The email is where they receive the credit decision."
+              },
+              {
+                "id": "faq-faq_y8i1685",
+                "question": "Can a business apply for residential solar?",
+                "answer": "No. Residential solar is for individuals and primary residences, secondary homes, or investment properties owned by real people, not businesses."
+              },
+              {
+                "id": "faq-faq_p2ll1aq",
+                "question": "Do all owners on title need to sign?",
+                "answer": "Yes. If multiple people are on the deed, ALL owners must sign the contract. This protects the financier's lien position."
+              },
+              {
+                "id": "faq-faq_m0x5nih",
+                "question": "Can a HOA prevent solar installation?",
+                "answer": "HOAs can impose rules, but we still finance the system. HOA approval is the customer's responsibility; we require property eligibility, not HOA approval."
+              },
+              {
+                "id": "faq-faq_go5q90o",
+                "question": "Is a utility bill required for 2026 onward?",
+                "answer": "Yes, as of 2026 mandate. A recent utility bill is required to verify property address and current usage."
+              },
+              {
+                "id": "faq-faq_l2ma4ew",
+                "question": "What happens to the PPA/Lease if the customer moves?",
+                "answer": "Assumption is required. The new homeowner must assume the agreement. This is handled by the servicer (LightReach, etc.)."
+              },
+              {
+                "id": "faq-faq_j46skkm",
+                "question": "Who do I contact for login or portal access issues?",
+                "answer": "Call or text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a><br>This covers Enerflo, Aurora, Financier portals, and Merdeka login issues."
+              },
+              {
+                "id": "faq-faq_e1nkioh",
+                "question": "Who do I contact for project updates after signing?",
+                "answer": "Go to Merdeka &gt; Projects and use the Project Chat (~2-4 min response).<br>Alternatively:<br>• Phone: 833-380-9751<br>• Text: 855-676-6344<br>• Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:csm.sunpower@sunpower.com\">csm.sunpower@sunpower.com</a>"
+              },
+              {
+                "id": "faq-faq_3syl3ne",
+                "question": "Who do I contact for adder or change order questions?",
+                "answer": "Check Merdeka &gt; Project Details first.<br>For adder questions: Project Chat in Merdeka is fastest.<br>For change orders: Email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:ChangeOrders@sunpower.com\">ChangeOrders@sunpower.com</a><br>Phone: 833-380-9751"
+              },
+              {
+                "id": "faq-faq_lgdr382",
+                "question": "Who handles commission questions?",
+                "answer": "Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:Commissions@sunpower.com\">Commissions@sunpower.com</a>"
+              },
+              {
+                "id": "faq-faq_wlv8brl",
+                "question": "What is the general escalation process?",
+                "answer": "1st escalation: Sales Manager<br>2nd escalation: Sales Support<br>Sales Support: Call or text 855-676-6344"
+              },
+              {
+                "id": "faq-faq_r7y182i",
+                "question": "Who do I contact for site survey scheduling?",
+                "answer": "If you're not completing the site survey yourself:<br>Phone: 385-206-3409<br>For site survey training, see Enerflo -&gt; Deal -&gt; Site Survey -&gt; Site Survey Guide"
+              },
+              {
+                "id": "faq-faq_2954o2k",
+                "question": "Who do I contact for equipment or market questions?",
+                "answer": "Sales Support: Call or text 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a><br>Mon-Fri &amp; Sat: 8 AM - 9 PM MDT | Sun: 8 AM - 5 PM MDT"
+              },
+              {
+                "id": "faq-faq_bpjte7f",
+                "question": "What's the fastest way to get help with a deal issue?",
+                "answer": "Use Enerflo Chat or Aurora Chat while working (in-app). For post-signature updates: Merdeka Project Chat. For escalations: Sales Support phone/text."
+              },
+              {
+                "id": "faq-faq_6652hse",
+                "question": "Can I contact Enerflo support directly?",
+                "answer": "Yes. Enerflo has in-app chat support for design, shading, errors, and deal submission questions. Use the chat feature in Enerflo."
+              },
+              {
+                "id": "faq-faq_iyzjves",
+                "question": "Where do I find my commission statement?",
+                "answer": "Email <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:Commissions@sunpower.com\">Commissions@sunpower.com</a> or check your payroll stub. Commission splits are tied to M1 submission date."
+              },
+              {
+                "id": "faq-faq_n61yvsp",
+                "question": "Who schedules the site survey?",
+                "answer": "You typically schedule it yourself through the portal. If you need scheduling assistance:<br>Phone: 385-206-3409<br>Mon-Fri: 8 AM - 5 PM MST"
+              },
+              {
+                "id": "faq-faq_77qd201",
+                "question": "What if a customer has questions about their PPA/Lease?",
+                "answer": "Direct them to their servicer (LightReach, Sunlight, Concert, etc.) once signed. Before signing, you answer product questions."
+              },
+              {
+                "id": "faq-faq_k6di1cj",
+                "question": "Can a battery be installed outside?",
+                "answer": "Yes. Batteries can go indoors or outdoors depending on the home, local requirements, and climate. Indoors (like the garage) is usually preferred since it's better protected from extreme temperatures&nbsp; but California is a common exception, where outdoor installs are typical.<br><br><span>Avoid south-facing walls without approval — they see the most direct sun and heat exposure. If the battery gets too hot, it may reduce charging or temporarily shut down to protect itself, then resume automatically once it cools back down</span>"
+              },
+              {
+                "id": "faq-faq_0a0as16",
+                "question": "What are the requirements for an indoor battery installation?",
+                "answer": "The room needs fire-rated drywall and a fire-rated, self-closing door. In newer homes, the garage usually already meets this, which is why it's the go-to indoor location when available."
+              },
+              {
+                "id": "faq-faq_bi2db5a",
+                "question": "What temperatures can the battery handle?",
+                "answer": "It performs best between 32°F and 86°F, and charges fastest between 59°F and 113°F. Outside those ranges, charging performance can drop. In very cold conditions the battery will shut down to protect itself (-4°F), and in very extreme cold (-13°F), permanent damage can occur that isn't covered under warranty. So in cold-climate markets, the installation location matters.&nbsp;"
+              },
+              {
+                "id": "faq-faq_g6utw27",
+                "question": "How many Enphase 10C batteries does a customer need to back up their home?",
+                "answer": "It depends on their electrical loads. As a simple guide: one battery covers everyday circuits plus most small AC units; two batteries cover larger loads and bigger or multiple AC units; three or four batteries can cover any load in the home and add extra runtime during an outage. Exact sizing is confirmed by Design/Ops based on the home's specific breakers and AC unit."
+              },
+              {
+                "id": "faq-faq_nwxm5dt",
+                "question": "What is the Enphase Meter Collar, and why does it matter?",
+                "answer": "It's a device installed between the utility meter and the home's panel that can enable whole-home battery backup without needing a separate backup load panel. During an outage, it disconnects the home from the grid so the battery can safely power it, then reconnects automatically once utility power is restored."
+              },
+              {
+                "id": "faq-faq_rw7tr66",
+                "question": "How should I describe backup coverage to a customer before the design is finalized?",
+                "answer": "Keep it simple and don't overpromise — refer to the system as \"Battery Backup with one 10C\" (or however many batteries are being quoted) rather than saying \"whole-home\" or \"partial-home\" backup. Once the design is complete and the covered circuits are confirmed, you can speak to coverage specifically."
+              },
+              {
+                "id": "faq-faq_lo39ky3",
+                "question": "Can a battery be added to a customer's existing solar system from another provider (SolarEdge, Tesla, etc.)?",
+                "answer": "Yes, as long as the existing system is properly sized relative to the battery and the setup is configured for whole-home backup. This is a good case-by-case conversation with Design/Ops to confirm fit before quoting."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

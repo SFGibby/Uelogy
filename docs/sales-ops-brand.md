@@ -1,4 +1,4 @@
-# Sales dashboard — brand + build spec
+# Gibson styling — brand + build spec
 
 A self-contained brand kit for a dark, mono-accented sales dashboard. Use this to match the look of the dashboard you were sent. Everything you need is inline — no external files to pull.
 
@@ -20,9 +20,9 @@ Define these once and reuse everywhere. Do not pick arbitrary hex values.
 
 ```ts
 // Fonts
-const SANS    = 'var(--font-sans), -apple-system, system-ui, sans-serif';
-const DISPLAY = 'var(--font-display), "Archivo Black", Impact, sans-serif';
-const MONO    = 'var(--font-mono), ui-monospace, monospace';
+const SANS    = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
+const MONO    = 'var(--font-gibson-mono), ui-monospace, monospace';
 
 // Backgrounds
 const INK        = '#0D1023';            // page background
@@ -62,9 +62,9 @@ Three Google fonts, loaded once. Framework-agnostic version:
 
 <style>
   :root {
-    --font-display: 'Archivo Black', Impact, sans-serif;
-    --font-sans:    'Geist', -apple-system, system-ui, sans-serif;
-    --font-mono:    'Geist Mono', ui-monospace, monospace;
+    --font-gibson-display: 'Archivo Black', Impact, sans-serif;
+    --font-gibson-sans:    'Geist', -apple-system, system-ui, sans-serif;
+    --font-gibson-mono:    'Geist Mono', ui-monospace, monospace;
   }
 </style>
 ```
@@ -74,9 +74,9 @@ Next.js version:
 ```ts
 import { Archivo_Black, Geist, Geist_Mono } from 'next/font/google';
 
-const display = Archivo_Black({ subsets: ['latin'], weight: '400', variable: '--font-display', display: 'swap' });
-const sans    = Geist({         subsets: ['latin'], variable: '--font-sans',    display: 'swap' });
-const mono    = Geist_Mono({    subsets: ['latin'], variable: '--font-mono',    display: 'swap' });
+const display = Archivo_Black({ subsets: ['latin'], weight: '400', variable: '--font-gibson-display', display: 'swap' });
+const sans    = Geist({         subsets: ['latin'], variable: '--font-gibson-sans',    display: 'swap' });
+const mono    = Geist_Mono({    subsets: ['latin'], variable: '--font-gibson-mono',    display: 'swap' });
 ```
 
 Where each font goes:

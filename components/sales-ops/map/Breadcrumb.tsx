@@ -2,8 +2,8 @@
 
 import type { FilterState } from './types';
 
-const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
-const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
+const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
 
 const SUBTLE = '#CED3E8';
 const MUTED = '#8B91B5';

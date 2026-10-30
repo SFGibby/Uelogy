@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import PrimaryNav from '../../../components/sales-ops/PrimaryNav';
-import HubSwagger from '../../../components/sales-ops/HubSwagger';
+import HubGibson from '../../../components/sales-ops/HubGibson';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ export default async function ScorecardPage() {
   return (
     <>
       <PrimaryNav />
-      <HubSwagger />
+      <HubGibson />
     </>
   );
 }

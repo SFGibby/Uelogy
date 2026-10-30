@@ -5,9 +5,9 @@ import type { Agg, AggValue, FilterState, Zip3Meta, MetricKey } from './types';
 import { getAgg, installCount, pickMetric } from './heat';
 import { MIN, METRIC_INDEX } from './types';
 
-const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
-const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
-const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
+const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
+const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
+const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
 
 const SURFACE = '#171B38';
 const LINE_HI = 'rgba(255,255,255,0.14)';
