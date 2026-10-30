@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { geoIdentity, geoPath } from 'd3-geo';
+import { geoIdentity, geoPath, geoAlbersUsa } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { FeatureCollection, Feature, Geometry } from 'geojson';
 import type { Topology, GeometryCollection as TopoGC } from 'topojson-specification';
@@ -16,23 +16,22 @@ const VIEW_H = 610;
 // Gibson palette.
 const INK = '#0D1023';
 const SUN = '#FAD646';
-const OUTLINE_ACTIVE = 'rgba(205,215,235,0.55)';   // states we operate in
-const OUTLINE_DIM = 'rgba(205,215,235,0.14)';      // states we don't
+const OUTLINE_ACTIVE = 'rgba(205,215,235,0.55)';
 const OUTLINE_HOVER = 'rgba(250,214,70,0.9)';
-const OUTLINE_EPC_HIT = 'rgba(94,228,147,0.8)';    // EPC operates here
+const OUTLINE_EPC_HIT = 'rgba(94,228,147,0.8)';
 const LABEL = '#f5f0d6';
 const LABEL_STROKE = 'rgba(13,16,35,0.65)';
-const ZIP_STROKE = 'rgba(13,16,35,0.9)';           // inter-ZIP border
-const ZIP_OUTER = 'rgba(205,215,235,0.55)';        // state outline when drilled
+const ZIP_OUTER = 'rgba(205,215,235,0.55)';
+const ZIP_SERVICE_STROKE = 'rgba(250,214,70,0.85)';
+const ZIP_SERVICE_STROKE_HOT = '#FFF4B5';
 
-// Nudges for state abbreviations whose geometric centroid misses the eye.
+// Centroid-nudge table. For small NE states the label floats outside the
+// state silhouette so the abbreviation stays legible.
 const LABEL_ADJ: Record<string, { dx: number; dy: number }> = {
   FL: { dx: 24, dy: 10 },
   LA: { dx: 6,  dy: -4 },
-  MI: { dx: 12, dy: -10 },
+  MI: { dx: 20, dy: 40 },   // sit on the lower peninsula instead of the upper
   ID: { dx: 0,  dy: 12 },
-  MD: { dx: -14, dy: 2 },
-  MA: { dx: -12, dy: 0 },
   OK: { dx: 10, dy: 4 },
   WV: { dx: 4,  dy: 6 },
   KY: { dx: 10, dy: 0 },
@@ -40,12 +39,20 @@ const LABEL_ADJ: Record<string, { dx: number; dy: number }> = {
   VA: { dx: 4,  dy: 2 },
   NC: { dx: 4,  dy: 2 },
   NY: { dx: -4, dy: 8 },
-  AK: { dx: 20, dy: 0 },
-  HI: { dx: 10, dy: 0 },
+  // Small NE states — labels float east/south into the ocean.
+  CT: { dx: 24, dy: 10 },
+  RI: { dx: 28, dy: 2 },
+  MA: { dx: 32, dy: -2 },
+  NH: { dx: 20, dy: -6 },
+  VT: { dx: -20, dy: -4 },
+  NJ: { dx: 24, dy: 10 },
+  DE: { dx: 20, dy: 10 },
+  MD: { dx: 10, dy: 24 },
+  DC: { dx: 22, dy: 28 },
 };
 
-// Small NE states that get a side pop-out instead of trying to label on map.
-const SKIP_LABEL = new Set(['CT','DE','MA','MD','NH','NJ','RI','VT','DC']);
+// Always hide: states we do not service in either channel.
+const NEVER_RENDER = new Set(['AK', 'HI']);
 
 interface StateFeature extends Feature<Geometry, { abbr: string; name: string }> {}
 interface Zip3Feature extends Feature<Geometry, { p: string }> {}
@@ -83,11 +90,10 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     const obj = t.objects?.states;
     if (!obj) return [];
     const fc = feature(t, obj) as unknown as FeatureCollection<Geometry, { abbr: string; name: string }>;
-    return fc.features;
+    return fc.features.filter(f => !NEVER_RENDER.has(f.properties.abbr));
   }, [topo]);
 
   // Operating states: any state with volume under the current channel/window.
-  // Falls back to the ZIP3 metadata so Direct-only states still read as active.
   const operatingSet = useMemo(() => {
     const out = new Set<string>();
     for (const z of zip3) {
@@ -97,7 +103,7 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     return out;
   }, [zip3, agg, filter]);
 
-  // Set of states the active EPC operates in (keys of form "ES|w|E|inc|<abbr>|<epc>").
+  // Set of states the active EPC operates in.
   const epcStateSet = useMemo(() => {
     if (!filter.activeEpc) return null;
     const inc = filter.inc;
@@ -111,8 +117,14 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     return out;
   }, [agg, filter.activeEpc, filter.window, filter.inc]);
 
+  // US states are pre-projected into viewBox pixels — identity suffices.
   const projection = useMemo(() => geoIdentity(), []);
   const path = useMemo(() => geoPath(projection), [projection]);
+
+  // ZIP3 topo is in raw lon/lat so we need an actual projection that matches
+  // the Albers USA frame the pre-projected US topo was baked in.
+  const zipProjection = useMemo(() => geoAlbersUsa().scale(1300).translate([VIEW_W / 2, VIEW_H / 2]), []);
+  const zipPath = useMemo(() => geoPath(zipProjection), [zipProjection]);
 
   const transform = useMemo<GlowTransform>(() => {
     if (!filter.stateAbbr) return { tx: 0, ty: 0, k: 1 };
@@ -135,18 +147,23 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     ? undefined
     : `scale(${transform.k}) translate(${transform.tx}, ${transform.ty})`;
 
-  // ZIP3 polys for the drilled state only.
+  // ZIP3 polys for the drilled state — only ones we have installs in.
   const zip3Features: Zip3Feature[] = useMemo(() => {
     if (!filter.stateAbbr || !zip3Topo) return [];
     const t = zip3Topo as Topology<Record<string, TopoGC>>;
     const obj = t.objects?.three_dig_zips;
     if (!obj) return [];
     const fc = feature(t, obj) as unknown as FeatureCollection<Geometry, { p: string }>;
-    const inState = new Set(zip3.filter(z => z.st === filter.stateAbbr).map(z => z.p));
-    return fc.features.filter(f => inState.has(f.properties.p));
-  }, [zip3Topo, filter.stateAbbr, zip3]);
+    // Only ZIP3s in this state AND where we've actually installed something.
+    const activeZips = new Set<string>();
+    for (const z of zip3) {
+      if (z.st !== filter.stateAbbr) continue;
+      const row = getAgg(agg, 'Z3', filter, z.p);
+      if (installCount(row) > 0) activeZips.add(z.p);
+    }
+    return fc.features.filter(f => activeZips.has(f.properties.p));
+  }, [zip3Topo, filter.stateAbbr, zip3, agg, filter]);
 
-  // Metric range for choropleth coloring at drill level.
   const zipRange = useMemo(() => {
     if (!filter.stateAbbr) return { min: 0, max: 0 };
     const vals: number[] = [];
@@ -164,12 +181,18 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     const row = getAgg(agg, 'Z3', filter, p);
     const v = pickMetric(row, filter.metric);
     if (v == null || zipRange.max === zipRange.min) return 'rgba(23,27,56,0.6)';
-    // For time-based metrics lower is better. For volume (n) higher is better.
     const norm = filter.metric === 'n'
       ? (v - zipRange.min) / (zipRange.max - zipRange.min)
       : 1 - (v - zipRange.min) / (zipRange.max - zipRange.min);
     const [r, g, b] = warmColor(Math.max(0, Math.min(1, norm)));
-    return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.78)`;
+    return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.82)`;
+  }
+
+  function zipStroke(p: string): string {
+    const row = getAgg(agg, 'Z3', filter, p);
+    const n = installCount(row);
+    // Louder outline for ZIPs with meaningful volume.
+    return n >= 25 ? ZIP_SERVICE_STROKE_HOT : ZIP_SERVICE_STROKE;
   }
 
   return (
@@ -185,22 +208,20 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
         aria-label="US install speed map"
         style={{ display: 'block', position: 'relative', zIndex: 0 }}
       >
+        {/* State paths. Only operating states get rendered at all —
+            non-operating ones leave empty space so the eye lands on where
+            we actually work. */}
         <g transform={svgTransform}>
           {states.map(f => {
             const abbr = f.properties.abbr;
+            const inOps = operatingSet.has(abbr);
             const isHover = hover === abbr;
             const isSelected = filter.stateAbbr === abbr;
-            const inOps = operatingSet.has(abbr);
             const epcHit = epcStateSet?.has(abbr) ?? false;
-            const stroke = isHover || isSelected
-              ? OUTLINE_HOVER
-              : epcHit
-                ? OUTLINE_EPC_HIT
-                : inOps
-                  ? OUTLINE_ACTIVE
-                  : OUTLINE_DIM;
-            const strokeW = (isHover || isSelected || epcHit ? 1.4 : 0.7) / transform.k;
-            // Hide state polys inside the drilled state since ZIP polys take over.
+            if (!inOps && !epcHit) return null;
+
+            // The drilled state becomes a soft container outline — the ZIP
+            // choropleth drawn above carries the data.
             if (filter.stateAbbr && isSelected) {
               return (
                 <path
@@ -208,11 +229,19 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
                   d={path(f) ?? undefined}
                   fill="transparent"
                   stroke={ZIP_OUTER}
-                  strokeWidth={1.2 / transform.k}
+                  strokeWidth={1.4 / transform.k}
                   pointerEvents="none"
                 />
               );
             }
+
+            const stroke = isHover || isSelected
+              ? OUTLINE_HOVER
+              : epcHit
+                ? OUTLINE_EPC_HIT
+                : OUTLINE_ACTIVE;
+            const strokeW = (isHover || isSelected || epcHit ? 1.4 : 0.8) / transform.k;
+
             return (
               <path
                 key={abbr}
@@ -231,28 +260,29 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
           })}
         </g>
 
-        {/* ZIP3 choropleth drawn only inside the drilled state */}
+        {/* ZIP3 "big chunks" we service, drawn on top of the drilled state. */}
         {filter.stateAbbr && (
           <g transform={svgTransform}>
             {zip3Features.map(f => (
               <path
                 key={f.properties.p}
-                d={path(f) ?? undefined}
+                d={zipPath(f) ?? undefined}
                 fill={zipFill(f.properties.p)}
-                stroke={ZIP_STROKE}
-                strokeWidth={0.6 / transform.k}
+                stroke={zipStroke(f.properties.p)}
+                strokeWidth={1.1 / transform.k}
+                strokeLinejoin="round"
               >
-                <title>{f.properties.p}</title>
+                <title>{`${f.properties.p}xx`}</title>
               </path>
             ))}
           </g>
         )}
 
+        {/* State abbreviation labels — only for operating states, with
+            offsets so small NE states stay readable. */}
         <g transform={svgTransform}>
           {states.map(f => {
             const abbr = f.properties.abbr;
-            if (SKIP_LABEL.has(abbr)) return null;
-            // Only label states we operate in.
             if (!operatingSet.has(abbr)) return null;
             if (filter.stateAbbr && filter.stateAbbr !== abbr) return null;
             const c = path.centroid(f);
