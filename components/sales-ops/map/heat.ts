@@ -104,12 +104,14 @@ export function renderDensity(
 
   const img = new Uint8ClampedArray(W * H * 4);
   if (gmax === 0) return img;
-  const GAMMA = 0.75;         // flatter contrast \u2014 fewer hard yellow dots
-  const ALPHA_CEIL = 0.78;    // cap glow brightness so it reads as light, not fill
+  // Steeper gamma + higher alpha pushes peaks hotter so dense cities
+  // read as distinct bright spots instead of a flat warm wash.
+  const GAMMA = 1.15;
+  const ALPHA_CEIL = 0.95;
   for (let i = 0; i < W * H; i++) {
     const n = grid[i] / gmax;
     const g = Math.pow(n, GAMMA);
-    if (g < 0.014) continue;
+    if (g < 0.012) continue;
     const [r2, g2, b2] = warmColor(g);
     const o = i * 4;
     img[o]     = r2;

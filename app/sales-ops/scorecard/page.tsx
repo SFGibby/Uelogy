@@ -5,7 +5,7 @@ import HubSwagger from '../../../components/sales-ops/HubSwagger';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PulsePage() {
+export default async function ScorecardPage() {
   const store = await cookies();
   if (store.get('sales_ops_auth')?.value !== '1') redirect('/sales-ops');
   return (

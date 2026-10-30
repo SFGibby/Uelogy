@@ -62,3 +62,24 @@ export function useUsTopo() {
   }, []);
   return topo;
 }
+
+// ZIP3 topology — lazy loaded the first time a state is drilled.
+let zip3TopoCached: unknown = null;
+let zip3TopoInFlight: Promise<unknown> | null = null;
+
+export function useZip3Topo(enabled: boolean) {
+  const [topo, setTopo] = useState<unknown>(zip3TopoCached);
+  useEffect(() => {
+    if (!enabled) return;
+    if (zip3TopoCached) { setTopo(zip3TopoCached); return; }
+    if (!zip3TopoInFlight) {
+      zip3TopoInFlight = fetch('/sales-ops/data/zip3-topo.json', { cache: 'force-cache' })
+        .then(r => r.json())
+        .then(d => { zip3TopoCached = d; zip3TopoInFlight = null; return d; });
+    }
+    let alive = true;
+    zip3TopoInFlight.then(t => { if (alive) setTopo(t); });
+    return () => { alive = false; };
+  }, [enabled]);
+  return topo;
+}

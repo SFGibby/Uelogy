@@ -17,7 +17,7 @@ const MONO = 'var(--font-swagger-mono), ui-monospace, monospace';
 
 const NAV = [
   { key: 'map', label: 'Map', href: '/sales-ops/map' },
-  { key: 'pulse', label: 'Pulse', href: '/sales-ops/pulse' },
+  { key: 'scorecard', label: 'Scorecard', href: '/sales-ops/scorecard' },
   { key: 'resources', label: 'Resources', href: '/sales-ops/resources' },
 ];
 

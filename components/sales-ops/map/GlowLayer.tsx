@@ -37,30 +37,33 @@ export default function GlowLayer({ zip3, agg, filter, width, height, transform 
     canvas.width = W;
     canvas.height = H;
 
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, W, H);
+
+    // When drilled into a state the choropleth ZIP3 fills do the work;
+    // the glow raster would just muddy the picture.
+    if (filter.stateAbbr) return;
+
     const projection = geoAlbersUsa().scale(1300).translate([VIEW_W / 2, VIEW_H / 2]);
     const t = transform ?? { tx: 0, ty: 0, k: 1 };
 
     const points: DensityPoint[] = [];
     for (const z of zip3) {
       if (!z.lat || !z.lon) continue;
-      if (filter.stateAbbr && z.st !== filter.stateAbbr) continue;
       const row = getAgg(agg, 'Z3', filter, z.p);
       const count = installCount(row);
       if (count <= 0) continue;
       const p = projection([z.lon, z.lat]);
       if (!p) continue;
-      // Apply viewBox transform: (p - origin) * k + translate
       const px = (p[0] + t.tx) * t.k;
       const py = (p[1] + t.ty) * t.k;
       points.push({ x: px * SCALE, y: py * SCALE, weight: Math.sqrt(count) });
     }
 
-    // Soften kernel when zoomed in \u2014 bigger sigma keeps the blobs airy.
-    const sigma = BASE_SIGMA * Math.max(1, t.k * 0.6);
+    // Tighter kernel yields more distinct bright spots at the US view.
+    const sigma = BASE_SIGMA * 0.55;
     const img = renderDensity(points, W, H, sigma * SCALE);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, W, H);
     const data = ctx.createImageData(W, H);
     data.data.set(img);
     ctx.putImageData(data, 0, 0);

@@ -31,6 +31,7 @@ const INITIAL: FilterState = {
   level: 'US',
   stateAbbr: null,
   zip3: null,
+  activeEpc: null,
   query: '',
 };
 
@@ -48,8 +49,13 @@ export default function OpsMap() {
       ...f,
       stateAbbr: abbr,
       zip3: null,
+      activeEpc: null,
       level: abbr ? 'STATE' : 'US',
     }));
+  }, []);
+
+  const onSelectEpc = useCallback((epc: string | null) => {
+    setFilter(f => ({ ...f, activeEpc: epc }));
   }, []);
 
   const totals = useMemo(() => {
@@ -142,6 +148,7 @@ export default function OpsMap() {
             zip3={data.ZIP3}
             filter={filter}
             onSelectState={abbr => onSelectState(abbr)}
+            onSelectEpc={(epc) => onSelectEpc(epc)}
           />
         </aside>
       </div>

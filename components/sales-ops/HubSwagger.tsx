@@ -394,10 +394,23 @@ function RepRow({ rank, r, metric, expanded, onToggle }: { rank: number; r: Scor
             width: 36, height: 36, borderRadius: '50%',
             border: `1px solid ${LINE_HI}`,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: SUBTLE, fontSize: 20, lineHeight: 1,
+            color: SUBTLE, lineHeight: 1,
           }}
+          aria-hidden
         >
-          {expanded ? '\u2212' : '+'}
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 160ms ease' }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </span>
       </button>
 

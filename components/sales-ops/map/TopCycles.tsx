@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Agg, FilterState, Zip3Meta } from './types';
+import type { Agg, AggValue, FilterState, Zip3Meta, MetricKey } from './types';
 import { getAgg, installCount, pickMetric } from './heat';
-import { MIN } from './types';
+import { MIN, METRIC_INDEX } from './types';
 
 const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
 const DISPLAY = 'var(--font-swagger-display), "Archivo Black", Impact, sans-serif';
@@ -34,23 +34,40 @@ interface Props {
   filter: FilterState;
   onSelectState: (abbr: string) => void;
   onSelectZip3?: (p: string) => void;
+  onSelectEpc?: (epc: string | null, states: string[]) => void;
 }
 
 interface Row {
   key: string;
-  primary: string;    // state abbr or ZIP3
-  secondary: string;  // name / city
-  value: number;      // metric value (lower is better for time; higher for volume)
-  count: number;      // install count
+  primary: string;
+  secondary: string;
+  value: number;
+  count: number;
 }
 
-export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZip3 }: Props) {
+export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc }: Props) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <PrimaryList
+        agg={agg}
+        zip3={zip3}
+        filter={filter}
+        onSelectState={onSelectState}
+        onSelectZip3={onSelectZip3}
+      />
+      {filter.channel === 'E' && (
+        <EpcList agg={agg} filter={filter} onSelectEpc={onSelectEpc ?? (() => {})} onSelectState={onSelectState} />
+      )}
+    </div>
+  );
+}
+
+function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3 }: Omit<Props, 'onSelectEpc'>) {
   const [expanded, setExpanded] = useState(false);
   const metricIsCount = filter.metric === 'n';
 
   const rows = useMemo<Row[]>(() => {
     if (filter.stateAbbr) {
-      // ZIP3s inside the selected state
       const inState = zip3.filter(z => z.st === filter.stateAbbr);
       return inState
         .map(z => {
@@ -86,7 +103,7 @@ export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZi
   const title = metricIsCount
     ? (filter.stateAbbr ? `Top ZIP3s by volume \u00b7 ${filter.stateAbbr}` : 'Top states by volume')
     : (filter.stateAbbr ? `Fastest ZIP3s \u00b7 ${filter.stateAbbr}` : 'Fastest states');
-  const subhead = `${filter.channel === 'D' ? 'Direct' : 'EPC'} \u00b7 ${filter.window === 'A' ? 'All time' : filter.window === '12' ? '1 yr' : filter.window + ' mo'}`;
+  const subhead = `${filter.channel === 'D' ? 'Direct' : 'EPC'} \u00b7 ${filter.window === '12' ? '1 yr' : filter.window + ' mo'}`;
 
   return (
     <div style={{ fontFamily: SANS, color: TEXT }}>
@@ -105,26 +122,11 @@ export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZi
               if (filter.stateAbbr && onSelectZip3) onSelectZip3(r.primary);
               else onSelectState(r.primary);
             }}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '26px 48px 1fr auto',
-              gap: 10,
-              alignItems: 'center',
-              padding: '9px 12px',
-              background: SURFACE,
-              border: `1px solid ${LINE_HI}`,
-              borderRadius: 8,
-              cursor: 'pointer',
-              color: TEXT,
-              fontFamily: SANS,
-              textAlign: 'left',
-            }}
+            style={primaryRowStyle}
           >
             <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.08em' }}>{i + 1}</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.08em', color: SUN }}>{r.primary}</span>
-            <span style={{ fontSize: 12, color: SUBTLE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {r.secondary}
-            </span>
+            <span style={ellipsisStyle}>{r.secondary}</span>
             <span style={{ fontFamily: MONO, fontSize: 12, color: TEXT, fontWeight: 700 }}>
               {metricIsCount ? r.value.toLocaleString() : `${Math.round(r.value)}d`}
             </span>
@@ -138,26 +140,192 @@ export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZi
       </div>
 
       {rows.length > 5 && (
-        <button
-          onClick={() => setExpanded(v => !v)}
-          style={{
-            marginTop: 10,
-            width: '100%',
-            background: 'transparent',
-            color: SUN,
-            border: `1px solid ${LINE_HI}`,
-            borderRadius: 999,
-            padding: '8px 14px',
-            fontFamily: MONO,
-            fontSize: 11,
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-          }}
-        >
+        <button onClick={() => setExpanded(v => !v)} style={expandBtn}>
           {expanded ? 'Show top 5' : `See all ${rows.length}`}
         </button>
       )}
     </div>
   );
 }
+
+interface EpcRow {
+  epc: string;
+  states: string[];
+  value: number;    // metric (lower is better for time, higher for volume)
+  count: number;    // install count
+}
+
+function EpcList({
+  agg,
+  filter,
+  onSelectEpc,
+  onSelectState,
+}: {
+  agg: Agg;
+  filter: FilterState;
+  onSelectEpc: (epc: string | null, states: string[]) => void;
+  onSelectState: (abbr: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const metricIsCount = filter.metric === 'n';
+  const scopeAbbr = filter.stateAbbr;
+
+  // Aggregate across ES keys: "ES|window|E|inc|<state>|<epc>" => AggValue.
+  // Index 0 is install count. For time metrics we recompute a count-weighted
+  // mean across states so the ranking matches what the user sees on the map.
+  const rows = useMemo<EpcRow[]>(() => {
+    const inc = filter.inc;
+    const prefix = `ES|${filter.window}|E|${inc}|`;
+    const byEpc = new Map<string, { statesHit: Set<string>; total: number; weighted: number }>();
+    const metricIdx = METRIC_INDEX[filter.metric];
+
+    for (const key of Object.keys(agg)) {
+      if (!key.startsWith(prefix)) continue;
+      const parts = key.split('|');
+      const stateAbbr = parts[4];
+      const epc = parts[5];
+      if (!epc) continue;
+      if (scopeAbbr && stateAbbr !== scopeAbbr) continue;
+      const row: AggValue = agg[key];
+      const n = installCount(row);
+      if (n <= 0) continue;
+      const bucket = byEpc.get(epc) ?? { statesHit: new Set<string>(), total: 0, weighted: 0 };
+      bucket.statesHit.add(stateAbbr);
+      bucket.total += n;
+      const v = row[metricIdx];
+      if (typeof v === 'number') bucket.weighted += v * n;
+      byEpc.set(epc, bucket);
+    }
+
+    const out: EpcRow[] = [];
+    for (const [epc, b] of byEpc) {
+      if (b.total < MIN.S) continue;
+      const value = metricIsCount ? b.total : (b.weighted > 0 ? b.weighted / b.total : Infinity);
+      out.push({ epc, states: Array.from(b.statesHit).sort(), value, count: b.total });
+    }
+    out.sort((a, b) => (metricIsCount ? b.value - a.value : a.value - b.value));
+    return out;
+  }, [agg, filter.window, filter.inc, filter.metric, scopeAbbr, metricIsCount]);
+
+  const visible = expanded ? rows : rows.slice(0, 5);
+  const title = scopeAbbr
+    ? (metricIsCount ? `Top EPCs by volume \u00b7 ${scopeAbbr}` : `Fastest EPCs \u00b7 ${scopeAbbr}`)
+    : (metricIsCount ? 'Top EPCs by volume' : 'Fastest EPCs');
+
+  function activate(r: EpcRow) {
+    if (r.states.length === 1) {
+      onSelectState(r.states[0]);
+      onSelectEpc(null, []);
+      return;
+    }
+    const next = filter.activeEpc === r.epc ? null : r.epc;
+    onSelectEpc(next, next ? r.states : []);
+  }
+
+  return (
+    <div style={{ fontFamily: SANS, color: TEXT }}>
+      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
+        EPC partners
+      </div>
+      <h3 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        {title}
+      </h3>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {visible.map((r, i) => {
+          const isActive = filter.activeEpc === r.epc;
+          return (
+            <button
+              key={r.epc}
+              onClick={() => activate(r)}
+              style={{
+                ...rowStyle,
+                background: isActive ? '#242A58' : SURFACE,
+                borderColor: isActive ? SUN : LINE_HI,
+              }}
+              title={r.states.length === 1 ? `Drill to ${r.states[0]}` : `Operates in ${r.states.length} states`}
+            >
+              <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.08em' }}>{i + 1}</span>
+              <span style={ellipsisStyle}>
+                <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.04em', color: SUN, textTransform: 'uppercase' }}>
+                  {r.epc}
+                </span>
+                <span style={{ display: 'block', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em', marginTop: 2 }}>
+                  {r.states.length === 1 ? r.states[0] : `${r.states.length} states`}
+                </span>
+              </span>
+              <span style={{ fontFamily: MONO, fontSize: 12, color: TEXT, fontWeight: 700 }}>
+                {metricIsCount ? r.value.toLocaleString() : `${Math.round(r.value)}d`}
+              </span>
+            </button>
+          );
+        })}
+        {visible.length === 0 && (
+          <div style={{ padding: '18px 12px', fontSize: 12, color: MUTED, fontStyle: 'italic' }}>
+            No EPC partners under this filter.
+          </div>
+        )}
+      </div>
+
+      {rows.length > 5 && (
+        <button onClick={() => setExpanded(v => !v)} style={expandBtn}>
+          {expanded ? 'Show top 5' : `See all ${rows.length}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+const primaryRowStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '26px 48px 1fr auto',
+  gap: 10,
+  alignItems: 'center',
+  padding: '9px 12px',
+  background: SURFACE,
+  border: `1px solid ${LINE_HI}`,
+  borderRadius: 8,
+  cursor: 'pointer',
+  color: TEXT,
+  fontFamily: SANS,
+  textAlign: 'left',
+};
+
+const rowStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '26px 1fr auto',
+  gap: 10,
+  alignItems: 'center',
+  padding: '9px 12px',
+  background: SURFACE,
+  border: `1px solid ${LINE_HI}`,
+  borderRadius: 8,
+  cursor: 'pointer',
+  color: TEXT,
+  fontFamily: SANS,
+  textAlign: 'left',
+};
+
+const ellipsisStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: SUBTLE,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  minWidth: 0,
+};
+
+const expandBtn: React.CSSProperties = {
+  marginTop: 10,
+  width: '100%',
+  background: 'transparent',
+  color: SUN,
+  border: `1px solid ${LINE_HI}`,
+  borderRadius: 999,
+  padding: '8px 14px',
+  fontFamily: MONO,
+  fontSize: 11,
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+};

@@ -62,20 +62,20 @@ interface Result {
 
 const SURFACES: Result[] = [
   { key: 'surface-map', kind: 'surface', label: 'Install speed map', href: '/sales-ops/map' },
-  { key: 'surface-pulse', kind: 'surface', label: 'Pulse', href: '/sales-ops/pulse' },
+  { key: 'surface-scorecard', kind: 'surface', label: 'Scorecard', href: '/sales-ops/scorecard' },
   { key: 'surface-resources', kind: 'surface', label: 'Resource guide', href: '/sales-ops/resources' },
 ];
 
 function buildIndex(): Result[] {
   const items: Result[] = [...SURFACES];
   for (const r of REPS) {
-    items.push({ key: `rep-${r}`, kind: 'rep', label: r, context: 'Rep scorecard', href: `/sales-ops/pulse?view=regional&q=${encodeURIComponent(r)}` });
+    items.push({ key: `rep-${r}`, kind: 'rep', label: r, context: 'Rep scorecard', href: `/sales-ops/scorecard?view=regional&q=${encodeURIComponent(r)}` });
   }
   for (const t of TEAMS) {
-    items.push({ key: `team-${t.team}`, kind: 'team', label: t.team, context: `${t.region} \u00b7 team`, href: `/sales-ops/pulse?view=regional&region=${encodeURIComponent(t.region)}&q=${encodeURIComponent(t.team)}` });
+    items.push({ key: `team-${t.team}`, kind: 'team', label: t.team, context: `${t.region} \u00b7 team`, href: `/sales-ops/scorecard?view=regional&region=${encodeURIComponent(t.region)}&q=${encodeURIComponent(t.team)}` });
   }
   for (const reg of REGIONS) {
-    items.push({ key: `region-${reg}`, kind: 'region', label: reg, context: 'Region', href: `/sales-ops/pulse?view=regional&region=${encodeURIComponent(reg)}` });
+    items.push({ key: `region-${reg}`, kind: 'region', label: reg, context: 'Region', href: `/sales-ops/scorecard?view=regional&region=${encodeURIComponent(reg)}` });
   }
   for (const r of RESOURCES) {
     items.push({ key: `res-${r.tab}`, kind: 'resource', label: r.label, context: 'Resource guide', href: `/sales-ops/resources?tab=${r.tab}` });

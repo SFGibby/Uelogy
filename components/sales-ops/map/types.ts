@@ -2,7 +2,7 @@
 // Mirrors the aggregates and metadata exported by scripts/extract-map-data.mjs.
 
 export type Channel = 'D' | 'E';
-export type WindowKey = '3' | '6' | '12' | 'A';
+export type WindowKey = '3' | '6' | '12';
 export type MetricKey = 'med' | 'bf' | 'fp' | 'ps' | 'sp' | 'bp' | 'n';
 export type Level = 'US' | 'STATE' | 'ZIP3';
 
@@ -66,7 +66,6 @@ export const WINDOWS: { key: WindowKey; label: string }[] = [
   { key: '3',  label: '3 mo' },
   { key: '6',  label: '6 mo' },
   { key: '12', label: '1 yr' },
-  { key: 'A',  label: 'All time' },
 ];
 
 export const MIN = { S: 10, Z3: 10, Z5: 5 };
@@ -80,5 +79,6 @@ export interface FilterState {
   level: Level;
   stateAbbr: string | null;   // when drilled into a state
   zip3: string | null;        // when drilled into a ZIP3
+  activeEpc: string | null;   // EPC name when a specific EPC is isolated
   query: string;
 }
