@@ -372,6 +372,285 @@ export function buildSnapshot(now: Date = new Date()): OpsSnapshot {
 }
 
 export const REGIONS = ROSTER.map(r => r.region);
+export const TEAMS_BY_REGION: Record<string, string[]> = Object.fromEntries(ROSTER.map(r => [r.region, r.teams]));
+export const ALL_TEAMS: string[] = ROSTER.flatMap(r => r.teams);
+
+export type Scope = 'company' | 'region' | 'team';
+
+export interface ScopeRow {
+  key: string;         // stable id (region name, team name, or rep name)
+  kind: 'region' | 'team' | 'rep';
+  label: string;
+  context: string;     // '4 teams \u00b7 24 reps' / 'Movement \u00b7 6 reps' / 'Blue Raven \u00b7 Shockwave'
+  region?: string;
+  team?: string;
+  knocks: number;
+  sits: number;
+  closes: number;
+  leadToConversion: number;
+  pullThrough: number;
+  installs: number;
+  recruited: number;
+  retention: number;
+  overall: number;
+}
+
+function aggregateRows(rows: ScopeRow[]): Omit<ScopeRow, 'key' | 'kind' | 'label' | 'context' | 'region' | 'team'> {
+  if (rows.length === 0) {
+    return { knocks: 0, sits: 0, closes: 0, leadToConversion: 0, pullThrough: 0, installs: 0, recruited: 0, retention: 0, overall: 0 };
+  }
+  const sum = (f: (r: ScopeRow) => number) => rows.reduce((s, r) => s + f(r), 0);
+  const avg = (f: (r: ScopeRow) => number) => Math.round(sum(f) / rows.length);
+  return {
+    knocks: sum(r => r.knocks),
+    sits: sum(r => r.sits),
+    closes: sum(r => r.closes),
+    leadToConversion: avg(r => r.leadToConversion),
+    pullThrough: avg(r => r.pullThrough),
+    installs: sum(r => r.installs),
+    recruited: sum(r => r.recruited),
+    retention: avg(r => r.retention),
+    overall: avg(r => r.overall),
+  };
+}
+
+export function buildScopeRows(
+  cadence: Cadence,
+  scope: Scope,
+  regionFilter: string | null,
+  teamFilter: string | null,
+  now: Date = new Date(),
+): ScopeRow[] {
+  // Always start from a full roster of rep rows. Each rep is tagged with
+  // their region/team so we can roll up or filter however we want.
+  const all = buildAllRepRows(cadence, now);
+
+  if (scope === 'team') {
+    const filtered = all.filter(r =>
+      (regionFilter == null || r.region === regionFilter) &&
+      (teamFilter == null || r.team === teamFilter),
+    );
+    return [...filtered].sort((a, b) => b.overall - a.overall);
+  }
+
+  if (scope === 'region') {
+    const region = regionFilter;
+    if (!region) return [];
+    const teams = TEAMS_BY_REGION[region] ?? [];
+    return teams.map(team => {
+      const inTeam = all.filter(r => r.region === region && r.team === team);
+      const agg = aggregateRows(inTeam);
+      return {
+        key: team,
+        kind: 'team' as const,
+        label: team,
+        context: `${region} \u00b7 ${inTeam.length} ${inTeam.length === 1 ? 'rep' : 'reps'}`,
+        region,
+        team,
+        ...agg,
+      };
+    }).sort((a, b) => b.overall - a.overall);
+  }
+
+  // Company
+  return REGIONS.map(region => {
+    const teams = TEAMS_BY_REGION[region] ?? [];
+    const inRegion = all.filter(r => r.region === region);
+    const agg = aggregateRows(inRegion);
+    return {
+      key: region,
+      kind: 'region' as const,
+      label: region,
+      context: `${teams.length} ${teams.length === 1 ? 'team' : 'teams'} \u00b7 ${inRegion.length} reps`,
+      region,
+      ...agg,
+    };
+  }).sort((a, b) => b.overall - a.overall);
+}
+
+export function buildCompanyAggregate(cadence: Cadence, now: Date = new Date()): ScopeRow {
+  const all = buildAllRepRows(cadence, now);
+  const agg = aggregateRows(all);
+  return {
+    key: 'company',
+    kind: 'region',
+    label: 'Company',
+    context: `${REGIONS.length} regions \u00b7 ${all.length} reps`,
+    ...agg,
+  };
+}
+
+// --- rep-level detail (deals / activity) --------------------------------
+
+export interface RepDeal {
+  id: string;
+  customer: string;
+  city: string;
+  signedOn: string;      // ISO date
+  stage: string;         // 'Signed' | 'Credit approved' | 'Install scheduled' | 'Installed' | 'PTO' | 'Cancelled'
+  valueUsd: number;      // contract value
+  pullThrough: 'live' | 'at-risk' | 'cancelled' | 'installed';
+  daysInStage: number;
+}
+
+export interface RepDealsPayload {
+  rep: string;
+  team: string;
+  region: string;
+  signedCount: number;
+  installedCount: number;
+  pullThroughPct: number;
+  avgDaysToInstall: number;
+  deals: RepDeal[];
+}
+
+const CUSTOMERS = [
+  'Thompson, L.', 'Hernandez, M.', 'Rowe, D.', 'Perkins, J.', 'Blount, R.',
+  'Costa, A.', 'Fuentes, I.', 'Kim, S.', 'Nguyen, T.', 'Osei, K.',
+  'Reyes, V.', 'Patel, N.', 'Walsh, B.', 'Jacobs, M.', 'Ruiz, E.',
+  'Flannery, G.', 'Oyelowo, A.', 'Dvorak, P.', 'Castellanos, S.', 'Barros, J.',
+];
+const CITIES_BY_REGION: Record<string, string[]> = {
+  'Blue Raven': ['Grand Rapids, MI', 'Charlotte, NC', 'Wilmington, NC', 'Denver, CO', 'Raleigh, NC'],
+  'Movement':   ['Reno, NV', 'Bend, OR', 'Portland, OR', 'Salem, OR', 'Philadelphia, PA'],
+  'Solar\u2019s Dead': ['Phoenix, AZ', 'Tucson, AZ'],
+  'Precision':  ['San Antonio, TX', 'Austin, TX'],
+};
+const STAGE_PROGRESSION: Array<{ stage: string; pt: RepDeal['pullThrough']; targetDays: number }> = [
+  { stage: 'Signed',             pt: 'live',       targetDays: 3 },
+  { stage: 'Credit approved',    pt: 'live',       targetDays: 4 },
+  { stage: 'Site survey done',   pt: 'live',       targetDays: 6 },
+  { stage: 'Design in review',   pt: 'live',       targetDays: 5 },
+  { stage: 'Permit submitted',   pt: 'live',       targetDays: 6 },
+  { stage: 'NTP',                pt: 'live',       targetDays: 4 },
+  { stage: 'Install scheduled',  pt: 'live',       targetDays: 10 },
+  { stage: 'Installed',          pt: 'installed',  targetDays: 2 },
+  { stage: 'PTO',                pt: 'installed',  targetDays: 32 },
+];
+
+export function buildRepDeals(repName: string, cadence: Cadence, now: Date = new Date()): RepDealsPayload {
+  // Keyed by rep name so numbers are stable across reloads.
+  const seed = daySeed(now) ^ Math.imul(hashString(repName), 16777619) ^ cadence.length;
+  const rand = mulberry32(seed);
+
+  // Resolve region / team by sampling the roster deterministically for this rep.
+  const regionIdx = Math.floor(rand() * REGIONS.length);
+  const region = REGIONS[regionIdx];
+  const teams = TEAMS_BY_REGION[region];
+  const team = teams[Math.floor(rand() * teams.length)];
+  const cities = CITIES_BY_REGION[region] ?? ['\u2014'];
+
+  const countBase = cadence === 'day' ? 1 : cadence === 'week' ? 4 : cadence === 'month' ? 18 : 48;
+  const signedCount = Math.max(1, Math.round(countBase * (0.75 + rand() * 0.5)));
+  const deals: RepDeal[] = [];
+  const msPerDay = 86400000;
+
+  for (let i = 0; i < signedCount; i++) {
+    const stageIdx = Math.min(STAGE_PROGRESSION.length - 1, Math.floor(rand() * STAGE_PROGRESSION.length));
+    // Older deals have progressed further on average; newer deals cluster earlier.
+    const ageDays = Math.round(rand() * (cadence === 'day' ? 1 : cadence === 'week' ? 7 : cadence === 'month' ? 30 : 90));
+    const signedOn = new Date(now.getTime() - ageDays * msPerDay).toISOString().slice(0, 10);
+    const def = STAGE_PROGRESSION[Math.min(STAGE_PROGRESSION.length - 1, Math.max(0, stageIdx - Math.floor(rand() * 2)))];
+    const atRiskRoll = rand();
+    const cancelledRoll = rand();
+    let pt: RepDeal['pullThrough'] = def.pt;
+    let stage = def.stage;
+    if (cancelledRoll < 0.06) { pt = 'cancelled'; stage = 'Cancelled'; }
+    else if (atRiskRoll < 0.15 && def.pt === 'live') pt = 'at-risk';
+    const valueUsd = Math.round(28000 + rand() * 36000);
+    const daysInStage = Math.max(0, Math.round(jitter(rand, def.targetDays, 0.6)));
+    deals.push({
+      id: `D-${(seed % 10000).toString().padStart(4, '0')}-${i.toString().padStart(2, '0')}`,
+      customer: CUSTOMERS[(i + Math.floor(rand() * CUSTOMERS.length)) % CUSTOMERS.length],
+      city: cities[Math.floor(rand() * cities.length)],
+      signedOn,
+      stage,
+      valueUsd,
+      pullThrough: pt,
+      daysInStage,
+    });
+  }
+
+  deals.sort((a, b) => (a.signedOn < b.signedOn ? 1 : -1));
+
+  const installed = deals.filter(d => d.pullThrough === 'installed');
+  const live = deals.filter(d => d.pullThrough === 'live' || d.pullThrough === 'at-risk');
+  const pullThroughBase = installed.length / Math.max(1, installed.length + deals.filter(d => d.pullThrough === 'cancelled').length);
+  const pullThroughPct = Math.round((pullThroughBase || 0.88) * 100);
+  const avgDaysToInstall = Math.round(STAGE_PROGRESSION.slice(0, 7).reduce((s, p) => s + p.targetDays, 0) * (0.9 + rand() * 0.3));
+
+  return {
+    rep: repName,
+    team,
+    region,
+    signedCount: deals.length,
+    installedCount: installed.length,
+    pullThroughPct,
+    avgDaysToInstall,
+    deals,
+  };
+}
+
+function hashString(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+// Internal helper: full roster of rep rows regardless of filter, assigned
+// deterministically to a region/team so rollups stay consistent.
+function buildAllRepRows(cadence: Cadence, now: Date): ScopeRow[] {
+  const rand = mulberry32(daySeed(now) ^ cadence.length);
+  // Build a stable rep -> (region, team) mapping per day.
+  const assignments: Array<{ rep: string; region: string; team: string }> = [];
+  for (let i = 0; i < REP_NAMES.length; i++) {
+    const r = ROSTER[i % ROSTER.length];
+    assignments.push({
+      rep: REP_NAMES[i],
+      region: r.region,
+      team: r.teams[Math.floor(rand() * r.teams.length)],
+    });
+  }
+
+  return assignments.map(({ rep, region, team }) => {
+    const perRep = mulberry32(daySeed(now) ^ hashString(rep) ^ cadence.length);
+    const knocksMonth = Math.round(1200 + perRep() * 600);
+    const sitsMonth = Math.round(knocksMonth * (0.08 + perRep() * 0.05));
+    const closesMonth = Math.round(sitsMonth * (0.3 + perRep() * 0.25));
+    const leadToConversion = Math.round(jitter(perRep, 22, 0.3));
+    const pullThrough = Math.round(jitter(perRep, 90, 0.07));
+    const installsMonth = Math.round(closesMonth * (pullThrough / 100));
+    const recruitedQtr = Math.round(perRep() * 4);
+    const retention = Math.round(jitter(perRep, 86, 0.1));
+    const score = Math.round(
+      (Math.min(100, (knocksMonth / 1800) * 100) +
+        Math.min(100, (sitsMonth / 150) * 100) +
+        Math.min(100, (closesMonth / 20) * 100) +
+        Math.min(100, (leadToConversion / 30) * 100) +
+        Math.min(100, pullThrough) +
+        Math.min(100, (installsMonth / 18) * 100) +
+        Math.min(100, (recruitedQtr / 4) * 100) +
+        Math.min(100, retention)) / 8,
+    );
+    return {
+      key: rep,
+      kind: 'rep' as const,
+      label: rep,
+      context: `${region} \u00b7 ${team}`,
+      region,
+      team,
+      knocks: scaleCount(knocksMonth, cadence),
+      sits: scaleCount(sitsMonth, cadence),
+      closes: scaleCount(closesMonth, cadence),
+      leadToConversion,
+      pullThrough,
+      installs: scaleCount(installsMonth, cadence),
+      recruited: cadence === 'qtr' ? recruitedQtr : scaleCount(recruitedQtr, cadence),
+      retention,
+      overall: score,
+    };
+  });
+}
 
 const CADENCE_MULT: Record<Cadence, number> = { day: 1 / 22, week: 1 / 4, month: 1, qtr: 3 };
 
