@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { geoAlbersUsa, geoPath } from 'd3-geo';
+import { geoIdentity, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { FeatureCollection, Feature, Geometry } from 'geojson';
 import type { Topology, GeometryCollection as TopoGC } from 'topojson-specification';
@@ -80,10 +80,9 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     return fc.features;
   }, [topo]);
 
-  const projection = useMemo(
-    () => geoAlbersUsa().scale(1300).translate([VIEW_W / 2, VIEW_H / 2]),
-    [],
-  );
+  // TOPO geometry is already pre-projected into the 975 \u00d7 610 viewBox
+  // (bbox roughly [-57, 12, 957, ...]), so geoIdentity renders paths as-is.
+  const projection = useMemo(() => geoIdentity(), []);
   const path = useMemo(() => geoPath(projection), [projection]);
 
   return (
