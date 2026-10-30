@@ -7,7 +7,7 @@ import { getAgg, installCount, pickMetric } from './heat';
 import Controls from './Controls';
 import Breadcrumb from './Breadcrumb';
 import MapCanvas from './MapCanvas';
-import OperatingHere from './OperatingHere';
+import TopCycles from './TopCycles';
 import CycleTable from './CycleTable';
 
 const SANS = 'var(--font-swagger-sans), -apple-system, system-ui, sans-serif';
@@ -137,7 +137,12 @@ export default function OpsMap() {
         </div>
 
         <aside>
-          <OperatingHere agg={data.AGG} filter={filter} onSelectState={abbr => onSelectState(abbr)} />
+          <TopCycles
+            agg={data.AGG}
+            zip3={data.ZIP3}
+            filter={filter}
+            onSelectState={abbr => onSelectState(abbr)}
+          />
         </aside>
       </div>
     </div>

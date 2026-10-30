@@ -27,14 +27,15 @@ export function installCount(row: AggValue | null): number {
 }
 
 // Warm navy \u2192 amber \u2192 yellow gradient (board A palette).
+// Softer top end so blobs read as glow instead of hard yellow spots.
 const GRADIENT: Array<[number, [number, number, number]]> = [
   [0.00, [10, 14, 32]],
-  [0.08, [40, 20, 20]],
-  [0.22, [140, 60, 20]],
-  [0.42, [220, 120, 35]],
-  [0.65, [245, 180, 55]],
-  [0.85, [252, 220, 95]],
-  [1.00, [255, 245, 150]],
+  [0.10, [50, 25, 25]],
+  [0.28, [130, 55, 28]],
+  [0.48, [195, 108, 40]],
+  [0.70, [230, 160, 60]],
+  [0.90, [242, 198, 92]],
+  [1.00, [248, 222, 128]],
 ];
 
 function lerp(a: number, b: number, t: number): number {
@@ -103,17 +104,18 @@ export function renderDensity(
 
   const img = new Uint8ClampedArray(W * H * 4);
   if (gmax === 0) return img;
-  const GAMMA = 0.6;
+  const GAMMA = 0.75;         // flatter contrast \u2014 fewer hard yellow dots
+  const ALPHA_CEIL = 0.78;    // cap glow brightness so it reads as light, not fill
   for (let i = 0; i < W * H; i++) {
     const n = grid[i] / gmax;
     const g = Math.pow(n, GAMMA);
-    if (g < 0.012) continue;
+    if (g < 0.014) continue;
     const [r2, g2, b2] = warmColor(g);
     const o = i * 4;
     img[o]     = r2;
     img[o + 1] = g2;
     img[o + 2] = b2;
-    img[o + 3] = Math.round(Math.min(1, g * 1.2) * 255);
+    img[o + 3] = Math.round(Math.min(ALPHA_CEIL, g) * 255);
   }
   return img;
 }

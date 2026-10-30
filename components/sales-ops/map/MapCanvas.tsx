@@ -5,7 +5,7 @@ import { geoIdentity, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { FeatureCollection, Feature, Geometry } from 'geojson';
 import type { Topology, GeometryCollection as TopoGC } from 'topojson-specification';
-import GlowLayer from './GlowLayer';
+import GlowLayer, { type GlowTransform } from './GlowLayer';
 import type { Agg, FilterState, Zip3Meta } from './types';
 import { useUsTopo } from './useMapData';
 
@@ -80,10 +80,31 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
     return fc.features;
   }, [topo]);
 
-  // TOPO geometry is already pre-projected into the 975 \u00d7 610 viewBox
-  // (bbox roughly [-57, 12, 957, ...]), so geoIdentity renders paths as-is.
+  // TOPO geometry is already pre-projected into the 975 \u00d7 610 viewBox.
   const projection = useMemo(() => geoIdentity(), []);
   const path = useMemo(() => geoPath(projection), [projection]);
+
+  // When a state is selected, compute a viewBox transform that zooms into it.
+  const transform = useMemo<GlowTransform>(() => {
+    if (!filter.stateAbbr) return { tx: 0, ty: 0, k: 1 };
+    const f = states.find(s => s.properties.abbr === filter.stateAbbr);
+    if (!f) return { tx: 0, ty: 0, k: 1 };
+    const [[x0, y0], [x1, y1]] = path.bounds(f);
+    const w = x1 - x0;
+    const h = y1 - y0;
+    if (w <= 0 || h <= 0) return { tx: 0, ty: 0, k: 1 };
+    const pad = 0.14;    // 14% padding around the state
+    const k = Math.min(VIEW_W / w, VIEW_H / h) * (1 - pad * 2);
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const tx = VIEW_W / 2 / k - cx;
+    const ty = VIEW_H / 2 / k - cy;
+    return { tx, ty, k };
+  }, [filter.stateAbbr, states, path]);
+
+  const svgTransform = transform.k === 1
+    ? undefined
+    : `scale(${transform.k}) translate(${transform.tx}, ${transform.ty})`;
 
   return (
     <div
@@ -98,18 +119,19 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
         aria-label="US install speed map"
         style={{ display: 'block', position: 'relative', zIndex: 0 }}
       >
-        <g>
+        <g transform={svgTransform}>
           {states.map(f => {
             const abbr = f.properties.abbr;
             const isHover = hover === abbr;
             const isSelected = filter.stateAbbr === abbr;
+            const strokeW = (isHover || isSelected ? 1.4 : 0.7) / transform.k;
             return (
               <path
                 key={abbr}
                 d={path(f) ?? undefined}
                 fill="transparent"
                 stroke={isHover || isSelected ? OUTLINE_HOVER : OUTLINE}
-                strokeWidth={isHover || isSelected ? 1.4 : 0.7}
+                strokeWidth={strokeW}
                 style={{ cursor: onSelectState ? 'pointer' : 'default' }}
                 onMouseEnter={() => setHover(abbr)}
                 onMouseLeave={() => setHover(h => (h === abbr ? null : h))}
@@ -120,10 +142,11 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
             );
           })}
         </g>
-        <g>
+        <g transform={svgTransform}>
           {states.map(f => {
             const abbr = f.properties.abbr;
             if (SKIP_LABEL.has(abbr)) return null;
+            if (filter.stateAbbr && filter.stateAbbr !== abbr) return null;
             const c = path.centroid(f);
             if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
             const adj = LABEL_ADJ[abbr] ?? { dx: 0, dy: 0 };
@@ -138,11 +161,11 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
                   pointerEvents: 'none',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif',
                   fontWeight: 600,
-                  fontSize: 10,
+                  fontSize: 10 / transform.k,
                   letterSpacing: '0.14em',
                   fill: LABEL,
                   stroke: LABEL_STROKE,
-                  strokeWidth: 1.2,
+                  strokeWidth: 1.2 / transform.k,
                   paintOrder: 'stroke',
                   textTransform: 'uppercase',
                 }}
@@ -154,7 +177,7 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState }: Props) {
         </g>
       </svg>
 
-      <GlowLayer zip3={zip3} agg={agg} filter={filter} width={size.w} height={size.h} />
+      <GlowLayer zip3={zip3} agg={agg} filter={filter} width={size.w} height={size.h} transform={transform} />
 
       {filter.stateAbbr && (
         <div

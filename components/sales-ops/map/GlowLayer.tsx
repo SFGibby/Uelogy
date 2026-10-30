@@ -7,18 +7,25 @@ import { getAgg, installCount, renderDensity, type DensityPoint } from './heat';
 
 const VIEW_W = 975;
 const VIEW_H = 610;
-const SCALE = 0.5;    // half-res grid for perf
-const SIGMA = 22;     // viewBox px
+const SCALE = 0.5;
+const BASE_SIGMA = 34;          // viewBox px \u2014 bigger kernel for a softer board A look
+
+export interface GlowTransform {
+  tx: number;    // translate X in viewBox coords
+  ty: number;    // translate Y in viewBox coords
+  k: number;     // scale factor applied after translate
+}
 
 interface Props {
   zip3: Zip3Meta[];
   agg: Agg;
   filter: FilterState;
-  width: number;      // CSS pixel size (reactive for mobile)
+  width: number;
   height: number;
+  transform?: GlowTransform;      // when a state is drilled, zoom the glow
 }
 
-export default function GlowLayer({ zip3, agg, filter, width, height }: Props) {
+export default function GlowLayer({ zip3, agg, filter, width, height, transform }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -31,28 +38,33 @@ export default function GlowLayer({ zip3, agg, filter, width, height }: Props) {
     canvas.height = H;
 
     const projection = geoAlbersUsa().scale(1300).translate([VIEW_W / 2, VIEW_H / 2]);
+    const t = transform ?? { tx: 0, ty: 0, k: 1 };
 
     const points: DensityPoint[] = [];
     for (const z of zip3) {
       if (!z.lat || !z.lon) continue;
-      // Skip ZIPs outside the current drill scope.
       if (filter.stateAbbr && z.st !== filter.stateAbbr) continue;
       const row = getAgg(agg, 'Z3', filter, z.p);
       const count = installCount(row);
       if (count <= 0) continue;
       const p = projection([z.lon, z.lat]);
       if (!p) continue;
-      points.push({ x: p[0] * SCALE, y: p[1] * SCALE, weight: Math.sqrt(count) });
+      // Apply viewBox transform: (p - origin) * k + translate
+      const px = (p[0] + t.tx) * t.k;
+      const py = (p[1] + t.ty) * t.k;
+      points.push({ x: px * SCALE, y: py * SCALE, weight: Math.sqrt(count) });
     }
 
-    const img = renderDensity(points, W, H, SIGMA * SCALE);
+    // Soften kernel when zoomed in \u2014 bigger sigma keeps the blobs airy.
+    const sigma = BASE_SIGMA * Math.max(1, t.k * 0.6);
+    const img = renderDensity(points, W, H, sigma * SCALE);
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
     const data = ctx.createImageData(W, H);
     data.data.set(img);
     ctx.putImageData(data, 0, 0);
-  }, [zip3, agg, filter]);
+  }, [zip3, agg, filter, transform]);
 
   return (
     <canvas
