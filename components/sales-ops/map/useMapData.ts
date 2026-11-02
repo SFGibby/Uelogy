@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import type { MapData } from './types';
+import { buildEpcIndexes } from './types';
 
 // Single-flight loader for /sales-ops/data/map-data.json. Cached at the module
-// level so navigating away and back doesn't re-fetch.
+// level so navigating away and back doesn't re-fetch. Index building happens
+// once right after parse so TopCycles can lookup "fastest EPC in state" in
+// O(1) instead of scanning the full AGG per row.
 
 let cached: MapData | null = null;
 let inFlight: Promise<MapData> | null = null;
@@ -17,7 +20,9 @@ async function load(): Promise<MapData> {
       if (!r.ok) throw new Error(`map-data.json ${r.status}`);
       return r.json();
     })
-    .then((d: MapData) => {
+    .then((raw: Omit<MapData, 'esIndex' | 'ezIndex'>) => {
+      const { esIndex, ezIndex } = buildEpcIndexes(raw.AGG);
+      const d: MapData = { ...raw, esIndex, ezIndex };
       cached = d;
       inFlight = null;
       return d;

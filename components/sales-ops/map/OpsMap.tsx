@@ -9,6 +9,9 @@ import Breadcrumb from './Breadcrumb';
 import MapCanvas from './MapCanvas';
 import TopCycles from './TopCycles';
 import CycleTable from './CycleTable';
+import MobileMarkets from './MobileMarkets';
+import StateContextBadges from './StateContextBadges';
+import { useIsNarrow } from '../useBreakpoint';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
 const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
@@ -43,6 +46,7 @@ export default function OpsMap() {
   const [tableOpen, setTableOpen] = useState(false);
   const [hoverZip, setHoverZip] = useState<string | null>(null);
   const [railMode, setRailMode] = useState<RailMode>('speed');
+  const isNarrow = useIsNarrow();
 
   const onChange = useCallback((patch: Partial<FilterState>) => {
     setFilter(f => ({ ...f, ...patch }));
@@ -99,6 +103,25 @@ export default function OpsMap() {
     );
   }
 
+  // On narrow viewports the map is unusable — swap to a searchable market
+  // table that answers the same "where should I knock?" question without
+  // hover, pinch-to-zoom, or a 975-pixel SVG.
+  if (isNarrow) {
+    return (
+      <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
+        <Breadcrumb filter={filter} onChange={onChange} />
+        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
+        <MobileMarkets
+          agg={data.AGG}
+          zip3={data.ZIP3}
+          filter={filter}
+          onSelectState={onSelectState}
+          onSelectZip3={onSelectZip3}
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
       <section style={{ padding: '32px 20px 10px' }}>
@@ -125,6 +148,7 @@ export default function OpsMap() {
 
       <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
       <Breadcrumb filter={filter} onChange={onChange} />
+      {filter.stateAbbr && !filter.zip3 && <StateContextBadges stateAbbr={filter.stateAbbr} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
@@ -169,6 +193,8 @@ export default function OpsMap() {
         <aside>
           <TopCycles
             agg={data.AGG}
+            esIndex={data.esIndex}
+            ezIndex={data.ezIndex}
             zip3={data.ZIP3}
             filter={filter}
             onSelectState={abbr => onSelectState(abbr)}

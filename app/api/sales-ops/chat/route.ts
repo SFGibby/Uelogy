@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { readFileSync, readdirSync } from 'fs';
 import { join, relative } from 'path';
+import { hit, clientKey, clientKeyFromCookie } from '../../../../lib/sales-ops/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,8 +18,16 @@ const BRAIN_DIR = join(KB_DIR, 'brain');
 const SKIP = new Set(['_template.md', 'README.md']);
 const MODEL = 'llama-3.3-70b-versatile';
 const MAX_INPUT_CHARS = 60_000;
+const KB_TTL_MS = 10 * 60 * 1000;
+
+// Rate limits — tune when we move off in-memory to Upstash.
+const COOKIE_MAX = 10;         // 10 chat questions per minute per authed cookie
+const COOKIE_WINDOW_MS = 60_000;
+const IP_MAX = 60;             // 60 per minute per IP across all sessions
+const IP_WINDOW_MS = 60_000;
 
 let docsCache: string | null = null;
+let docsCacheAt = 0;
 
 function safeRead(p: string): string {
   try { return readFileSync(p, 'utf8'); } catch { return ''; }
@@ -49,12 +58,14 @@ function loadBrainIndex(): string {
 }
 
 function loadDocs(): string {
-  if (docsCache) return docsCache;
+  const now = Date.now();
+  if (docsCache && now - docsCacheAt < KB_TTL_MS) return docsCache;
   const kb = safeRead(KB_PATH);
   const dirx = safeRead(DIR_PATH);
   const brain = loadBrainIndex();
   const out = `## Knowledge Base\n${kb}\n\n## Directory\n${dirx}\n\n## Brain Index\n${brain}`;
   docsCache = out.slice(0, MAX_INPUT_CHARS);
+  docsCacheAt = now;
   return docsCache;
 }
 
@@ -73,6 +84,32 @@ interface ChatRequestBody {
 }
 
 export async function POST(req: NextRequest) {
+  // Gate behind the sales_ops_auth cookie so a random bot can't burn Groq
+  // credits by hitting the endpoint. Same cookie the UI already sets.
+  const cookie = req.headers.get('cookie') || '';
+  if (!cookie.includes('sales_ops_auth=1')) {
+    return NextResponse.json({ error: 'auth required' }, { status: 401 });
+  }
+
+  // Dual rate limit: per-cookie (keeps a single tab from spamming) + per-IP
+  // (covers unauthed probes once we loosen the cookie gate).
+  const ip = clientKey(req);
+  const cookieKey = clientKeyFromCookie(req) ?? 'anon';
+  const perCookie = hit(`chat:cookie:${ip}:${cookieKey}`, COOKIE_MAX, COOKIE_WINDOW_MS);
+  if (!perCookie.ok) {
+    return NextResponse.json(
+      { error: 'too many requests' },
+      { status: 429, headers: { 'retry-after': String(Math.ceil(perCookie.retryAfterMs / 1000)) } },
+    );
+  }
+  const perIp = hit(`chat:ip:${ip}`, IP_MAX, IP_WINDOW_MS);
+  if (!perIp.ok) {
+    return NextResponse.json(
+      { error: 'too many requests from source' },
+      { status: 429, headers: { 'retry-after': String(Math.ceil(perIp.retryAfterMs / 1000)) } },
+    );
+  }
+
   let body: ChatRequestBody;
   try {
     body = await req.json();
@@ -82,6 +119,9 @@ export async function POST(req: NextRequest) {
   const question = (body.question ?? '').trim();
   if (!question) {
     return NextResponse.json({ error: 'empty question' }, { status: 400 });
+  }
+  if (question.length > 2000) {
+    return NextResponse.json({ error: 'question too long' }, { status: 413 });
   }
 
   const apiKey = process.env.GROQ_API_KEY;

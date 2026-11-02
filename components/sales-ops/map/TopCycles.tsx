@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { Agg, AggValue, FilterState, Zip3Meta, MetricKey } from './types';
+import type { Agg, AggValue, EpcIndex, FilterState, Zip3Meta, MetricKey } from './types';
 import { getAgg, installCount, pickMetric } from './heat';
 import { MIN, METRIC_INDEX } from './types';
 import { useServiceableStates, useEnerfloCoverage } from './useMapData';
@@ -33,6 +33,8 @@ export type RailMode = 'speed' | 'workable';
 
 interface Props {
   agg: Agg;
+  esIndex: EpcIndex;
+  ezIndex: EpcIndex;
   zip3: Zip3Meta[];
   filter: FilterState;
   onSelectState: (abbr: string) => void;
@@ -56,25 +58,22 @@ interface Row {
 // Find the EPC inside a scope (state or ZIP3) that owns the best metric
 // value under the current filter. "Best" is lowest median for time metrics,
 // highest count for volume. Returns null when no EPC meets the install floor.
+// Uses the precomputed EpcIndex so this is O(k) per scope where k is the
+// number of EPCs with data in that scope, not O(|AGG|).
 function bestEpcIn(
-  agg: Agg,
+  index: EpcIndex,
   filter: FilterState,
-  section: 'ES' | 'EZ',
-  scopeKey: string,       // state abbr for ES, ZIP3 for EZ
+  scopeKey: string,
 ): string | null {
   const metricIdx = METRIC_INDEX[filter.metric];
   const metricIsCount = filter.metric === 'n';
-  const prefix = `${section}|${filter.window}|E|${filter.inc}|${scopeKey}|`;
+  const bucket = index.get(`${filter.window}|${filter.inc}|${scopeKey}`);
+  if (!bucket) return null;
   let bestName: string | null = null;
   let bestValue = metricIsCount ? -Infinity : Infinity;
-  for (const key of Object.keys(agg)) {
-    if (!key.startsWith(prefix)) continue;
-    const parts = key.split('|');
-    const epc = parts[5];
-    if (!epc) continue;
-    const row = agg[key];
+  for (const { epc, row } of bucket) {
     const n = installCount(row);
-    if (n < 3) continue;    // too few installs to credit as "fastest"
+    if (n < 3) continue;
     const v = row[metricIdx];
     if (typeof v !== 'number') continue;
     const score = metricIsCount ? n : v;
@@ -87,7 +86,7 @@ function bestEpcIn(
 }
 
 export default function TopCycles({
-  agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc,
+  agg, esIndex, ezIndex, zip3, filter, onSelectState, onSelectZip3, onSelectEpc,
   hoverZip, onHoverZip, railMode = 'speed', onRailMode,
 }: Props) {
   const drilled = !!filter.stateAbbr;
@@ -125,6 +124,8 @@ export default function TopCycles({
       ) : (
         <PrimaryList
           agg={agg}
+          esIndex={esIndex}
+          ezIndex={ezIndex}
           zip3={zip3}
           filter={filter}
           onSelectState={onSelectState}
@@ -169,6 +170,8 @@ function RailModeToggle({ mode, onChange }: { mode: RailMode; onChange: (m: Rail
 
 interface PrimaryProps {
   agg: Agg;
+  esIndex: EpcIndex;
+  ezIndex: EpcIndex;
   zip3: Zip3Meta[];
   filter: FilterState;
   onSelectState: (abbr: string) => void;
@@ -177,7 +180,7 @@ interface PrimaryProps {
   onHoverZip: (p: string | null) => void;
 }
 
-function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip, onHoverZip }: PrimaryProps) {
+function PrimaryList({ agg, esIndex, ezIndex, zip3, filter, onSelectState, onSelectZip3, hoverZip, onHoverZip }: PrimaryProps) {
   const [expanded, setExpanded] = useState(false);
   const metricIsCount = filter.metric === 'n';
 
@@ -215,7 +218,7 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
             key: z.p,
             primary: z.p,
             secondary: z.city,
-            epc: isEpc ? bestEpcIn(agg, filter, 'EZ', z.p) ?? undefined : undefined,
+            epc: isEpc ? bestEpcIn(ezIndex, filter, z.p) ?? undefined : undefined,
             value: pickMetric(row, filter.metric) ?? Infinity,
             count: installCount(row),
           };
@@ -231,7 +234,7 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
           key: abbr,
           primary: abbr,
           secondary: STATE_NAMES[abbr],
-          epc: isEpc ? bestEpcIn(agg, filter, 'ES', abbr) ?? undefined : undefined,
+          epc: isEpc ? bestEpcIn(esIndex, filter, abbr) ?? undefined : undefined,
           value: pickMetric(row, filter.metric) ?? Infinity,
           count: installCount(row),
         };
@@ -242,7 +245,7 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
       // installs for EPC).
       .filter(r => !activeServiceSet || activeServiceSet.size === 0 || activeServiceSet.has(r.primary))
       .sort((a, b) => (metricIsCount ? b.value - a.value : a.value - b.value));
-  }, [agg, zip3, filter, metricIsCount, isEpc, activeServiceSet]);
+  }, [agg, esIndex, ezIndex, zip3, filter, metricIsCount, isEpc, activeServiceSet]);
 
   const visible = expanded ? rows : rows.slice(0, 5);
   const title = metricIsCount

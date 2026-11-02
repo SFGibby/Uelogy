@@ -33,11 +33,36 @@ export interface Meta {
   inactive_list: string;
 }
 
+// EPC-side index: (section|window|inc|scopeKey) -> list of (epc, row) tuples.
+// Precomputed once at load so bestEpcIn() doesn't scan 50K AGG keys per row.
+export interface EpcIndexRow { epc: string; row: AggValue; }
+export type EpcIndex = Map<string, EpcIndexRow[]>;
+
 export interface MapData {
   META: Meta;
   DQ: DqEntry[];
   ZIP3: Zip3Meta[];
   AGG: Agg;
+  esIndex: EpcIndex;   // 'ES' keys grouped by `${window}|${inc}|${state}`
+  ezIndex: EpcIndex;   // 'EZ' keys grouped by `${window}|${inc}|${zip3}`
+}
+
+export function buildEpcIndexes(agg: Agg): { esIndex: EpcIndex; ezIndex: EpcIndex } {
+  const esIndex: EpcIndex = new Map();
+  const ezIndex: EpcIndex = new Map();
+  for (const key of Object.keys(agg)) {
+    const parts = key.split('|');
+    const sec = parts[0];
+    if (sec !== 'ES' && sec !== 'EZ') continue;
+    const epc = parts[5];
+    if (!epc) continue;
+    const bucket = sec === 'ES' ? esIndex : ezIndex;
+    const indexKey = `${parts[1]}|${parts[3]}|${parts[4]}`;
+    const arr = bucket.get(indexKey) ?? [];
+    arr.push({ epc, row: agg[key] });
+    bucket.set(indexKey, arr);
+  }
+  return { esIndex, ezIndex };
 }
 
 // Column index inside an AGG value for each metric.

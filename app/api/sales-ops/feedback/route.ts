@@ -1,15 +1,29 @@
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import { hit, clientKey } from '../../../../lib/sales-ops/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 // Minimal feedback sink. Writes to Supabase if env is wired, else no-op.
 // Beta: unauthed callers from the gated hub POST their unmatched asks here.
 
+const PER_IP_MAX = 20;         // 20 posts per minute per IP
+const PER_IP_WINDOW_MS = 60_000;
+const MAX_TEXT_LEN = 4000;
+
 export async function POST(req: NextRequest) {
   const store = await cookies();
   if (store.get('sales_ops_auth')?.value !== '1') {
     return Response.json({ ok: false, error: 'not authorized' }, { status: 401 });
+  }
+
+  const ip = clientKey(req);
+  const limited = hit(`feedback:${ip}`, PER_IP_MAX, PER_IP_WINDOW_MS);
+  if (!limited.ok) {
+    return Response.json(
+      { ok: false, error: 'too many requests' },
+      { status: 429, headers: { 'retry-after': String(Math.ceil(limited.retryAfterMs / 1000)) } },
+    );
   }
 
   let body: { text?: string; ts?: number };
@@ -21,6 +35,9 @@ export async function POST(req: NextRequest) {
 
   const text = (body.text ?? '').trim();
   if (!text) return Response.json({ ok: false, error: 'empty' }, { status: 400 });
+  if (text.length > MAX_TEXT_LEN) {
+    return Response.json({ ok: false, error: 'too long' }, { status: 413 });
+  }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
