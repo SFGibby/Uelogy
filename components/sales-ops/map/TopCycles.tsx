@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Agg, AggValue, FilterState, Zip3Meta, MetricKey } from './types';
 import { getAgg, installCount, pickMetric } from './heat';
 import { MIN, METRIC_INDEX } from './types';
-import { useServiceableStates } from './useMapData';
+import { useServiceableStates, useEnerfloCoverage } from './useMapData';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
 const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
@@ -117,10 +117,11 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
 
   const isEpc = filter.channel === 'E';
   const serviceable = useServiceableStates();
+  const enerflo = useEnerfloCoverage();
 
   // Mirror MapCanvas: EPC uses the 6-month install footprint instead of
   // the Finance guide, so Fastest states excludes states we don't actively
-  // sell EPC into.
+  // sell EPC into. Direct uses the Enerflo installer-markets set.
   const epcActive = useMemo(() => {
     if (!isEpc) return null;
     const out = new Set<string>();
@@ -134,7 +135,9 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
     return out;
   }, [agg, filter.inc, isEpc]);
 
-  const activeServiceSet = isEpc ? epcActive : serviceable;
+  const activeServiceSet = isEpc
+    ? epcActive
+    : (enerflo && enerflo.states.size > 0 ? enerflo.states : serviceable);
 
   const rows = useMemo<Row[]>(() => {
     if (filter.stateAbbr) {

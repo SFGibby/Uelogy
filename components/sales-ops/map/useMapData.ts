@@ -63,8 +63,66 @@ export function useUsTopo() {
   return topo;
 }
 
+// Enerflo installer markets — Sam's live Direct open-area set. Each market is
+// `{state, metro, zone (0|1|2), zips}`. We expose both a flat state set and a
+// ZIP5 → {state, metro, zone} lookup.
+export interface EnerfloMarket {
+  metro: string;
+  zone: number;
+  zips: string[];
+  id: string;
+}
+export interface EnerfloMarkets {
+  updatedAt: string;
+  totalMarkets: number;
+  totalZips: number;
+  byState: Record<string, EnerfloMarket[]>;
+}
+export interface EnerfloCoverage {
+  states: Set<string>;
+  zipLookup: Map<string, { state: string; metro: string; zone: number }>;
+  markets: EnerfloMarkets;
+}
+
+let enerfloCached: EnerfloCoverage | null = null;
+let enerfloInFlight: Promise<EnerfloCoverage> | null = null;
+
+export function useEnerfloCoverage(): EnerfloCoverage | null {
+  const [cov, setCov] = useState<EnerfloCoverage | null>(enerfloCached);
+  useEffect(() => {
+    if (enerfloCached) { setCov(enerfloCached); return; }
+    if (!enerfloInFlight) {
+      enerfloInFlight = fetch('/sales-ops/data/enerflo-markets.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : { byState: {} })
+        .then((d: EnerfloMarkets) => {
+          const states = new Set(Object.keys(d.byState ?? {}));
+          const zipLookup = new Map<string, { state: string; metro: string; zone: number }>();
+          for (const [state, markets] of Object.entries(d.byState ?? {})) {
+            for (const m of markets) {
+              for (const z of m.zips) zipLookup.set(z, { state, metro: m.metro, zone: m.zone });
+            }
+          }
+          const c = { states, zipLookup, markets: d };
+          enerfloCached = c;
+          enerfloInFlight = null;
+          return c;
+        })
+        .catch(() => {
+          const c = { states: new Set<string>(), zipLookup: new Map(), markets: { updatedAt: '', totalMarkets: 0, totalZips: 0, byState: {} } };
+          enerfloCached = c;
+          enerfloInFlight = null;
+          return c;
+        });
+    }
+    let alive = true;
+    enerfloInFlight.then(c => { if (alive) setCov(c); });
+    return () => { alive = false; };
+  }, []);
+  return cov;
+}
+
 // Serviceable states — union of all financier Active States columns.
-// Cached once at module scope; the file is tiny.
+// Kept for EPC fallback; Direct now uses Enerflo markets instead.
 let serviceableCached: Set<string> | null = null;
 let serviceableInFlight: Promise<Set<string>> | null = null;
 

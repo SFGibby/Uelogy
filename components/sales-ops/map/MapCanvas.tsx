@@ -8,7 +8,7 @@ import type { Topology, GeometryCollection as TopoGC } from 'topojson-specificat
 import GlowLayer, { type GlowTransform } from './GlowLayer';
 import type { Agg, FilterState, Zip3Meta } from './types';
 import { getAgg, installCount, pickMetric, speedColor } from './heat';
-import { useUsTopo, useZip3Topo, useServiceableStates } from './useMapData';
+import { useUsTopo, useZip3Topo, useServiceableStates, useEnerfloCoverage } from './useMapData';
 import { MAJOR_CITIES } from './cities';
 
 const VIEW_W = 975;
@@ -69,6 +69,7 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
   const topo = useUsTopo();
   const zip3Topo = useZip3Topo(!!filter.stateAbbr);
   const serviceable = useServiceableStates();
+  const enerflo = useEnerfloCoverage();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ w: VIEW_W, h: VIEW_H });
   const [hover, setHover] = useState<string | null>(null);
@@ -95,9 +96,8 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return fc.features.filter(f => !NEVER_RENDER.has(f.properties.abbr));
   }, [topo]);
 
-  // Direct uses the Finance guide's active-financier set. EPC uses the
-  // set of states that have had any EPC install in the last 6 months —
-  // the Merdeka footprint reference until we build a tighter one.
+  // EPC uses the set of states that have had any EPC install in the last
+  // 6 months — the Merdeka footprint reference until we build a tighter one.
   const epcActive = useMemo(() => {
     const out = new Set<string>();
     const prefix = `ES|6|E|${filter.inc}|`;
@@ -110,10 +110,14 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return out;
   }, [agg, filter.inc]);
 
+  // Direct uses the Enerflo installer-markets set (states we actually sell
+  // into right now, zoned 0/1/2). Fall back to the Finance guide only if the
+  // Enerflo file hasn't loaded yet.
   const activeServiceSet = useMemo<Set<string> | null>(() => {
     if (filter.channel === 'E') return epcActive;
+    if (enerflo && enerflo.states.size > 0) return enerflo.states;
     return serviceable;
-  }, [filter.channel, epcActive, serviceable]);
+  }, [filter.channel, epcActive, serviceable, enerflo]);
 
   // A state only counts as operating if it (a) has installs under the
   // current filter AND (b) sits in the channel's active service set.
@@ -351,6 +355,39 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
                 >
                   <title>{`${p}xx`}</title>
                 </path>
+              );
+            })}
+          </g>
+        )}
+
+        {/* Persistent ZIP3 labels on drill-in so a lead can plan where to go */}
+        {drilled && (
+          <g transform={svgTransform}>
+            {sortedZips.map(f => {
+              const p = f.properties.p;
+              const c = zipPath.centroid(f);
+              if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
+              return (
+                <text
+                  key={`zl-${p}`}
+                  x={c[0]}
+                  y={c[1]}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{
+                    pointerEvents: 'none',
+                    fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
+                    fontSize: 8 / transform.k,
+                    letterSpacing: '0.08em',
+                    fill: '#0D1023',
+                    stroke: 'rgba(255,255,255,0.75)',
+                    strokeWidth: 0.9 / transform.k,
+                    paintOrder: 'stroke',
+                    fontWeight: 700,
+                  }}
+                >
+                  {p}
+                </text>
               );
             })}
           </g>
