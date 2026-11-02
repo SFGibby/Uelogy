@@ -95,21 +95,39 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return fc.features.filter(f => !NEVER_RENDER.has(f.properties.abbr));
   }, [topo]);
 
+  // Direct uses the Finance guide's active-financier set. EPC uses the
+  // set of states that have had any EPC install in the last 6 months —
+  // the Merdeka footprint reference until we build a tighter one.
+  const epcActive = useMemo(() => {
+    const out = new Set<string>();
+    const prefix = `ES|6|E|${filter.inc}|`;
+    for (const key of Object.keys(agg)) {
+      if (!key.startsWith(prefix)) continue;
+      if (installCount(agg[key]) <= 0) continue;
+      const parts = key.split('|');
+      if (parts[4]) out.add(parts[4]);
+    }
+    return out;
+  }, [agg, filter.inc]);
+
+  const activeServiceSet = useMemo<Set<string> | null>(() => {
+    if (filter.channel === 'E') return epcActive;
+    return serviceable;
+  }, [filter.channel, epcActive, serviceable]);
+
   // A state only counts as operating if it (a) has installs under the
-  // current filter AND (b) has at least one active financier per the
-  // Sales Resource Guide. States with historical installs but no live
-  // financier coverage grey out just like true no-service states.
+  // current filter AND (b) sits in the channel's active service set.
   const operatingSet = useMemo(() => {
     const out = new Set<string>();
     for (const z of zip3) {
       const row = getAgg(agg, 'Z3', filter, z.p);
       if (installCount(row) > 0) out.add(z.st);
     }
-    if (!serviceable || serviceable.size === 0) return out;
+    if (!activeServiceSet || activeServiceSet.size === 0) return out;
     const filtered = new Set<string>();
-    for (const abbr of out) if (serviceable.has(abbr)) filtered.add(abbr);
+    for (const abbr of out) if (activeServiceSet.has(abbr)) filtered.add(abbr);
     return filtered;
-  }, [zip3, agg, filter, serviceable]);
+  }, [zip3, agg, filter, activeServiceSet]);
 
   const epcStateSet = useMemo(() => {
     if (!filter.activeEpc) return null;
@@ -207,12 +225,17 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return p ? [p[0], p[1]] : null;
   }
 
-  // Cities only render once drilled into a state. Keeps the national view
-  // uncluttered — nothing competes with the glow raster.
+  // Cities only render once drilled into a state. Direct also layers in the
+  // Product-by-Market "Sales Region" metros; EPC hides those (they are a
+  // Direct go-to-market artefact) and shows the generic state metros only.
   const visibleCities = useMemo(() => {
     if (!drilled) return [];
-    return MAJOR_CITIES.filter(c => c.abbr === filter.stateAbbr);
-  }, [drilled, filter.stateAbbr]);
+    return MAJOR_CITIES.filter(c => {
+      if (c.abbr !== filter.stateAbbr) return false;
+      if (c.directOnly && filter.channel !== 'D') return false;
+      return true;
+    });
+  }, [drilled, filter.stateAbbr, filter.channel]);
 
   return (
     <div

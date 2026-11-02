@@ -118,6 +118,24 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
   const isEpc = filter.channel === 'E';
   const serviceable = useServiceableStates();
 
+  // Mirror MapCanvas: EPC uses the 6-month install footprint instead of
+  // the Finance guide, so Fastest states excludes states we don't actively
+  // sell EPC into.
+  const epcActive = useMemo(() => {
+    if (!isEpc) return null;
+    const out = new Set<string>();
+    const prefix = `ES|6|E|${filter.inc}|`;
+    for (const key of Object.keys(agg)) {
+      if (!key.startsWith(prefix)) continue;
+      if (installCount(agg[key]) <= 0) continue;
+      const parts = key.split('|');
+      if (parts[4]) out.add(parts[4]);
+    }
+    return out;
+  }, [agg, filter.inc, isEpc]);
+
+  const activeServiceSet = isEpc ? epcActive : serviceable;
+
   const rows = useMemo<Row[]>(() => {
     if (filter.stateAbbr) {
       const inState = zip3.filter(z => z.st === filter.stateAbbr);
@@ -150,11 +168,12 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
         };
       })
       .filter(r => r.count >= MIN.S)
-      // Skip states with no active financier — they match the greyed-out
-      // map treatment set by the Sales Resource Guide.
-      .filter(r => !serviceable || serviceable.size === 0 || serviceable.has(r.primary))
+      // Match the map's greyed-out treatment: skip states outside the
+      // channel's active service set (financiers for Direct, 6mo EPC
+      // installs for EPC).
+      .filter(r => !activeServiceSet || activeServiceSet.size === 0 || activeServiceSet.has(r.primary))
       .sort((a, b) => (metricIsCount ? b.value - a.value : a.value - b.value));
-  }, [agg, zip3, filter, metricIsCount, isEpc, serviceable]);
+  }, [agg, zip3, filter, metricIsCount, isEpc, activeServiceSet]);
 
   const visible = expanded ? rows : rows.slice(0, 5);
   const title = metricIsCount
