@@ -8,7 +8,7 @@ import type { Topology, GeometryCollection as TopoGC } from 'topojson-specificat
 import GlowLayer, { type GlowTransform } from './GlowLayer';
 import type { Agg, FilterState, Zip3Meta } from './types';
 import { getAgg, installCount, pickMetric, speedColor } from './heat';
-import { useUsTopo, useZip3Topo, useServiceableStates, useEnerfloCoverage } from './useMapData';
+import { useUsTopo, useZip3Topo, useZip5Topo, useServiceableStates, useEnerfloCoverage } from './useMapData';
 import { MAJOR_CITIES } from './cities';
 
 const VIEW_W = 975;
@@ -63,18 +63,21 @@ interface Props {
   onSelectState?: (abbr: string | null) => void;
   hoverZip: string | null;
   onHoverZip: (p: string | null) => void;
-  focusedZip3?: string | null;
-  onFocusZip3?: (p: string | null) => void;
+  onSelectZip3?: (p: string | null) => void;
 }
 
-export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, onHoverZip, focusedZip3, onFocusZip3 }: Props) {
+interface Zip5Feature extends Feature<Geometry, { z: string; c: string }> {}
+
+export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, onHoverZip, onSelectZip3 }: Props) {
   const topo = useUsTopo();
   const zip3Topo = useZip3Topo(!!filter.stateAbbr);
+  const zip5Topo = useZip5Topo(filter.zip3 ?? null);
   const serviceable = useServiceableStates();
   const enerflo = useEnerfloCoverage();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ w: VIEW_W, h: VIEW_H });
   const [hover, setHover] = useState<string | null>(null);
+  const zip3Drilled = !!filter.zip3;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -154,27 +157,8 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
   const zipProjection = useMemo(() => geoAlbersUsa().scale(1300).translate([VIEW_W / 2, VIEW_H / 2]), []);
   const zipPath = useMemo(() => geoPath(zipProjection), [zipProjection]);
 
-  const transform = useMemo<GlowTransform>(() => {
-    if (!filter.stateAbbr) return { tx: 0, ty: 0, k: 1 };
-    const f = states.find(s => s.properties.abbr === filter.stateAbbr);
-    if (!f) return { tx: 0, ty: 0, k: 1 };
-    const [[x0, y0], [x1, y1]] = path.bounds(f);
-    const w = x1 - x0;
-    const h = y1 - y0;
-    if (w <= 0 || h <= 0) return { tx: 0, ty: 0, k: 1 };
-    const pad = 0.14;
-    const k = Math.min(VIEW_W / w, VIEW_H / h) * (1 - pad * 2);
-    const cx = (x0 + x1) / 2;
-    const cy = (y0 + y1) / 2;
-    const tx = VIEW_W / 2 / k - cx;
-    const ty = VIEW_H / 2 / k - cy;
-    return { tx, ty, k };
-  }, [filter.stateAbbr, states, path]);
-
-  const svgTransform = transform.k === 1
-    ? undefined
-    : `scale(${transform.k}) translate(${transform.tx}, ${transform.ty})`;
-
+  // All ZIP3 polys inside the drilled state, computed once so both the
+  // choropleth and the ZIP5 zoom transform can share the same bounds.
   const zip3Features: Zip3Feature[] = useMemo(() => {
     if (!filter.stateAbbr || !zip3Topo) return [];
     const t = zip3Topo as Topology<Record<string, TopoGC>>;
@@ -189,6 +173,80 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     }
     return fc.features.filter(f => activeZips.has(f.properties.p));
   }, [zip3Topo, filter.stateAbbr, zip3, agg, filter]);
+
+  const transform = useMemo<GlowTransform>(() => {
+    // ZIP3 drill — zoom into the specific ZIP3 polygon in the Albers frame.
+    if (filter.zip3) {
+      const z3f = zip3Features.find(z => z.properties.p === filter.zip3);
+      if (z3f) {
+        const [[x0, y0], [x1, y1]] = zipPath.bounds(z3f);
+        const w = x1 - x0;
+        const h = y1 - y0;
+        if (w > 0 && h > 0) {
+          const pad = 0.12;
+          const k = Math.min(VIEW_W / w, VIEW_H / h) * (1 - pad * 2);
+          const cx = (x0 + x1) / 2;
+          const cy = (y0 + y1) / 2;
+          return { tx: VIEW_W / 2 / k - cx, ty: VIEW_H / 2 / k - cy, k };
+        }
+      }
+    }
+    // State drill — zoom to the state polygon in the identity frame.
+    if (!filter.stateAbbr) return { tx: 0, ty: 0, k: 1 };
+    const f = states.find(s => s.properties.abbr === filter.stateAbbr);
+    if (!f) return { tx: 0, ty: 0, k: 1 };
+    const [[x0, y0], [x1, y1]] = path.bounds(f);
+    const w = x1 - x0;
+    const h = y1 - y0;
+    if (w <= 0 || h <= 0) return { tx: 0, ty: 0, k: 1 };
+    const pad = 0.14;
+    const k = Math.min(VIEW_W / w, VIEW_H / h) * (1 - pad * 2);
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const tx = VIEW_W / 2 / k - cx;
+    const ty = VIEW_H / 2 / k - cy;
+    return { tx, ty, k };
+  }, [filter.stateAbbr, filter.zip3, states, path, zipPath, zip3Features]);
+
+  // ZIP5 geometry filtered to just the ZIPs inside the drilled ZIP3.
+  const zip5Features: Zip5Feature[] = useMemo(() => {
+    if (!filter.zip3 || !zip5Topo) return [];
+    const t = zip5Topo as Topology<Record<string, TopoGC>>;
+    const objKey = Object.keys(t.objects ?? {})[0];
+    if (!objKey) return [];
+    const fc = feature(t, t.objects![objKey]) as unknown as FeatureCollection<Geometry, { z: string; c: string }>;
+    const prefix = filter.zip3;
+    return fc.features.filter(f => (f.properties.z ?? '').startsWith(prefix));
+  }, [zip5Topo, filter.zip3]);
+
+  // Flat ZIP5 → data lookups for coloring the ZIP5 choropleth.
+  const zip5Range = useMemo(() => {
+    if (!filter.zip3) return { min: 0, max: 0 };
+    const vals: number[] = [];
+    for (const f of zip5Features) {
+      const row = getAgg(agg, 'Z5', filter, f.properties.z);
+      const v = pickMetric(row, filter.metric);
+      if (v != null) vals.push(v);
+    }
+    if (vals.length === 0) return { min: 0, max: 0 };
+    return { min: Math.min(...vals), max: Math.max(...vals) };
+  }, [filter.zip3, filter.metric, filter.channel, filter.window, filter.inc, agg, zip5Features]);
+
+  function zip5Fill(z: string): string {
+    const row = getAgg(agg, 'Z5', filter, z);
+    const v = pickMetric(row, filter.metric);
+    if (v == null) return 'rgba(23,27,56,0.4)';
+    if (zip5Range.max === zip5Range.min) return 'rgba(23,27,56,0.6)';
+    const norm = filter.metric === 'n'
+      ? (v - zip5Range.min) / (zip5Range.max - zip5Range.min)
+      : 1 - (v - zip5Range.min) / (zip5Range.max - zip5Range.min);
+    const [r, g, b] = speedColor(Math.max(0, Math.min(1, norm)));
+    return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.85)`;
+  }
+
+  const svgTransform = transform.k === 1
+    ? undefined
+    : `scale(${transform.k}) translate(${transform.tx}, ${transform.ty})`;
 
   const zipRange = useMemo(() => {
     if (!filter.stateAbbr) return { min: 0, max: 0 };
@@ -256,8 +314,9 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
         aria-label="US install speed map"
         style={{ display: 'block', position: 'relative', zIndex: 0 }}
         onClick={() => {
-          // Background click: exit drill, clear ZIP hover.
-          if (drilled) onSelectState?.(null);
+          // Background click: pop one drill level.
+          if (zip3Drilled) onSelectZip3?.(null);
+          else if (drilled) onSelectState?.(null);
           onHoverZip(null);
         }}
       >
@@ -337,26 +396,25 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
         </g>
 
         {/* ZIP3 chunks + hover-sync */}
-        {drilled && (
+        {drilled && !zip3Drilled && (
           <g transform={svgTransform}>
             {sortedZips.map(f => {
               const p = f.properties.p;
               const isHot = hoverZip === p;
-              const isFocused = focusedZip3 === p;
               return (
                 <path
                   key={p}
                   d={zipPath(f) ?? undefined}
                   fill={zipFill(p)}
-                  stroke={isFocused ? SUN : isHot ? ZIP_STROKE_HOVER : ZIP_STROKE}
-                  strokeWidth={(isFocused ? 2.6 : isHot ? 2.2 : 1) / transform.k}
+                  stroke={isHot ? ZIP_STROKE_HOVER : ZIP_STROKE}
+                  strokeWidth={(isHot ? 2.2 : 1) / transform.k}
                   strokeLinejoin="round"
                   style={{ cursor: 'pointer' }}
                   onMouseEnter={() => onHoverZip(p)}
                   onMouseLeave={() => onHoverZip(null)}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onFocusZip3?.(isFocused ? null : p);
+                    onSelectZip3?.(p);
                   }}
                 >
                   <title>{`${p}xx`}</title>
@@ -366,46 +424,147 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
           </g>
         )}
 
-        {/* Persistent ZIP3 labels on drill-in so a lead can plan where to go */}
-        {drilled && (
+        {/* ZIP5 polys when drilled into a ZIP3 */}
+        {drilled && zip3Drilled && (
+          <g transform={svgTransform}>
+            {zip5Features.map(f => {
+              const z = f.properties.z;
+              const isHot = hoverZip === z;
+              return (
+                <path
+                  key={z}
+                  d={zipPath(f) ?? undefined}
+                  fill={zip5Fill(z)}
+                  stroke={isHot ? ZIP_STROKE_HOVER : ZIP_STROKE}
+                  strokeWidth={(isHot ? 2.4 : 0.9) / transform.k}
+                  strokeLinejoin="round"
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={() => onHoverZip(z)}
+                  onMouseLeave={() => onHoverZip(null)}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <title>{`${z} \u00b7 ${f.properties.c}`}</title>
+                </path>
+              );
+            })}
+          </g>
+        )}
+
+        {/* Persistent ZIP3 labels on drill-in so a lead can plan where to go.
+            Rooms-too-small ZIPs lose the dark pill and fall back to compact
+            white-on-black text so neighbor labels don't crash into each other.
+            Hidden at ZIP5 drill level — ZIP5 labels take over. */}
+        {drilled && !zip3Drilled && (
           <g transform={svgTransform}>
             {sortedZips.map(f => {
               const p = f.properties.p;
               const c = zipPath.centroid(f);
               if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
+              const b = zipPath.bounds(f);
+              const polyW = b[1][0] - b[0][0];
+              const polyH = b[1][1] - b[0][1];
               const k = transform.k;
-              const fontPx = 12 / k;
-              // 3 digits × mono char width ratio (~0.6) + a touch of padding.
-              const w = fontPx * 3 * 0.68 + 6 / k;
-              const h = fontPx + 4 / k;
+              const fontPx = 11 / k;
+              const pillW = fontPx * 3 * 0.68 + 6 / k;
+              const pillH = fontPx + 4 / k;
+              // Only draw the dark pill if it comfortably fits inside the ZIP
+              // polygon's bounding box. Otherwise, drop to plain stroked text
+              // so dense clusters stop stacking rectangles.
+              const fitsPill = pillW < polyW * 0.82 && pillH < polyH * 0.82;
+              if (fitsPill) {
+                return (
+                  <g key={`zl-${p}`} pointerEvents="none">
+                    <rect
+                      x={c[0] - pillW / 2}
+                      y={c[1] - pillH / 2}
+                      width={pillW}
+                      height={pillH}
+                      rx={pillH / 2}
+                      fill="rgba(13,16,35,0.78)"
+                      stroke="rgba(255,255,255,0.25)"
+                      strokeWidth={0.6 / k}
+                    />
+                    <text
+                      x={c[0]}
+                      y={c[1]}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      style={{
+                        fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
+                        fontSize: fontPx,
+                        letterSpacing: '0.08em',
+                        fill: '#FFFFFF',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {p}
+                    </text>
+                  </g>
+                );
+              }
+              // Fallback compact label — no background, dark text stroked in
+              // white so it reads over any choropleth fill.
+              const smallFont = Math.min(fontPx, Math.max(polyW, polyH) * 0.5);
               return (
-                <g key={`zl-${p}`} pointerEvents="none">
-                  <rect
-                    x={c[0] - w / 2}
-                    y={c[1] - h / 2}
-                    width={w}
-                    height={h}
-                    rx={h / 2}
-                    fill="rgba(13,16,35,0.78)"
-                    stroke="rgba(255,255,255,0.25)"
-                    strokeWidth={0.6 / k}
-                  />
-                  <text
-                    x={c[0]}
-                    y={c[1]}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    style={{
-                      fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
-                      fontSize: fontPx,
-                      letterSpacing: '0.08em',
-                      fill: '#FFFFFF',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {p}
-                  </text>
-                </g>
+                <text
+                  key={`zl-${p}`}
+                  x={c[0]}
+                  y={c[1]}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  pointerEvents="none"
+                  style={{
+                    fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
+                    fontSize: smallFont,
+                    letterSpacing: '0.04em',
+                    fill: '#0D1023',
+                    stroke: 'rgba(255,255,255,0.75)',
+                    strokeWidth: 0.9 / k,
+                    paintOrder: 'stroke',
+                    fontWeight: 800,
+                  }}
+                >
+                  {p}
+                </text>
+              );
+            })}
+          </g>
+        )}
+
+        {/* ZIP5 labels (compact) at ZIP5 drill level */}
+        {drilled && zip3Drilled && (
+          <g transform={svgTransform}>
+            {zip5Features.map(f => {
+              const z = f.properties.z;
+              const c = zipPath.centroid(f);
+              if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
+              const b = zipPath.bounds(f);
+              const polyW = b[1][0] - b[0][0];
+              const polyH = b[1][1] - b[0][1];
+              const k = transform.k;
+              const fontPx = 7 / k;
+              const smallFont = Math.min(fontPx, Math.max(polyW, polyH) * 0.4);
+              return (
+                <text
+                  key={`z5l-${z}`}
+                  x={c[0]}
+                  y={c[1]}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  pointerEvents="none"
+                  style={{
+                    fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
+                    fontSize: smallFont,
+                    letterSpacing: '0.02em',
+                    fill: '#0D1023',
+                    stroke: 'rgba(255,255,255,0.7)',
+                    strokeWidth: 0.6 / k,
+                    paintOrder: 'stroke',
+                    fontWeight: 700,
+                  }}
+                >
+                  {z}
+                </text>
               );
             })}
           </g>
@@ -519,9 +678,13 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
             cursor: 'pointer',
             zIndex: 2,
           }}
-          onClick={(e) => { e.stopPropagation(); onSelectState?.(null); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (zip3Drilled) onSelectZip3?.(null);
+            else onSelectState?.(null);
+          }}
         >
-          {filter.stateAbbr} {'\u2715'}
+          {zip3Drilled ? `${filter.zip3}xx` : filter.stateAbbr} {'\u2715'}
         </div>
       )}
     </div>

@@ -36,14 +36,12 @@ interface Props {
   zip3: Zip3Meta[];
   filter: FilterState;
   onSelectState: (abbr: string) => void;
-  onSelectZip3?: (p: string) => void;
+  onSelectZip3?: (p: string | null) => void;
   onSelectEpc?: (epc: string | null, states: string[]) => void;
   hoverZip?: string | null;
   onHoverZip?: (p: string | null) => void;
   railMode?: RailMode;
   onRailMode?: (m: RailMode) => void;
-  focusedZip3?: string | null;
-  onFocusZip3?: (p: string | null) => void;
 }
 
 interface Row {
@@ -90,17 +88,22 @@ function bestEpcIn(
 
 export default function TopCycles({
   agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc,
-  hoverZip, onHoverZip, railMode = 'speed', onRailMode, focusedZip3, onFocusZip3,
+  hoverZip, onHoverZip, railMode = 'speed', onRailMode,
 }: Props) {
   const drilled = !!filter.stateAbbr;
+  const zip3Drilled = !!filter.zip3;
 
-  // When a ZIP3 is focused, the rail collapses into the ZIP5 copy panel.
-  if (drilled && focusedZip3) {
+  // ZIP3 drill → rail becomes the ZIP5 ranking + copy-all panel.
+  if (drilled && zip3Drilled) {
     return (
       <Zip5Panel
-        zip3={focusedZip3}
+        zip3={filter.zip3!}
         stateAbbr={filter.stateAbbr!}
-        onBack={() => onFocusZip3?.(null)}
+        agg={agg}
+        filter={filter}
+        hoverZip={hoverZip ?? null}
+        onHoverZip={onHoverZip ?? (() => {})}
+        onBack={() => onSelectZip3?.(null)}
       />
     );
   }
@@ -117,7 +120,7 @@ export default function TopCycles({
           filter={filter}
           hoverZip={hoverZip ?? null}
           onHoverZip={onHoverZip ?? (() => {})}
-          onFocusZip3={onFocusZip3 ?? (() => {})}
+          onSelectZip3Row={onSelectZip3 ?? (() => {})}
         />
       ) : (
         <PrimaryList
@@ -498,10 +501,10 @@ interface WorkableListProps {
   filter: FilterState;
   hoverZip: string | null;
   onHoverZip: (p: string | null) => void;
-  onFocusZip3: (p: string | null) => void;
+  onSelectZip3Row: (p: string | null) => void;
 }
 
-function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onFocusZip3 }: WorkableListProps) {
+function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onSelectZip3Row }: WorkableListProps) {
   const [expanded, setExpanded] = useState(false);
   const enerflo = useEnerfloCoverage();
 
@@ -542,7 +545,7 @@ function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onFocusZip3 }: 
               key={r.key}
               onMouseEnter={() => onHoverZip(r.key)}
               onMouseLeave={() => onHoverZip(null)}
-              onClick={() => onFocusZip3(r.key)}
+              onClick={() => onSelectZip3Row(r.key)}
               style={{
                 ...primaryRowStyle,
                 gridTemplateColumns: '48px 1fr auto',
@@ -577,7 +580,17 @@ function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onFocusZip3 }: 
 
 // --- ZIP5 copy panel ----------------------------------------------------
 
-function Zip5Panel({ zip3, stateAbbr, onBack }: { zip3: string; stateAbbr: string; onBack: () => void }) {
+interface Zip5PanelProps {
+  zip3: string;
+  stateAbbr: string;
+  agg: Agg;
+  filter: FilterState;
+  hoverZip: string | null;
+  onHoverZip: (p: string | null) => void;
+  onBack: () => void;
+}
+
+function Zip5Panel({ zip3, stateAbbr, agg, filter, hoverZip, onHoverZip, onBack }: Zip5PanelProps) {
   const enerflo = useEnerfloCoverage();
   const [copied, setCopied] = useState(false);
 
@@ -688,18 +701,36 @@ function Zip5Panel({ zip3, stateAbbr, onBack }: { zip3: string; stateAbbr: strin
               <span style={{ fontFamily: MONO, fontSize: 10, color: SUN, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Zone {g.zone}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {g.zips.map(z => (
-                <span key={z} style={{
-                  fontFamily: MONO,
-                  fontSize: 11,
-                  letterSpacing: '0.08em',
-                  color: TEXT,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${LINE_HI}`,
-                  borderRadius: 6,
-                  padding: '3px 7px',
-                }}>{z}</span>
-              ))}
+              {g.zips.map(z => {
+                const row = getAgg(agg, 'Z5', filter, z);
+                const n = installCount(row);
+                const med = pickMetric(row, 'med');
+                const isHot = hoverZip === z;
+                const tooltip = n > 0
+                  ? `${z} \u00b7 ${n} install${n === 1 ? '' : 's'}${med != null ? ` \u00b7 ${Math.round(med)}d median` : ''}`
+                  : `${z} \u00b7 no installs under this filter`;
+                return (
+                  <span
+                    key={z}
+                    title={tooltip}
+                    onMouseEnter={() => onHoverZip(z)}
+                    onMouseLeave={() => onHoverZip(null)}
+                    style={{
+                      fontFamily: MONO,
+                      fontSize: 11,
+                      letterSpacing: '0.08em',
+                      color: TEXT,
+                      background: isHot ? '#242A58' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${isHot ? SUN : LINE_HI}`,
+                      borderRadius: 6,
+                      padding: '3px 7px',
+                      cursor: 'default',
+                    }}
+                  >
+                    {z}
+                  </span>
+                );
+              })}
             </div>
           </div>
         ))}

@@ -173,3 +173,37 @@ export function useZip3Topo(enabled: boolean) {
   }, [enabled]);
   return topo;
 }
+
+// ZIP5 (ZCTA) topology — split into 5 regional files by first digit pair.
+// Only load the file that matches the drilled ZIP3's first digit.
+const zcta5Cache: Record<string, unknown> = {};
+const zcta5InFlight: Record<string, Promise<unknown> | undefined> = {};
+
+export function zcta5FileFor(zip3: string | null | undefined): string | null {
+  if (!zip3) return null;
+  const d = zip3.charAt(0);
+  if (d === '0' || d === '1') return '01';
+  if (d === '2' || d === '3') return '23';
+  if (d === '4' || d === '5') return '45';
+  if (d === '6' || d === '7') return '67';
+  if (d === '8' || d === '9') return '89';
+  return null;
+}
+
+export function useZip5Topo(zip3: string | null): unknown {
+  const file = zcta5FileFor(zip3);
+  const [topo, setTopo] = useState<unknown>(file ? (zcta5Cache[file] ?? null) : null);
+  useEffect(() => {
+    if (!file) { setTopo(null); return; }
+    if (zcta5Cache[file]) { setTopo(zcta5Cache[file]); return; }
+    if (!zcta5InFlight[file]) {
+      zcta5InFlight[file] = fetch(`/sales-ops/data/zcta/${file}.json`, { cache: 'force-cache' })
+        .then(r => r.json())
+        .then(d => { zcta5Cache[file] = d; zcta5InFlight[file] = undefined; return d; });
+    }
+    let alive = true;
+    zcta5InFlight[file]!.then(t => { if (alive) setTopo(t); });
+    return () => { alive = false; };
+  }, [file]);
+  return topo;
+}
