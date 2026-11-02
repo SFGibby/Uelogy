@@ -17,25 +17,31 @@ const MUTED = '#8B91B5';
 const SUN = '#FAD646';
 
 export default function SalesOpsUnlock() {
+  const [name, setName] = useState('');
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    nameRef.current?.focus();
   }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+    const cleanedName = name.trim();
+    if (!cleanedName) {
+      setError('Enter your name so screenshots have attribution.');
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       const res = await fetch('/api/grid/unlock', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ gate: 'sales_ops', password: value }),
+        body: JSON.stringify({ gate: 'sales_ops', password: value, name: cleanedName }),
       });
       if (res.ok) { window.location.reload(); return; }
       setError(res.status === 401 ? 'Access denied.' : 'Something went wrong.');
@@ -79,12 +85,39 @@ export default function SalesOpsUnlock() {
             Beta surface for Direct Ops transparency. Password lands you on the live map.
           </p>
 
+          <label htmlFor="name" style={{ display: 'block', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.22em', marginBottom: 8, textTransform: 'uppercase' }}>
+            Your name
+          </label>
+          <input
+            id="name"
+            ref={nameRef}
+            type="text"
+            autoComplete="name"
+            maxLength={60}
+            placeholder="Sam Gibson"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{
+              display: 'block',
+              width: '100%',
+              padding: '14px 18px',
+              background: SURFACE,
+              color: TEXT,
+              border: `1px solid ${LINE_HI}`,
+              borderRadius: 999,
+              outline: 'none',
+              fontFamily: SANS,
+              fontSize: 15,
+              marginBottom: 14,
+              boxSizing: 'border-box',
+            }}
+          />
+
           <label htmlFor="password" style={{ display: 'block', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.22em', marginBottom: 8, textTransform: 'uppercase' }}>
             Password
           </label>
           <input
             id="password"
-            ref={inputRef}
             type="password"
             autoComplete="off"
             value={value}
@@ -111,7 +144,7 @@ export default function SalesOpsUnlock() {
 
           <button
             type="submit"
-            disabled={busy || !value}
+            disabled={busy || !value || !name.trim()}
             style={{
               background: SUN,
               color: INK,
@@ -122,13 +155,17 @@ export default function SalesOpsUnlock() {
               fontSize: 14,
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
-              cursor: busy || !value ? 'not-allowed' : 'pointer',
-              opacity: busy || !value ? 0.5 : 1,
+              cursor: busy || !value || !name.trim() ? 'not-allowed' : 'pointer',
+              opacity: busy || !value || !name.trim() ? 0.5 : 1,
               width: '100%',
             }}
           >
             {busy ? 'Checking\u2026' : 'Enter'}
           </button>
+
+          <p style={{ marginTop: 14, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
+            Your name lands on every page as a soft watermark and in a pageview log. Screenshots trace back to you.
+          </p>
 
           <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${LINE_HI}`, display: 'flex', justifyContent: 'space-between', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
             <span>Confidential</span>

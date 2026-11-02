@@ -11,8 +11,19 @@ const GATES = {
 
 type GateName = keyof typeof GATES;
 
+// Keep identity text short, printable, single-line. Prevents the cookie from
+// turning into a vector for XSS or oversized headers.
+function sanitizeName(input: string): string {
+  return input
+    .replace(/[\u0000-\u001f\u007f]/g, '')  // control chars
+    .replace(/[<>"'`\\]/g, '')               // common HTML/attribute breakers
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+}
+
 export async function POST(request: NextRequest) {
-  let body: { gate?: string; password?: string };
+  let body: { gate?: string; password?: string; name?: string };
   try {
     body = await request.json();
   } catch {
@@ -21,6 +32,7 @@ export async function POST(request: NextRequest) {
 
   const gateName = body.gate as GateName | undefined;
   const password = body.password ?? '';
+  const name = sanitizeName(body.name ?? '');
 
   if (!gateName || !(gateName in GATES)) {
     return Response.json({ ok: false, error: 'unknown gate' }, { status: 400 });
@@ -43,6 +55,22 @@ export async function POST(request: NextRequest) {
     path: '/',
     maxAge: ONE_YEAR,
   });
+
+  // Only the Sales Ops gate attaches a visible identity cookie — it's used
+  // by the watermark + pageview beacon. Readable from JS, lax same-site so
+  // same-origin fetches still see it.
+  if (gateName === 'sales_ops' && name) {
+    const identity = JSON.stringify({ name, when: new Date().toISOString() });
+    store.set({
+      name: 'sales_ops_identity',
+      value: encodeURIComponent(identity),
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: ONE_YEAR,
+    });
+  }
 
   return Response.json({ ok: true });
 }
