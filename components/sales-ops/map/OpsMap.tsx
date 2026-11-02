@@ -61,7 +61,10 @@ export default function OpsMap() {
 
   const totals = useMemo(() => {
     if (!data) return { installs: 0, median: null as number | null };
-    const row = getAgg(data.AGG, 'S', filter, 'ALL');
+    // National totals live in the 'T' section (key: T|window|channel|inc|ALL|).
+    const inc = filter.channel === 'E' ? filter.inc : 0;
+    const key = `T|${filter.window}|${filter.channel}|${inc}|ALL|`;
+    const row = data.AGG[key] ?? null;
     return {
       installs: installCount(row),
       median: pickMetric(row, 'med'),

@@ -365,17 +365,20 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
             const p = projectCity(c.lat, c.lon);
             if (!p) return null;
             const [x, y] = p;
-            const r = 3 / transform.k;
-            const chipDx = 10 / transform.k;
-            const chipDy = -10 / transform.k;
-            const fontPx = Math.max(9, 11 / transform.k);
-            const padX = 7 / transform.k;
-            const padY = 4 / transform.k;
+            const k = transform.k;
+            // Everything inside this <g> gets scaled by k on render, so to
+            // land on a ~10px label on screen the SVG units need to be 10/k.
+            const r = 2.6 / k;
+            const chipDx = 8 / k;
+            const chipDy = -8 / k;
+            const fontPx = 10 / k;
+            const padX = 6 / k;
+            const padY = 3 / k;
             const label = c.name.toUpperCase();
             const estWidth = label.length * fontPx * 0.58;
             return (
               <g key={`city-${c.name}-${c.abbr}`} pointerEvents="none">
-                <circle cx={x} cy={y} r={r} fill={SUN} stroke={INK} strokeWidth={0.8 / transform.k} />
+                <circle cx={x} cy={y} r={r} fill={SUN} stroke={INK} strokeWidth={0.8 / k} />
                 <rect
                   x={x + chipDx}
                   y={y + chipDy - padY - fontPx * 0.6}
@@ -384,7 +387,7 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
                   rx={fontPx / 1.6}
                   fill="rgba(13,16,35,0.78)"
                   stroke="rgba(255,255,255,0.14)"
-                  strokeWidth={0.6 / transform.k}
+                  strokeWidth={0.6 / k}
                 />
                 <text
                   x={x + chipDx + padX}
