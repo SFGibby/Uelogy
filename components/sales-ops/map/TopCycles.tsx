@@ -35,6 +35,8 @@ interface Props {
   onSelectState: (abbr: string) => void;
   onSelectZip3?: (p: string) => void;
   onSelectEpc?: (epc: string | null, states: string[]) => void;
+  hoverZip?: string | null;
+  onHoverZip?: (p: string | null) => void;
 }
 
 interface Row {
@@ -45,7 +47,7 @@ interface Row {
   count: number;
 }
 
-export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc }: Props) {
+export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc, hoverZip, onHoverZip }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <PrimaryList
@@ -54,6 +56,8 @@ export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZi
         filter={filter}
         onSelectState={onSelectState}
         onSelectZip3={onSelectZip3}
+        hoverZip={hoverZip ?? null}
+        onHoverZip={onHoverZip ?? (() => {})}
       />
       {filter.channel === 'E' && (
         <EpcList agg={agg} filter={filter} onSelectEpc={onSelectEpc ?? (() => {})} onSelectState={onSelectState} />
@@ -62,7 +66,17 @@ export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZi
   );
 }
 
-function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3 }: Omit<Props, 'onSelectEpc'>) {
+interface PrimaryProps {
+  agg: Agg;
+  zip3: Zip3Meta[];
+  filter: FilterState;
+  onSelectState: (abbr: string) => void;
+  onSelectZip3?: (p: string) => void;
+  hoverZip: string | null;
+  onHoverZip: (p: string | null) => void;
+}
+
+function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip, onHoverZip }: PrimaryProps) {
   const [expanded, setExpanded] = useState(false);
   const metricIsCount = filter.metric === 'n';
 
@@ -115,23 +129,32 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3 }: Omit<Pr
       </h3>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {visible.map((r, i) => (
-          <button
-            key={r.key}
-            onClick={() => {
-              if (filter.stateAbbr && onSelectZip3) onSelectZip3(r.primary);
-              else onSelectState(r.primary);
-            }}
-            style={primaryRowStyle}
-          >
-            <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.08em' }}>{i + 1}</span>
-            <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.08em', color: SUN }}>{r.primary}</span>
-            <span style={ellipsisStyle}>{r.secondary}</span>
-            <span style={{ fontFamily: MONO, fontSize: 12, color: TEXT, fontWeight: 700 }}>
-              {metricIsCount ? r.value.toLocaleString() : `${Math.round(r.value)}d`}
-            </span>
-          </button>
-        ))}
+        {visible.map((r, i) => {
+          const isHot = !!filter.stateAbbr && hoverZip === r.key;
+          return (
+            <button
+              key={r.key}
+              onClick={() => {
+                if (filter.stateAbbr && onSelectZip3) onSelectZip3(r.primary);
+                else onSelectState(r.primary);
+              }}
+              onMouseEnter={() => { if (filter.stateAbbr) onHoverZip(r.key); }}
+              onMouseLeave={() => { if (filter.stateAbbr) onHoverZip(null); }}
+              style={{
+                ...primaryRowStyle,
+                background: isHot ? '#242A58' : primaryRowStyle.background,
+                borderColor: isHot ? SUN : LINE_HI,
+              }}
+            >
+              <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.08em' }}>{i + 1}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.08em', color: SUN }}>{r.primary}</span>
+              <span style={ellipsisStyle}>{r.secondary}</span>
+              <span style={{ fontFamily: MONO, fontSize: 12, color: TEXT, fontWeight: 700 }}>
+                {metricIsCount ? r.value.toLocaleString() : `${Math.round(r.value)}d`}
+              </span>
+            </button>
+          );
+        })}
         {visible.length === 0 && (
           <div style={{ padding: '18px 12px', fontSize: 12, color: MUTED, fontStyle: 'italic' }}>
             Nothing meets the minimum install threshold under this filter.

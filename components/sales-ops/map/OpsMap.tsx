@@ -39,6 +39,7 @@ export default function OpsMap() {
   const { data, loading, error } = useMapData();
   const [filter, setFilter] = useState<FilterState>(INITIAL);
   const [tableOpen, setTableOpen] = useState(false);
+  const [hoverZip, setHoverZip] = useState<string | null>(null);
 
   const onChange = useCallback((patch: Partial<FilterState>) => {
     setFilter(f => ({ ...f, ...patch }));
@@ -112,7 +113,14 @@ export default function OpsMap() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
-          <MapCanvas zip3={data.ZIP3} agg={data.AGG} filter={filter} onSelectState={onSelectState} />
+          <MapCanvas
+            zip3={data.ZIP3}
+            agg={data.AGG}
+            filter={filter}
+            onSelectState={onSelectState}
+            hoverZip={hoverZip}
+            onHoverZip={setHoverZip}
+          />
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
             <button
               onClick={() => setTableOpen(v => !v)}
@@ -149,6 +157,8 @@ export default function OpsMap() {
             filter={filter}
             onSelectState={abbr => onSelectState(abbr)}
             onSelectEpc={(epc) => onSelectEpc(epc)}
+            hoverZip={hoverZip}
+            onHoverZip={setHoverZip}
           />
         </aside>
       </div>

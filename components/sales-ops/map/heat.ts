@@ -55,6 +55,29 @@ export function warmColor(v: number): [number, number, number] {
   return GRADIENT[GRADIENT.length - 1][1];
 }
 
+// Speed ramp — orange (slow) → yellow (middle) → green (fast). Used on the
+// ZIP3 choropleth at drill level where speed should read at a glance.
+const SPEED_GRADIENT: Array<[number, [number, number, number]]> = [
+  [0.00, [255, 112, 70]],    // orange — slowest
+  [0.35, [255, 160, 70]],    // amber
+  [0.55, [250, 214, 70]],    // SunPower yellow
+  [0.75, [168, 220, 90]],    // lime
+  [1.00, [94, 228, 147]],    // green — fastest
+];
+
+export function speedColor(v: number): [number, number, number] {
+  const clamped = Math.max(0, Math.min(1, v));
+  for (let i = 1; i < SPEED_GRADIENT.length; i++) {
+    if (clamped <= SPEED_GRADIENT[i][0]) {
+      const [t0, c0] = SPEED_GRADIENT[i - 1];
+      const [t1, c1] = SPEED_GRADIENT[i];
+      const u = (clamped - t0) / (t1 - t0 || 1);
+      return [lerp(c0[0], c1[0], u), lerp(c0[1], c1[1], u), lerp(c0[2], c1[2], u)];
+    }
+  }
+  return SPEED_GRADIENT[SPEED_GRADIENT.length - 1][1];
+}
+
 export interface DensityPoint {
   x: number;    // projected pixel x in the SVG viewBox
   y: number;    // projected pixel y
