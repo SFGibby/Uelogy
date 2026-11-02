@@ -35,11 +35,15 @@ const INITIAL: FilterState = {
   query: '',
 };
 
+export type RailMode = 'speed' | 'workable';
+
 export default function OpsMap() {
   const { data, loading, error } = useMapData();
   const [filter, setFilter] = useState<FilterState>(INITIAL);
   const [tableOpen, setTableOpen] = useState(false);
   const [hoverZip, setHoverZip] = useState<string | null>(null);
+  const [railMode, setRailMode] = useState<RailMode>('speed');
+  const [focusedZip3, setFocusedZip3] = useState<string | null>(null);
 
   const onChange = useCallback((patch: Partial<FilterState>) => {
     setFilter(f => ({ ...f, ...patch }));
@@ -53,6 +57,12 @@ export default function OpsMap() {
       activeEpc: null,
       level: abbr ? 'STATE' : 'US',
     }));
+    setFocusedZip3(null);
+    setRailMode('speed');
+  }, []);
+
+  const onFocusZip3 = useCallback((zip3: string | null) => {
+    setFocusedZip3(zip3);
   }, []);
 
   const onSelectEpc = useCallback((epc: string | null) => {
@@ -123,6 +133,8 @@ export default function OpsMap() {
             onSelectState={onSelectState}
             hoverZip={hoverZip}
             onHoverZip={setHoverZip}
+            onFocusZip3={onFocusZip3}
+            focusedZip3={focusedZip3}
           />
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
             <button
@@ -162,6 +174,10 @@ export default function OpsMap() {
             onSelectEpc={(epc) => onSelectEpc(epc)}
             hoverZip={hoverZip}
             onHoverZip={setHoverZip}
+            railMode={railMode}
+            onRailMode={setRailMode}
+            focusedZip3={focusedZip3}
+            onFocusZip3={onFocusZip3}
           />
         </aside>
       </div>

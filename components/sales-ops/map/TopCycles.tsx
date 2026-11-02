@@ -29,6 +29,8 @@ const STATE_NAMES: Record<string, string> = {
   WA:'Washington', WV:'West Virginia', WI:'Wisconsin', WY:'Wyoming', DC:'DC',
 };
 
+export type RailMode = 'speed' | 'workable';
+
 interface Props {
   agg: Agg;
   zip3: Zip3Meta[];
@@ -38,6 +40,10 @@ interface Props {
   onSelectEpc?: (epc: string | null, states: string[]) => void;
   hoverZip?: string | null;
   onHoverZip?: (p: string | null) => void;
+  railMode?: RailMode;
+  onRailMode?: (m: RailMode) => void;
+  focusedZip3?: string | null;
+  onFocusZip3?: (p: string | null) => void;
 }
 
 interface Row {
@@ -82,21 +88,78 @@ function bestEpcIn(
   return bestName;
 }
 
-export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc, hoverZip, onHoverZip }: Props) {
+export default function TopCycles({
+  agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc,
+  hoverZip, onHoverZip, railMode = 'speed', onRailMode, focusedZip3, onFocusZip3,
+}: Props) {
+  const drilled = !!filter.stateAbbr;
+
+  // When a ZIP3 is focused, the rail collapses into the ZIP5 copy panel.
+  if (drilled && focusedZip3) {
+    return (
+      <Zip5Panel
+        zip3={focusedZip3}
+        stateAbbr={filter.stateAbbr!}
+        onBack={() => onFocusZip3?.(null)}
+      />
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <PrimaryList
-        agg={agg}
-        zip3={zip3}
-        filter={filter}
-        onSelectState={onSelectState}
-        onSelectZip3={onSelectZip3}
-        hoverZip={hoverZip ?? null}
-        onHoverZip={onHoverZip ?? (() => {})}
-      />
-      {filter.channel === 'E' && (
+      {drilled && (
+        <RailModeToggle mode={railMode} onChange={onRailMode ?? (() => {})} />
+      )}
+      {drilled && railMode === 'workable' ? (
+        <WorkableList
+          agg={agg}
+          zip3={zip3}
+          filter={filter}
+          hoverZip={hoverZip ?? null}
+          onHoverZip={onHoverZip ?? (() => {})}
+          onFocusZip3={onFocusZip3 ?? (() => {})}
+        />
+      ) : (
+        <PrimaryList
+          agg={agg}
+          zip3={zip3}
+          filter={filter}
+          onSelectState={onSelectState}
+          onSelectZip3={onSelectZip3}
+          hoverZip={hoverZip ?? null}
+          onHoverZip={onHoverZip ?? (() => {})}
+        />
+      )}
+      {filter.channel === 'E' && !drilled && (
         <EpcList agg={agg} filter={filter} onSelectEpc={onSelectEpc ?? (() => {})} onSelectState={onSelectState} />
       )}
+      {filter.channel === 'E' && drilled && railMode === 'speed' && (
+        <EpcList agg={agg} filter={filter} onSelectEpc={onSelectEpc ?? (() => {})} onSelectState={onSelectState} />
+      )}
+    </div>
+  );
+}
+
+function RailModeToggle({ mode, onChange }: { mode: RailMode; onChange: (m: RailMode) => void }) {
+  const base: React.CSSProperties = {
+    padding: '7px 12px',
+    fontFamily: MONO,
+    fontSize: 10,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    border: 0,
+    background: 'transparent',
+    color: SUBTLE,
+  };
+  return (
+    <div style={{ display: 'inline-flex', background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 999, overflow: 'hidden', width: 'fit-content' }}>
+      <button onClick={() => onChange('speed')} style={{ ...base, background: mode === 'speed' ? SUN : 'transparent', color: mode === 'speed' ? '#0D1023' : SUBTLE }}>
+        Fastest
+      </button>
+      <button onClick={() => onChange('workable')} style={{ ...base, background: mode === 'workable' ? SUN : 'transparent', color: mode === 'workable' ? '#0D1023' : SUBTLE }}>
+        Workable area
+      </button>
     </div>
   );
 }
@@ -426,3 +489,221 @@ const expandBtn: React.CSSProperties = {
   textTransform: 'uppercase',
   cursor: 'pointer',
 };
+
+// --- Workable area list (Enerflo-covered ZIP3s by install volume) --------
+
+interface WorkableListProps {
+  agg: Agg;
+  zip3: Zip3Meta[];
+  filter: FilterState;
+  hoverZip: string | null;
+  onHoverZip: (p: string | null) => void;
+  onFocusZip3: (p: string | null) => void;
+}
+
+function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onFocusZip3 }: WorkableListProps) {
+  const [expanded, setExpanded] = useState(false);
+  const enerflo = useEnerfloCoverage();
+
+  const rows = useMemo(() => {
+    if (!filter.stateAbbr) return [];
+    // Which ZIP3s do we actually sell into in this state (per Enerflo)?
+    const workable = new Set<string>();
+    if (enerflo) {
+      for (const [z5, meta] of enerflo.zipLookup) {
+        if (meta.state === filter.stateAbbr) workable.add(z5.slice(0, 3));
+      }
+    }
+    const inState = zip3.filter(z => z.st === filter.stateAbbr && workable.has(z.p));
+    return inState
+      .map(z => {
+        const row = getAgg(agg, 'Z3', filter, z.p);
+        return { key: z.p, primary: z.p, secondary: z.city, count: installCount(row) };
+      })
+      .sort((a, b) => b.count - a.count);
+  }, [agg, zip3, filter, enerflo]);
+
+  const visible = expanded ? rows : rows.slice(0, 10);
+
+  return (
+    <div style={{ fontFamily: SANS, color: TEXT }}>
+      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
+        Enerflo coverage
+      </div>
+      <h3 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        {`Workable area \u00b7 ${filter.stateAbbr}`}
+      </h3>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {visible.map(r => {
+          const isHot = hoverZip === r.key;
+          return (
+            <button
+              key={r.key}
+              onMouseEnter={() => onHoverZip(r.key)}
+              onMouseLeave={() => onHoverZip(null)}
+              onClick={() => onFocusZip3(r.key)}
+              style={{
+                ...primaryRowStyle,
+                gridTemplateColumns: '48px 1fr auto',
+                background: isHot ? '#242A58' : SURFACE,
+                borderColor: isHot ? SUN : LINE_HI,
+              }}
+              title={`Open ZIPs we service in ${r.primary}xx`}
+            >
+              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.08em', color: SUN }}>{r.primary}</span>
+              <span style={ellipsisStyle}>{r.secondary}</span>
+              <span style={{ fontFamily: MONO, fontSize: 12, color: TEXT, fontWeight: 700 }}>
+                {r.count.toLocaleString()} inst
+              </span>
+            </button>
+          );
+        })}
+        {visible.length === 0 && (
+          <div style={{ padding: '18px 12px', fontSize: 12, color: MUTED, fontStyle: 'italic' }}>
+            No Enerflo-covered ZIPs in {filter.stateAbbr} under this filter.
+          </div>
+        )}
+      </div>
+
+      {rows.length > 10 && (
+        <button onClick={() => setExpanded(v => !v)} style={expandBtn}>
+          {expanded ? 'Show top 10' : `See all ${rows.length}`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// --- ZIP5 copy panel ----------------------------------------------------
+
+function Zip5Panel({ zip3, stateAbbr, onBack }: { zip3: string; stateAbbr: string; onBack: () => void }) {
+  const enerflo = useEnerfloCoverage();
+  const [copied, setCopied] = useState(false);
+
+  const zips = useMemo(() => {
+    if (!enerflo) return [] as { z5: string; metro: string; zone: number }[];
+    const out: { z5: string; metro: string; zone: number }[] = [];
+    for (const [z5, meta] of enerflo.zipLookup) {
+      if (meta.state === stateAbbr && z5.startsWith(zip3)) {
+        out.push({ z5, metro: meta.metro, zone: meta.zone });
+      }
+    }
+    return out.sort((a, b) => a.z5.localeCompare(b.z5));
+  }, [enerflo, zip3, stateAbbr]);
+
+  // Group by metro+zone for context
+  const groups = useMemo(() => {
+    const m = new Map<string, { metro: string; zone: number; zips: string[] }>();
+    for (const r of zips) {
+      const k = `${r.metro}\u00a0\u00b7\u00a0Z${r.zone}`;
+      const g = m.get(k) ?? { metro: r.metro, zone: r.zone, zips: [] };
+      g.zips.push(r.z5);
+      m.set(k, g);
+    }
+    return [...m.values()];
+  }, [zips]);
+
+  async function copyAll() {
+    try {
+      await navigator.clipboard.writeText(zips.map(z => z.z5).join(', '));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Fallback via temporary textarea
+      const ta = document.createElement('textarea');
+      ta.value = zips.map(z => z.z5).join(', ');
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  }
+
+  return (
+    <div style={{ fontFamily: SANS, color: TEXT }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <button
+          onClick={onBack}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${LINE_HI}`,
+            borderRadius: 999,
+            color: SUBTLE,
+            padding: '5px 10px',
+            fontFamily: MONO,
+            fontSize: 10,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+          }}
+        >
+          {'\u2190 Back'}
+        </button>
+        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase' }}>
+          Workable zips
+        </span>
+      </div>
+      <h3 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 18, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
+        {zip3}xx {'\u00b7 '}
+        <span style={{ color: SUN }}>{zips.length}</span>
+        <span style={{ color: MUTED, fontSize: 13 }}>{' '}zips</span>
+      </h3>
+
+      <button
+        onClick={copyAll}
+        disabled={zips.length === 0}
+        style={{
+          width: '100%',
+          background: copied ? '#5EE493' : SUN,
+          color: '#0D1023',
+          border: 0,
+          borderRadius: 999,
+          padding: '10px 14px',
+          fontFamily: DISPLAY,
+          fontSize: 12,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          cursor: zips.length === 0 ? 'not-allowed' : 'pointer',
+          opacity: zips.length === 0 ? 0.5 : 1,
+          marginBottom: 12,
+        }}
+      >
+        {copied ? 'Copied' : `Copy all ${zips.length} zips`}
+      </button>
+
+      {groups.length === 0 && (
+        <div style={{ padding: '18px 12px', fontSize: 12, color: MUTED, fontStyle: 'italic', border: `1px solid ${LINE_HI}`, borderRadius: 8 }}>
+          No Enerflo-covered ZIPs in {zip3}xx. We don&rsquo;t sell here right now.
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {groups.map(g => (
+          <div key={`${g.metro}-${g.zone}`} style={{ background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{g.metro}</span>
+              <span style={{ fontFamily: MONO, fontSize: 10, color: SUN, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Zone {g.zone}</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {g.zips.map(z => (
+                <span key={z} style={{
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  letterSpacing: '0.08em',
+                  color: TEXT,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${LINE_HI}`,
+                  borderRadius: 6,
+                  padding: '3px 7px',
+                }}>{z}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -63,9 +63,11 @@ interface Props {
   onSelectState?: (abbr: string | null) => void;
   hoverZip: string | null;
   onHoverZip: (p: string | null) => void;
+  focusedZip3?: string | null;
+  onFocusZip3?: (p: string | null) => void;
 }
 
-export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, onHoverZip }: Props) {
+export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, onHoverZip, focusedZip3, onFocusZip3 }: Props) {
   const topo = useUsTopo();
   const zip3Topo = useZip3Topo(!!filter.stateAbbr);
   const serviceable = useServiceableStates();
@@ -340,18 +342,22 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
             {sortedZips.map(f => {
               const p = f.properties.p;
               const isHot = hoverZip === p;
+              const isFocused = focusedZip3 === p;
               return (
                 <path
                   key={p}
                   d={zipPath(f) ?? undefined}
                   fill={zipFill(p)}
-                  stroke={isHot ? ZIP_STROKE_HOVER : ZIP_STROKE}
-                  strokeWidth={(isHot ? 2.2 : 1) / transform.k}
+                  stroke={isFocused ? SUN : isHot ? ZIP_STROKE_HOVER : ZIP_STROKE}
+                  strokeWidth={(isFocused ? 2.6 : isHot ? 2.2 : 1) / transform.k}
                   strokeLinejoin="round"
                   style={{ cursor: 'pointer' }}
                   onMouseEnter={() => onHoverZip(p)}
                   onMouseLeave={() => onHoverZip(null)}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFocusZip3?.(isFocused ? null : p);
+                  }}
                 >
                   <title>{`${p}xx`}</title>
                 </path>
@@ -367,27 +373,39 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
               const p = f.properties.p;
               const c = zipPath.centroid(f);
               if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return null;
+              const k = transform.k;
+              const fontPx = 12 / k;
+              // 3 digits × mono char width ratio (~0.6) + a touch of padding.
+              const w = fontPx * 3 * 0.68 + 6 / k;
+              const h = fontPx + 4 / k;
               return (
-                <text
-                  key={`zl-${p}`}
-                  x={c[0]}
-                  y={c[1]}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  style={{
-                    pointerEvents: 'none',
-                    fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
-                    fontSize: 8 / transform.k,
-                    letterSpacing: '0.08em',
-                    fill: '#0D1023',
-                    stroke: 'rgba(255,255,255,0.75)',
-                    strokeWidth: 0.9 / transform.k,
-                    paintOrder: 'stroke',
-                    fontWeight: 700,
-                  }}
-                >
-                  {p}
-                </text>
+                <g key={`zl-${p}`} pointerEvents="none">
+                  <rect
+                    x={c[0] - w / 2}
+                    y={c[1] - h / 2}
+                    width={w}
+                    height={h}
+                    rx={h / 2}
+                    fill="rgba(13,16,35,0.78)"
+                    stroke="rgba(255,255,255,0.25)"
+                    strokeWidth={0.6 / k}
+                  />
+                  <text
+                    x={c[0]}
+                    y={c[1]}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
+                      fontSize: fontPx,
+                      letterSpacing: '0.08em',
+                      fill: '#FFFFFF',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {p}
+                  </text>
+                </g>
               );
             })}
           </g>
@@ -442,13 +460,16 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
             const chipDx = 8 / k;
             const chipDy = -8 / k;
             const fontPx = 10 / k;
-            const padX = 6 / k;
+            const padX = 8 / k;
             const padY = 3 / k;
             const label = c.name.toUpperCase();
-            const estWidth = label.length * fontPx * 0.58;
+            // Mono + 0.14em letter-spacing lands around 0.78 char-width ratio;
+            // bump a hair past that so long names (SAN FRANCISCO, HARRISBURG)
+            // don't poke out of their pill.
+            const estWidth = label.length * fontPx * 0.82;
             return (
               <g key={`city-${c.name}-${c.abbr}`} pointerEvents="none">
-                <circle cx={x} cy={y} r={r} fill={SUN} stroke={INK} strokeWidth={0.8 / k} />
+                <circle cx={x} cy={y} r={r} fill={OUTLINE_ACTIVE} stroke={INK} strokeWidth={0.8 / k} />
                 <rect
                   x={x + chipDx}
                   y={y + chipDy - padY - fontPx * 0.6}
