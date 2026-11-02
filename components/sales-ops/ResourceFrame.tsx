@@ -51,7 +51,39 @@ export default function ResourceFrame() {
   if (err) return <Shell><div style={{ padding: 48, color: '#FF8B9F', fontFamily: SANS }}>Resource guide failed to load: {err}</div></Shell>;
   if (!data) return <Shell><Loading /></Shell>;
 
-  const tab = data.tabs.find(t => t.key === tabKey) ?? data.tabs[0];
+  // Append a static Redlines & Adders tab that surfaces the Merdeka PDFs
+  // Colten syncs each cycle. These live in /sales-ops/data/pdfs/ in the repo.
+  const extendedTabs: Tab[] = [
+    ...data.tabs,
+    {
+      key: 'redlines',
+      label: 'Redlines & Adders',
+      hero: { title: 'Redlines & Adders', subtitle: 'The current cycle from Merdeka SPWR HQ.' },
+      sections: [
+        {
+          kind: 'cards',
+          title: 'Direct side',
+          cards: [
+            { title: 'SPWR Redlines (Direct)', highlight: true,
+              body: '<p>Approved product/price redlines for the Direct side. Current cycle.</p><p><a href="/sales-ops/data/pdfs/spwr-redlines-2026-10-26.pdf" target="_blank" rel="noopener">Open SPWR Redlines 10.26.26 \u2192</a></p>' },
+            { title: 'SunPower Adder Sheet', highlight: true,
+              body: '<p>Adder catalog by zone. Zone assignments come from Enerflo installer markets.</p><p><a href="/sales-ops/data/pdfs/adder-sheet-2026-10-09.pdf" target="_blank" rel="noopener">Open Adder Sheet 10-09-2026 \u2192</a></p>' },
+            { title: 'SunPower DQ ZIP codes', highlight: false,
+              body: '<p>ZIPs we actively DQ. If a lead lands here, we don\'t work it.</p><p><a href="/sales-ops/data/pdfs/sunpower-dq-zips-2026-10.pdf" target="_blank" rel="noopener">Open DQ ZIPs sheet \u2192</a></p>' },
+          ],
+        },
+        {
+          kind: 'cards',
+          title: 'EPC side',
+          cards: [
+            { title: 'EPC Redlines (Sunder)', highlight: true,
+              body: '<p>Approved product/price redlines for EPC partners. Current cycle.</p><p><a href="/sales-ops/data/pdfs/epc-redlines-2026-10-26.pdf" target="_blank" rel="noopener">Open Sunder Redlines 10.26.26 \u2192</a></p>' },
+          ],
+        },
+      ],
+    },
+  ];
+  const tab = extendedTabs.find(t => t.key === tabKey) ?? extendedTabs[0];
   const q = query.trim().toLowerCase();
 
   return (
@@ -66,7 +98,7 @@ export default function ResourceFrame() {
           background: INK, position: 'sticky', top: 55, zIndex: 20,
         }}
       >
-        {data.tabs.map(t => {
+        {extendedTabs.map(t => {
           const active = t.key === tab.key;
           return (
             <button
