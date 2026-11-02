@@ -43,8 +43,42 @@ interface Row {
   key: string;
   primary: string;
   secondary: string;
+  epc?: string;      // "fastest EPC" credit, only populated on EPC channel
   value: number;
   count: number;
+}
+
+// Find the EPC inside a scope (state or ZIP3) that owns the best metric
+// value under the current filter. "Best" is lowest median for time metrics,
+// highest count for volume. Returns null when no EPC meets the install floor.
+function bestEpcIn(
+  agg: Agg,
+  filter: FilterState,
+  section: 'ES' | 'EZ',
+  scopeKey: string,       // state abbr for ES, ZIP3 for EZ
+): string | null {
+  const metricIdx = METRIC_INDEX[filter.metric];
+  const metricIsCount = filter.metric === 'n';
+  const prefix = `${section}|${filter.window}|E|${filter.inc}|${scopeKey}|`;
+  let bestName: string | null = null;
+  let bestValue = metricIsCount ? -Infinity : Infinity;
+  for (const key of Object.keys(agg)) {
+    if (!key.startsWith(prefix)) continue;
+    const parts = key.split('|');
+    const epc = parts[5];
+    if (!epc) continue;
+    const row = agg[key];
+    const n = installCount(row);
+    if (n < 3) continue;    // too few installs to credit as "fastest"
+    const v = row[metricIdx];
+    if (typeof v !== 'number') continue;
+    const score = metricIsCount ? n : v;
+    if (metricIsCount ? score > bestValue : score < bestValue) {
+      bestValue = score;
+      bestName = epc;
+    }
+  }
+  return bestName;
 }
 
 export default function TopCycles({ agg, zip3, filter, onSelectState, onSelectZip3, onSelectEpc, hoverZip, onHoverZip }: Props) {
@@ -80,6 +114,8 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
   const [expanded, setExpanded] = useState(false);
   const metricIsCount = filter.metric === 'n';
 
+  const isEpc = filter.channel === 'E';
+
   const rows = useMemo<Row[]>(() => {
     if (filter.stateAbbr) {
       const inState = zip3.filter(z => z.st === filter.stateAbbr);
@@ -90,6 +126,7 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
             key: z.p,
             primary: z.p,
             secondary: z.city,
+            epc: isEpc ? bestEpcIn(agg, filter, 'EZ', z.p) ?? undefined : undefined,
             value: pickMetric(row, filter.metric) ?? Infinity,
             count: installCount(row),
           };
@@ -105,13 +142,14 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
           key: abbr,
           primary: abbr,
           secondary: STATE_NAMES[abbr],
+          epc: isEpc ? bestEpcIn(agg, filter, 'ES', abbr) ?? undefined : undefined,
           value: pickMetric(row, filter.metric) ?? Infinity,
           count: installCount(row),
         };
       })
       .filter(r => r.count >= MIN.S)
       .sort((a, b) => (metricIsCount ? b.value - a.value : a.value - b.value));
-  }, [agg, zip3, filter, metricIsCount]);
+  }, [agg, zip3, filter, metricIsCount, isEpc]);
 
   const visible = expanded ? rows : rows.slice(0, 5);
   const title = metricIsCount
@@ -148,7 +186,16 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
             >
               <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.08em' }}>{i + 1}</span>
               <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.08em', color: SUN }}>{r.primary}</span>
-              <span style={ellipsisStyle}>{r.secondary}</span>
+              <span style={{ minWidth: 0, overflow: 'hidden' }}>
+                <span style={{ display: 'block', fontSize: 12, color: SUBTLE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {r.secondary}
+                </span>
+                {r.epc && (
+                  <span style={{ display: 'block', fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {r.epc}
+                  </span>
+                )}
+              </span>
               <span style={{ fontFamily: MONO, fontSize: 12, color: TEXT, fontWeight: 700 }}>
                 {metricIsCount ? r.value.toLocaleString() : `${Math.round(r.value)}d`}
               </span>
