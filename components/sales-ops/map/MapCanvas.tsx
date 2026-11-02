@@ -8,7 +8,7 @@ import type { Topology, GeometryCollection as TopoGC } from 'topojson-specificat
 import GlowLayer, { type GlowTransform } from './GlowLayer';
 import type { Agg, FilterState, Zip3Meta } from './types';
 import { getAgg, installCount, pickMetric, speedColor } from './heat';
-import { useUsTopo, useZip3Topo } from './useMapData';
+import { useUsTopo, useZip3Topo, useServiceableStates } from './useMapData';
 import { MAJOR_CITIES } from './cities';
 
 const VIEW_W = 975;
@@ -68,6 +68,7 @@ interface Props {
 export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, onHoverZip }: Props) {
   const topo = useUsTopo();
   const zip3Topo = useZip3Topo(!!filter.stateAbbr);
+  const serviceable = useServiceableStates();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ w: VIEW_W, h: VIEW_H });
   const [hover, setHover] = useState<string | null>(null);
@@ -94,14 +95,21 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return fc.features.filter(f => !NEVER_RENDER.has(f.properties.abbr));
   }, [topo]);
 
+  // A state only counts as operating if it (a) has installs under the
+  // current filter AND (b) has at least one active financier per the
+  // Sales Resource Guide. States with historical installs but no live
+  // financier coverage grey out just like true no-service states.
   const operatingSet = useMemo(() => {
     const out = new Set<string>();
     for (const z of zip3) {
       const row = getAgg(agg, 'Z3', filter, z.p);
       if (installCount(row) > 0) out.add(z.st);
     }
-    return out;
-  }, [zip3, agg, filter]);
+    if (!serviceable || serviceable.size === 0) return out;
+    const filtered = new Set<string>();
+    for (const abbr of out) if (serviceable.has(abbr)) filtered.add(abbr);
+    return filtered;
+  }, [zip3, agg, filter, serviceable]);
 
   const epcStateSet = useMemo(() => {
     if (!filter.activeEpc) return null;
@@ -199,10 +207,12 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return p ? [p[0], p[1]] : null;
   }
 
+  // Cities only render once drilled into a state. Keeps the national view
+  // uncluttered — nothing competes with the glow raster.
   const visibleCities = useMemo(() => {
-    if (drilled) return MAJOR_CITIES.filter(c => c.abbr === filter.stateAbbr);
-    return MAJOR_CITIES.filter(c => c.scope === 'US' && operatingSet.has(c.abbr));
-  }, [drilled, filter.stateAbbr, operatingSet]);
+    if (!drilled) return [];
+    return MAJOR_CITIES.filter(c => c.abbr === filter.stateAbbr);
+  }, [drilled, filter.stateAbbr]);
 
   return (
     <div

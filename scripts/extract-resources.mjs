@@ -334,5 +334,26 @@ const out = {
 
 writeFileSync(OUT, JSON.stringify(out, null, 2));
 
+// Also emit the union of states covered by any active financier. The map
+// uses this as the "we actually service here" set: a state without a
+// financier is greyed out even if there's an historical install there.
+const financeTab = out.tabs.find(t => t.key === 'finance');
+const compareTable = financeTab?.sections.find(s => s.title === 'Quick comparison');
+const activeRow = compareTable?.content.rows.find(row => row[0]?.toLowerCase().includes('active state'));
+const serviceable = new Set();
+if (activeRow) {
+  for (let i = 1; i < activeRow.length; i++) {
+    const cell = activeRow[i] || '';
+    const matches = cell.match(/\b[A-Z]{2}\b/g) ?? [];
+    for (const s of matches) serviceable.add(s);
+  }
+}
+const serviceableOut = join(ROOT, 'public', 'sales-ops', 'data', 'serviceable-states.json');
+writeFileSync(serviceableOut, JSON.stringify({
+  updatedAt: new Date().toISOString(),
+  states: [...serviceable].sort(),
+}, null, 2));
+
 const summary = out.tabs.map(t => `${t.key}: ${t.sections.length} sections`).join(', ');
 console.log(`Wrote ${OUT} — ${summary}`);
+console.log(`Wrote ${serviceableOut} — ${serviceable.size} serviceable states`);

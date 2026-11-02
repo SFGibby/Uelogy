@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Agg, AggValue, FilterState, Zip3Meta, MetricKey } from './types';
 import { getAgg, installCount, pickMetric } from './heat';
 import { MIN, METRIC_INDEX } from './types';
+import { useServiceableStates } from './useMapData';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
 const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
@@ -115,6 +116,7 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
   const metricIsCount = filter.metric === 'n';
 
   const isEpc = filter.channel === 'E';
+  const serviceable = useServiceableStates();
 
   const rows = useMemo<Row[]>(() => {
     if (filter.stateAbbr) {
@@ -148,8 +150,11 @@ function PrimaryList({ agg, zip3, filter, onSelectState, onSelectZip3, hoverZip,
         };
       })
       .filter(r => r.count >= MIN.S)
+      // Skip states with no active financier — they match the greyed-out
+      // map treatment set by the Sales Resource Guide.
+      .filter(r => !serviceable || serviceable.size === 0 || serviceable.has(r.primary))
       .sort((a, b) => (metricIsCount ? b.value - a.value : a.value - b.value));
-  }, [agg, zip3, filter, metricIsCount, isEpc]);
+  }, [agg, zip3, filter, metricIsCount, isEpc, serviceable]);
 
   const visible = expanded ? rows : rows.slice(0, 5);
   const title = metricIsCount

@@ -63,6 +63,38 @@ export function useUsTopo() {
   return topo;
 }
 
+// Serviceable states — union of all financier Active States columns.
+// Cached once at module scope; the file is tiny.
+let serviceableCached: Set<string> | null = null;
+let serviceableInFlight: Promise<Set<string>> | null = null;
+
+export function useServiceableStates(): Set<string> | null {
+  const [set, setSet] = useState<Set<string> | null>(serviceableCached);
+  useEffect(() => {
+    if (serviceableCached) { setSet(serviceableCached); return; }
+    if (!serviceableInFlight) {
+      serviceableInFlight = fetch('/sales-ops/data/serviceable-states.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : { states: [] })
+        .then((d: { states: string[] }) => {
+          const s = new Set(d.states ?? []);
+          serviceableCached = s;
+          serviceableInFlight = null;
+          return s;
+        })
+        .catch(() => {
+          const s = new Set<string>();
+          serviceableCached = s;
+          serviceableInFlight = null;
+          return s;
+        });
+    }
+    let alive = true;
+    serviceableInFlight.then(s => { if (alive) setSet(s); });
+    return () => { alive = false; };
+  }, []);
+  return set;
+}
+
 // ZIP3 topology — lazy loaded the first time a state is drilled.
 let zip3TopoCached: unknown = null;
 let zip3TopoInFlight: Promise<unknown> | null = null;
