@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Archivo_Black, Geist, Geist_Mono } from 'next/font/google';
 import FeedbackWidget from '../../components/sales-ops/FeedbackWidget';
-import Watermark from '../../components/sales-ops/Watermark';
 import PageviewBeacon from '../../components/sales-ops/PageviewBeacon';
+import ScreenshotSignals from '../../components/sales-ops/ScreenshotSignals';
 
 const archivo = Archivo_Black({ subsets: ['latin'], weight: '400', variable: '--font-gibson-display', display: 'swap' });
 const geist = Geist({ subsets: ['latin'], variable: '--font-gibson-sans', display: 'swap' });
@@ -15,8 +15,8 @@ export default function SalesOpsLayout({ children }: { children: ReactNode }) {
       style={{ minHeight: '100vh', background: '#0D1023' }}
     >
       {children}
-      <Watermark />
       <PageviewBeacon />
+      <ScreenshotSignals />
       <FeedbackWidget />
     </div>
   );

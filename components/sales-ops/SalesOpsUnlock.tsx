@@ -164,7 +164,7 @@ export default function SalesOpsUnlock() {
           </button>
 
           <p style={{ marginTop: 14, fontSize: 12, color: MUTED, lineHeight: 1.5 }}>
-            Your name lands on every page as a soft watermark and in a pageview log. Screenshots trace back to you.
+            Beta surface. Sam uses the name to keep track of who&rsquo;s poking around.
           </p>
 
           <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${LINE_HI}`, display: 'flex', justifyContent: 'space-between', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
