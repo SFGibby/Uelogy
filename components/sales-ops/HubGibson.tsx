@@ -40,18 +40,18 @@ const CADENCES: { key: Cadence; label: string }[] = [
   { key: 'qtr', label: 'Quarter' },
 ];
 
-type BucketKey = 'overall' | 'knocks' | 'sits' | 'closes' | 'leadToConversion' | 'pullThrough' | 'installs' | 'recruited' | 'retention';
+type BucketKey = 'overall' | 'knocks' | 'sits' | 'closes' | 'leadToConversion' | 'pullThrough' | 'installs' | 'recruited' | 'activeReps';
 
 const BUCKETS: { key: BucketKey; label: string; format: (r: ScopeRow) => string }[] = [
-  { key: 'overall',          label: 'Overall',    format: r => `${r.overall}` },
-  { key: 'knocks',           label: 'Knocks',     format: r => r.knocks.toLocaleString() },
-  { key: 'sits',             label: 'Sits',       format: r => r.sits.toLocaleString() },
-  { key: 'closes',           label: 'Bookings',   format: r => r.closes.toLocaleString() },
-  { key: 'leadToConversion', label: 'L\u2192C',   format: r => `${r.leadToConversion}%` },
-  { key: 'pullThrough',      label: 'Pull-thru',  format: r => `${r.pullThrough}%` },
-  { key: 'installs',         label: 'Installs',   format: r => r.installs.toLocaleString() },
-  { key: 'recruited',        label: 'Recruited',  format: r => `${r.recruited}` },
-  { key: 'retention',        label: 'Retention',  format: r => `${r.retention}%` },
+  { key: 'overall',          label: 'Overall',     format: r => `${r.overall}` },
+  { key: 'knocks',           label: 'Knocks',      format: r => r.knocks.toLocaleString() },
+  { key: 'sits',             label: 'Sits',        format: r => r.sits.toLocaleString() },
+  { key: 'closes',           label: 'Bookings',    format: r => r.closes.toLocaleString() },
+  { key: 'leadToConversion', label: 'L\u2192C',    format: r => `${r.leadToConversion}%` },
+  { key: 'pullThrough',      label: 'Pull-thru',   format: r => `${r.pullThrough}%` },
+  { key: 'installs',         label: 'Installs',    format: r => r.installs.toLocaleString() },
+  { key: 'recruited',        label: 'Recruited',   format: r => `${r.recruited}` },
+  { key: 'activeReps',       label: 'Active reps', format: r => `${r.activeReps}` },
 ];
 
 export default function HubGibson() {
@@ -581,7 +581,7 @@ function ScopeRowTile({
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${LINE}`, display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.22em', textTransform: 'uppercase' }}>Overall</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 36, color: scoreColor, letterSpacing: '-0.025em' }}>{row.overall}</span>
-            <span style={{ fontSize: 12, color: MUTED }}>/ 100 &middot; equal weighting across 8 buckets</span>
+            <span style={{ fontSize: 12, color: MUTED }}>/ 100 &middot; equal weighting across 7 performance buckets (active reps excluded)</span>
             <button onClick={onBody} style={{ ...pillSelect, marginLeft: 'auto', cursor: 'pointer', color: SUN, borderColor: SUN }}>
               {bodyActionLabel}
             </button>

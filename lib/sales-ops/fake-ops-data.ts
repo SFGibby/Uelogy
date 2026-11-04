@@ -155,7 +155,7 @@ export interface ScorecardRow {
   pullThrough: number;        // percent
   installs: number;           // count
   recruited: number;          // reps they brought on in period
-  retention: number;          // retention percent for their reports
+  activeReps: number;         // count of active reps in scope; wire to Merdeka later
   overall: number;            // 0-100 equal-weighted
 }
 
@@ -391,13 +391,13 @@ export interface ScopeRow {
   pullThrough: number;
   installs: number;
   recruited: number;
-  retention: number;
+  activeReps: number;   // 1 per rep; summed up at team/region/company
   overall: number;
 }
 
 function aggregateRows(rows: ScopeRow[]): Omit<ScopeRow, 'key' | 'kind' | 'label' | 'context' | 'region' | 'team'> {
   if (rows.length === 0) {
-    return { knocks: 0, sits: 0, closes: 0, leadToConversion: 0, pullThrough: 0, installs: 0, recruited: 0, retention: 0, overall: 0 };
+    return { knocks: 0, sits: 0, closes: 0, leadToConversion: 0, pullThrough: 0, installs: 0, recruited: 0, activeReps: 0, overall: 0 };
   }
   const sum = (f: (r: ScopeRow) => number) => rows.reduce((s, r) => s + f(r), 0);
   const avg = (f: (r: ScopeRow) => number) => Math.round(sum(f) / rows.length);
@@ -409,7 +409,7 @@ function aggregateRows(rows: ScopeRow[]): Omit<ScopeRow, 'key' | 'kind' | 'label
     pullThrough: avg(r => r.pullThrough),
     installs: sum(r => r.installs),
     recruited: sum(r => r.recruited),
-    retention: avg(r => r.retention),
+    activeReps: sum(r => r.activeReps),
     overall: avg(r => r.overall),
   };
 }
@@ -631,7 +631,12 @@ function buildAllRepRows(cadence: Cadence, now: Date): ScopeRow[] {
     const pullThrough = Math.round(jitter(perRep, 90, 0.07));
     const installsMonth = Math.round(closesMonth * (pullThrough / 100));
     const recruitedQtr = Math.round(perRep() * 4);
-    const retention = Math.round(jitter(perRep, 86, 0.1));
+    // Each rep contributes 1 to the active-reps count; rolls up at team/
+    // region/company. Real value will come from a Merdeka table later.
+    const activeReps = 1;
+    // Overall score drops Retention from the equal-weight average and rolls
+    // the 7 remaining buckets. Active reps is a scope count, not a
+    // performance score, so it doesn't belong in the composite.
     const score = Math.round(
       (Math.min(100, (knocksMonth / 1800) * 100) +
         Math.min(100, (sitsMonth / 150) * 100) +
@@ -639,8 +644,7 @@ function buildAllRepRows(cadence: Cadence, now: Date): ScopeRow[] {
         Math.min(100, (leadToConversion / 30) * 100) +
         Math.min(100, pullThrough) +
         Math.min(100, (installsMonth / 18) * 100) +
-        Math.min(100, (recruitedQtr / 4) * 100) +
-        Math.min(100, retention)) / 8,
+        Math.min(100, (recruitedQtr / 4) * 100)) / 7,
     );
     return {
       key: rep,
@@ -656,7 +660,7 @@ function buildAllRepRows(cadence: Cadence, now: Date): ScopeRow[] {
       pullThrough,
       installs: scaleCount(installsMonth, cadence),
       recruited: cadence === 'qtr' ? recruitedQtr : scaleCount(recruitedQtr, cadence),
-      retention,
+      activeReps,
       overall: score,
     };
   });
@@ -681,9 +685,8 @@ export function buildScorecards(cadence: Cadence, region: string | null = null, 
     const pullThrough = Math.round(jitter(rand, 90, 0.07));
     const installsMonth = Math.round(closesMonth * (pullThrough / 100));
     const recruitedQtr = Math.round(rand() * 4);
-    const retention = Math.round(jitter(rand, 86, 0.1));
-
-    // Normalize each bucket to 0-100 against reasonable targets.
+    // Normalize each bucket to 0-100 against reasonable targets. Retention is
+    // out; active reps is a scope count and doesn't belong in the composite.
     const score = Math.round(
       (Math.min(100, (knocksMonth / 1800) * 100) +
         Math.min(100, (sitsMonth / 150) * 100) +
@@ -691,9 +694,8 @@ export function buildScorecards(cadence: Cadence, region: string | null = null, 
         Math.min(100, (leadToConversion / 30) * 100) +
         Math.min(100, pullThrough) +
         Math.min(100, (installsMonth / 18) * 100) +
-        Math.min(100, (recruitedQtr / 4) * 100) +
-        Math.min(100, retention)) /
-      8
+        Math.min(100, (recruitedQtr / 4) * 100)) /
+      7
     );
 
     return {
@@ -706,7 +708,7 @@ export function buildScorecards(cadence: Cadence, region: string | null = null, 
       pullThrough,
       installs: scaleCount(installsMonth, cadence),
       recruited: cadence === 'qtr' ? recruitedQtr : scaleCount(recruitedQtr, cadence),
-      retention,
+      activeReps: 1,
       overall: score,
     };
   }).sort((a, b) => b.overall - a.overall);
