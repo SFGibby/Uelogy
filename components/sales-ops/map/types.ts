@@ -95,6 +95,8 @@ export const WINDOWS: { key: WindowKey; label: string }[] = [
 
 export const MIN = { S: 10, Z3: 10, Z5: 5 };
 
+export type StateShadingKey = 'metric' | 'rate' | 'financiers';
+
 export interface FilterState {
   channel: Channel;
   window: WindowKey;
@@ -106,4 +108,32 @@ export interface FilterState {
   zip3: string | null;        // when drilled into a ZIP3
   activeEpc: string | null;   // EPC name when a specific EPC is isolated
   query: string;
+  // National-level state shading mode:
+  //   'metric'     — color by the selected install metric (current behavior)
+  //   'rate'       — 4-band blue ramp by residential ¢/kWh
+  //   'financiers' — green ramp by financier count, or binary if a single
+  //                  financier is picked
+  stateShading: StateShadingKey;
+  shadingFinancier: string | null;   // financier.key when drilling to one lender
+}
+
+export interface UtilityRates {
+  updatedAt: string;
+  period: string;
+  us_avg: number;
+  bands: Array<[number, number, string]>;   // [min, max, label]
+  source: string;
+  rates: Record<string, number>;
+}
+
+export interface Financier {
+  key: string;
+  name: string;
+  states: string[];
+}
+
+export interface FinanciersFile {
+  updatedAt: string;
+  source: string;
+  financiers: Financier[];
 }

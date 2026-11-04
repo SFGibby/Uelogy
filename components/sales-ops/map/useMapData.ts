@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { MapData } from './types';
+import type { MapData, UtilityRates, FinanciersFile } from './types';
 import { buildEpcIndexes } from './types';
 
 // Single-flight loader for /sales-ops/data/map-data.json. Cached at the module
@@ -156,6 +156,72 @@ export function useServiceableStates(): Set<string> | null {
     return () => { alive = false; };
   }, []);
   return set;
+}
+
+// Utility rates by state. Small (~1 KB) so we load eagerly and cache.
+let utilityCached: UtilityRates | null = null;
+let utilityInFlight: Promise<UtilityRates | null> | null = null;
+
+export function useUtilityRates(): UtilityRates | null {
+  const [data, setData] = useState<UtilityRates | null>(utilityCached);
+  useEffect(() => {
+    if (utilityCached) { setData(utilityCached); return; }
+    if (!utilityInFlight) {
+      utilityInFlight = fetch('/sales-ops/data/utility-rates.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : null)
+        .then((d: UtilityRates | null) => { utilityCached = d; utilityInFlight = null; return d; })
+        .catch(() => { utilityInFlight = null; return null; });
+    }
+    let alive = true;
+    utilityInFlight.then(d => { if (alive) setData(d); });
+    return () => { alive = false; };
+  }, []);
+  return data;
+}
+
+// Financiers derived from the resources.json Finance tab.
+let financiersCached: FinanciersFile | null = null;
+let financiersInFlight: Promise<FinanciersFile | null> | null = null;
+
+export function useFinanciers(): FinanciersFile | null {
+  const [data, setData] = useState<FinanciersFile | null>(financiersCached);
+  useEffect(() => {
+    if (financiersCached) { setData(financiersCached); return; }
+    if (!financiersInFlight) {
+      financiersInFlight = fetch('/sales-ops/data/financiers.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : null)
+        .then((d: FinanciersFile | null) => { financiersCached = d; financiersInFlight = null; return d; })
+        .catch(() => { financiersInFlight = null; return null; });
+    }
+    let alive = true;
+    financiersInFlight.then(d => { if (alive) setData(d); });
+    return () => { alive = false; };
+  }, []);
+  return data;
+}
+
+// Real state outlines in lon/lat, used to clip ZIP3 polygons to the drilled
+// state. Some ZIP3 prefixes (per US Census ZCTA data) extend past state lines;
+// without this clip, those polygons bleed into neighbor states. ~114 KB.
+let statesLonLatCached: unknown = null;
+let statesLonLatInFlight: Promise<unknown> | null = null;
+
+export function useUsStatesLonLat(enabled: boolean): unknown {
+  const [topo, setTopo] = useState<unknown>(statesLonLatCached);
+  useEffect(() => {
+    if (!enabled) return;
+    if (statesLonLatCached) { setTopo(statesLonLatCached); return; }
+    if (!statesLonLatInFlight) {
+      statesLonLatInFlight = fetch('/sales-ops/data/us-states-lonlat.json', { cache: 'force-cache' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { statesLonLatCached = d; statesLonLatInFlight = null; return d; })
+        .catch(() => { statesLonLatInFlight = null; return null; });
+    }
+    let alive = true;
+    statesLonLatInFlight.then(t => { if (alive) setTopo(t); });
+    return () => { alive = false; };
+  }, [enabled]);
+  return topo;
 }
 
 // ZIP3 topology — lazy loaded the first time a state is drilled.

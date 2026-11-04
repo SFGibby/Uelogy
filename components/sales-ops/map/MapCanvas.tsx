@@ -6,10 +6,13 @@ import { feature } from 'topojson-client';
 import type { FeatureCollection, Feature, Geometry } from 'geojson';
 import type { Topology, GeometryCollection as TopoGC } from 'topojson-specification';
 import GlowLayer, { type GlowTransform } from './GlowLayer';
-import type { Agg, FilterState, Zip3Meta } from './types';
+import type { Agg, DqEntry, FilterState, Financier, UtilityRates, Zip3Meta } from './types';
 import { getAgg, installCount, pickMetric, speedColor } from './heat';
-import { useUsTopo, useZip3Topo, useZip5Topo, useServiceableStates, useEnerfloCoverage } from './useMapData';
+import { useUsTopo, useZip3Topo, useZip5Topo, useServiceableStates, useEnerfloCoverage, useUtilityRates, useFinanciers, useUsStatesLonLat } from './useMapData';
 import { MAJOR_CITIES } from './cities';
+import { stateShadingFill, financierCount } from './StateShading';
+import { buildDqByPrefix, computeVerdict } from './Verdict';
+import MapTooltip, { type TooltipContent } from './MapTooltip';
 
 const VIEW_W = 975;
 const VIEW_H = 610;
@@ -53,12 +56,27 @@ const LABEL_ADJ: Record<string, { dx: number; dy: number }> = {
 
 const NEVER_RENDER = new Set(['AK', 'HI']);
 
+// FIPS → USPS abbr, for looking up a state polygon out of the lon/lat topology
+// where each geometry is keyed by its two-digit FIPS id.
+const FIPS_TO_ABBR: Record<string, string> = {
+  '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA', '08': 'CO',
+  '09': 'CT', '10': 'DE', '11': 'DC', '12': 'FL', '13': 'GA', '15': 'HI',
+  '16': 'ID', '17': 'IL', '18': 'IN', '19': 'IA', '20': 'KS', '21': 'KY',
+  '22': 'LA', '23': 'ME', '24': 'MD', '25': 'MA', '26': 'MI', '27': 'MN',
+  '28': 'MS', '29': 'MO', '30': 'MT', '31': 'NE', '32': 'NV', '33': 'NH',
+  '34': 'NJ', '35': 'NM', '36': 'NY', '37': 'NC', '38': 'ND', '39': 'OH',
+  '40': 'OK', '41': 'OR', '42': 'PA', '44': 'RI', '45': 'SC', '46': 'SD',
+  '47': 'TN', '48': 'TX', '49': 'UT', '50': 'VT', '51': 'VA', '53': 'WA',
+  '54': 'WV', '55': 'WI', '56': 'WY',
+};
+
 interface StateFeature extends Feature<Geometry, { abbr: string; name: string }> {}
 interface Zip3Feature extends Feature<Geometry, { p: string }> {}
 
 interface Props {
   zip3: Zip3Meta[];
   agg: Agg;
+  dq?: DqEntry[];
   filter: FilterState;
   onSelectState?: (abbr: string | null) => void;
   hoverZip: string | null;
@@ -68,15 +86,20 @@ interface Props {
 
 interface Zip5Feature extends Feature<Geometry, { z: string; c: string }> {}
 
-export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, onHoverZip, onSelectZip3 }: Props) {
+export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZip, onHoverZip, onSelectZip3 }: Props) {
   const topo = useUsTopo();
+  const statesLonLat = useUsStatesLonLat(!!filter.stateAbbr);
   const zip3Topo = useZip3Topo(!!filter.stateAbbr);
   const zip5Topo = useZip5Topo(filter.zip3 ?? null);
   const serviceable = useServiceableStates();
   const enerflo = useEnerfloCoverage();
+  const utility = useUtilityRates();
+  const financiersFile = useFinanciers();
+  const financiers = financiersFile?.financiers ?? null;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState({ w: VIEW_W, h: VIEW_H });
   const [hover, setHover] = useState<string | null>(null);
+  const [tip, setTip] = useState<{ content: TooltipContent; x: number; y: number } | null>(null);
   const zip3Drilled = !!filter.zip3;
 
   useEffect(() => {
@@ -91,6 +114,20 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     ro.observe(containerRef.current);
     return () => ro.disconnect();
   }, []);
+
+  // Escape = drill back one level. Matches Kerstin's planner. Only fires when
+  // the map is in the DOM and no modal/input owns the key.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (filter.zip3) onSelectZip3?.(null);
+      else if (filter.stateAbbr) onSelectState?.(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [filter.zip3, filter.stateAbbr, onSelectState, onSelectZip3]);
 
   const states: StateFeature[] = useMemo(() => {
     if (!topo) return [];
@@ -157,24 +194,97 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
   const zipProjection = useMemo(() => geoAlbersUsa().scale(1300).translate([VIEW_W / 2, VIEW_H / 2]), []);
   const zipPath = useMemo(() => geoPath(zipProjection), [zipProjection]);
 
-  // All ZIP3 polys inside the drilled state, computed once so both the
-  // choropleth and the ZIP5 zoom transform can share the same bounds.
+  const dqByPrefix = useMemo(() => buildDqByPrefix(dq), [dq]);
+
+  // National median of the "Booking → install" metric under the current
+  // filter. Verdict uses this as the baseline for fast / slow comparisons.
+  const companyMedian = useMemo<number | null>(() => {
+    const inc = filter.channel === 'E' ? filter.inc : 0;
+    const key = `T|${filter.window}|${filter.channel}|${inc}|ALL|`;
+    const row = agg[key] ?? null;
+    return pickMetric(row, 'med');
+  }, [agg, filter.window, filter.channel, filter.inc]);
+
+  const zip3ByP = useMemo(() => {
+    const m = new Map<string, Zip3Meta>();
+    for (const z of zip3) m.set(z.p, z);
+    return m;
+  }, [zip3]);
+
+  // Enerflo-covered ZIP3 prefixes for the drilled state. These are active
+  // Direct markets even if they have no installs under the current filter
+  // window — we still want them clickable so a leader can scout them.
+  const enerfloZip3Set = useMemo(() => {
+    const out = new Set<string>();
+    if (!filter.stateAbbr || !enerflo) return out;
+    const markets = enerflo.markets.byState?.[filter.stateAbbr] ?? [];
+    for (const m of markets) {
+      for (const z of m.zips) out.add(String(z).slice(0, 3));
+    }
+    return out;
+  }, [filter.stateAbbr, enerflo]);
+
+  // ZIP3 prefixes with at least one install under the current filter.
+  const installActiveZip3Set = useMemo(() => {
+    const out = new Set<string>();
+    if (!filter.stateAbbr) return out;
+    for (const z of zip3) {
+      if (z.st !== filter.stateAbbr) continue;
+      const row = getAgg(agg, 'Z3', filter, z.p);
+      if (installCount(row) > 0) out.add(z.p);
+    }
+    return out;
+  }, [filter.stateAbbr, zip3, agg, filter]);
+
+  // ZIP3 prefix → primary state abbreviation. Used to drop neighbor-state
+  // ZIP3 polygons that Enerflo might otherwise pull in.
+  const zip3ToState = useMemo(() => {
+    const out = new Map<string, string>();
+    for (const z of zip3) out.set(z.p, z.st);
+    return out;
+  }, [zip3]);
+
+  // All ZIP3 polys inside the drilled state. Union of install-active plus
+  // Enerflo-active prefixes so Direct markets aren't invisible just because
+  // they haven't booked installs in the current window. Any ZIP3 prefix whose
+  // primary state isn't the drilled one gets dropped — we don't want to show
+  // a Colorado ZIP3 while drilled into Utah, even if Enerflo lets us sell it.
   const zip3Features: Zip3Feature[] = useMemo(() => {
     if (!filter.stateAbbr || !zip3Topo) return [];
     const t = zip3Topo as Topology<Record<string, TopoGC>>;
     const obj = t.objects?.three_dig_zips;
     if (!obj) return [];
     const fc = feature(t, obj) as unknown as FeatureCollection<Geometry, { p: string }>;
-    const activeZips = new Set<string>();
-    for (const z of zip3) {
-      if (z.st !== filter.stateAbbr) continue;
-      const row = getAgg(agg, 'Z3', filter, z.p);
-      if (installCount(row) > 0) activeZips.add(z.p);
-    }
-    return fc.features.filter(f => activeZips.has(f.properties.p));
-  }, [zip3Topo, filter.stateAbbr, zip3, agg, filter]);
+    const ab = filter.stateAbbr;
+    return fc.features.filter(f => {
+      const p = f.properties.p;
+      if (zip3ToState.get(p) !== ab) return false;
+      return installActiveZip3Set.has(p) || enerfloZip3Set.has(p);
+    });
+  }, [zip3Topo, filter.stateAbbr, installActiveZip3Set, enerfloZip3Set, zip3ToState]);
 
-  const transform = useMemo<GlowTransform>(() => {
+  // Exact drilled-state polygon in lon/lat, extracted from the us-states
+  // topology. Used both as a clip (to trim ZIP3 polygons that cross into
+  // neighboring states) and as the state-border stroke.
+  const drilledStateFeature = useMemo<Feature<Geometry, { name: string }> | null>(() => {
+    if (!filter.stateAbbr || !statesLonLat) return null;
+    const t = statesLonLat as Topology<Record<string, TopoGC>>;
+    const obj = t.objects?.states;
+    if (!obj) return null;
+    try {
+      const fc = feature(t, obj) as unknown as FeatureCollection<Geometry, { name: string }>;
+      const want = filter.stateAbbr;
+      const hit = fc.features.find(f => {
+        const fipsId = (f as unknown as { id?: string }).id;
+        return fipsId != null && FIPS_TO_ABBR[String(fipsId).padStart(2, '0')] === want;
+      });
+      return hit ?? null;
+    } catch {
+      return null;
+    }
+  }, [statesLonLat, filter.stateAbbr]);
+
+  const transformTarget = useMemo<GlowTransform>(() => {
     // ZIP3 drill — zoom into the specific ZIP3 polygon in the Albers frame.
     if (filter.zip3) {
       const z3f = zip3Features.find(z => z.properties.p === filter.zip3);
@@ -191,7 +301,23 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
         }
       }
     }
-    // State drill — zoom to the state polygon in the identity frame.
+    // State drill — center on the Albers bounds of the ZIP3 cluster so the
+    // state border rendered from ZIP arcs (via mesh) stays flush with every
+    // ZIP polygon underneath it. Using the viewBox-projected state bounds
+    // would land in a different coordinate space and make edges mismatch.
+    if (filter.stateAbbr && zip3Features.length) {
+      const fc = { type: 'FeatureCollection', features: zip3Features } as FeatureCollection<Geometry, { p: string }>;
+      const [[x0, y0], [x1, y1]] = zipPath.bounds(fc);
+      const w = x1 - x0;
+      const h = y1 - y0;
+      if (w > 0 && h > 0) {
+        const pad = 0.10;
+        const k = Math.min(VIEW_W / w, VIEW_H / h) * (1 - pad * 2);
+        const cx = (x0 + x1) / 2;
+        const cy = (y0 + y1) / 2;
+        return { tx: VIEW_W / 2 / k - cx, ty: VIEW_H / 2 / k - cy, k };
+      }
+    }
     if (!filter.stateAbbr) return { tx: 0, ty: 0, k: 1 };
     const f = states.find(s => s.properties.abbr === filter.stateAbbr);
     if (!f) return { tx: 0, ty: 0, k: 1 };
@@ -207,6 +333,36 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     const ty = VIEW_H / 2 / k - cy;
     return { tx, ty, k };
   }, [filter.stateAbbr, filter.zip3, states, path, zipPath, zip3Features]);
+
+  // Animate the transform toward its target instead of snapping. Drill-in
+  // and drill-out feel like a pan/zoom rather than a hard screen swap. Uses
+  // ease-out cubic over ~450ms. Cancels on consecutive filter changes so we
+  // chase the newest target.
+  const [transform, setTransform] = useState<GlowTransform>(transformTarget);
+  const transformRef = useRef(transform);
+  transformRef.current = transform;
+  useEffect(() => {
+    const from = transformRef.current;
+    const to = transformTarget;
+    if (from.tx === to.tx && from.ty === to.ty && from.k === to.k) return;
+    const start = performance.now();
+    const dur = 480;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    let raf = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / dur);
+      const e = ease(t);
+      const next = {
+        tx: from.tx + (to.tx - from.tx) * e,
+        ty: from.ty + (to.ty - from.ty) * e,
+        k: from.k + (to.k - from.k) * e,
+      };
+      setTransform(next);
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [transformTarget]);
 
   // ZIP5 geometry filtered to just the ZIPs inside the drilled ZIP3.
   const zip5Features: Zip5Feature[] = useMemo(() => {
@@ -235,8 +391,13 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
   function zip5Fill(z: string): string {
     const row = getAgg(agg, 'Z5', filter, z);
     const v = pickMetric(row, filter.metric);
-    if (v == null) return 'rgba(23,27,56,0.4)';
-    if (zip5Range.max === zip5Range.min) return 'rgba(23,27,56,0.6)';
+    const inEnerflo = enerflo?.zipLookup.has(z) ?? false;
+    if (v == null || zip5Range.max === zip5Range.min) {
+      // No install data under current filter — still show the ZIP as part of
+      // the active territory if it's in Enerflo (muted gold), or a visible
+      // neutral slate otherwise. Pure dark fills blend into the background.
+      return inEnerflo ? 'rgba(250, 214, 70, 0.18)' : 'rgba(140, 150, 190, 0.22)';
+    }
     const norm = filter.metric === 'n'
       ? (v - zip5Range.min) / (zip5Range.max - zip5Range.min)
       : 1 - (v - zip5Range.min) / (zip5Range.max - zip5Range.min);
@@ -261,10 +422,18 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     return { min: Math.min(...vals), max: Math.max(...vals) };
   }, [filter.stateAbbr, filter.metric, filter.channel, filter.window, filter.inc, agg, zip3]);
 
+  // Muted SunPower-yellow tint for ZIP3s that are in an Enerflo market but
+  // don't have install data under the current filter. Still clickable, still
+  // clearly belongs on the map, but visually distinct from the speed heat.
+  const ENERFLO_IDLE_FILL = 'rgba(250, 214, 70, 0.16)';
+  const EMPTY_FILL = 'rgba(23, 27, 56, 0.6)';
+
   function zipFill(p: string): string {
     const row = getAgg(agg, 'Z3', filter, p);
     const v = pickMetric(row, filter.metric);
-    if (v == null || zipRange.max === zipRange.min) return 'rgba(23,27,56,0.6)';
+    if (v == null || zipRange.max === zipRange.min) {
+      return enerfloZip3Set.has(p) ? ENERFLO_IDLE_FILL : EMPTY_FILL;
+    }
     const norm = filter.metric === 'n'
       ? (v - zipRange.min) / (zipRange.max - zipRange.min)
       : 1 - (v - zipRange.min) / (zipRange.max - zipRange.min);
@@ -301,9 +470,65 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
     });
   }, [drilled, filter.stateAbbr, filter.channel]);
 
+  function buildStateTooltip(abbr: string, name: string, inOps: boolean, epcHit: boolean): TooltipContent {
+    const rate = utility?.rates[abbr];
+    const finCount = financiers ? financierCount(abbr, financiers) : 0;
+    const lines: Array<{ label: string; value: string }> = [];
+    if (rate != null) lines.push({ label: 'Utility', value: `${rate.toFixed(1)}¢ / kWh` });
+    lines.push({ label: 'Financiers', value: finCount > 0 ? `${finCount} active` : 'none on file' });
+    const footnote = inOps
+      ? (filter.channel === 'E' ? 'EPC: has recent installs' : 'Direct: Enerflo market')
+      : (epcHit ? 'EPC footprint, no installs in window' : 'Not serviced in this channel');
+    return { title: name, lines, footnote };
+  }
+
+  function buildZip3Tooltip(p: string): TooltipContent {
+    const meta = zip3ByP.get(p);
+    if (!meta) return { title: `${p}xx` };
+    const inEnerflo = enerfloZip3Set.has(p);
+    const hasInstalls = installActiveZip3Set.has(p);
+    if (!hasInstalls && inEnerflo) {
+      return {
+        title: `${p}xx · ${meta.city}`,
+        chip: { label: 'Direct market', kind: 'good' },
+        footnote: 'No install data in window — scout opportunity',
+      };
+    }
+    const v = computeVerdict(meta, agg, filter, { companyMedian, dqByPrefix });
+    const row = getAgg(agg, 'Z3', filter, p);
+    const med = pickMetric(row, 'med');
+    const volume = installCount(row);
+    const lines: Array<{ label: string; value: string }> = [];
+    if (med != null) lines.push({ label: 'Median', value: `${Math.round(med)} days` });
+    if (companyMedian != null) lines.push({ label: 'Company', value: `${Math.round(companyMedian)} days` });
+    lines.push({ label: 'Installs', value: `${volume.toLocaleString()}` });
+    if (v.dqCount > 0) lines.push({ label: 'DQ ZIPs', value: `${v.dqCount} of ${meta.n}` });
+    return {
+      title: `${p}xx · ${meta.city}`,
+      chip: { label: v.label, kind: v.key },
+      lines,
+      flags: v.flags,
+    };
+  }
+
+  const handleContainerMouseMove = (e: React.MouseEvent) => {
+    if (!tip) return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTip({ ...tip, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  const openTip = (content: TooltipContent, e: React.MouseEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTip({ content, x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
   return (
     <div
       ref={containerRef}
+      onMouseMove={handleContainerMouseMove}
+      onMouseLeave={() => setTip(null)}
       style={{ position: 'relative', width: '100%', background: INK, borderRadius: 12, overflow: 'hidden' }}
     >
       <svg
@@ -320,6 +545,22 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
           onHoverZip(null);
         }}
       >
+        <defs>
+          {/* Hatched pattern for ZIP3s with disqualified ZIPs. 45° diagonal
+              lines over a transparent background so the base speed fill stays
+              visible underneath. */}
+          <pattern id="dq-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(13,16,35,0.75)" strokeWidth="1.1" />
+          </pattern>
+          {/* Drilled-state silhouette in Albers coords. Used to clip ZIP3
+              polygons so they never render past the real state border even
+              when a ZIP3 prefix legally crosses state lines. */}
+          {drilledStateFeature && (
+            <clipPath id="state-clip">
+              <path d={zipPath(drilledStateFeature) ?? undefined} />
+            </clipPath>
+          )}
+        </defs>
         {/* State paths */}
         <g transform={svgTransform}>
           {states.map(f => {
@@ -329,32 +570,23 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
             const isSelected = filter.stateAbbr === abbr;
             const epcHit = epcStateSet?.has(abbr) ?? false;
 
-            // While drilled: focused state becomes a container outline; every
-            // other state renders as a non-interactive faint shadow.
-            if (drilled) {
-              if (isSelected) {
-                return (
-                  <path
-                    key={abbr}
-                    d={path(f) ?? undefined}
-                    fill="transparent"
-                    stroke={ZIP_OUTER}
-                    strokeWidth={1.4 / transform.k}
-                    pointerEvents="none"
-                  />
-                );
-              }
-              return (
-                <path
-                  key={abbr}
-                  d={path(f) ?? undefined}
-                  fill="transparent"
-                  stroke={OUTLINE_DRILLED_OTHER}
-                  strokeWidth={0.6 / transform.k}
-                  pointerEvents="none"
-                />
-              );
-            }
+            // While drilled: all state paths are hidden. The drilled state's
+            // border is drawn separately in the Albers frame from the ZIP3
+            // arc mesh so it sits flush with every ZIP edge; neighbor states
+            // sit in a different projection and would only add visual noise
+            // off to the side, so we skip them.
+            if (drilled) return null;
+
+            // When shading by utility rate or financier count, all states get a
+            // choropleth fill — that info is geographic, not tied to whether
+            // we sell there. Non-operating states stay inert (no click).
+            const shadingFill = stateShadingFill({
+              abbr,
+              mode: filter.stateShading,
+              utility,
+              financiers,
+              singleFinancierKey: filter.shadingFinancier,
+            });
 
             // US level: operating states clickable; non-ops dim + inert.
             if (!inOps && !epcHit) {
@@ -362,7 +594,7 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
                 <path
                   key={abbr}
                   d={path(f) ?? undefined}
-                  fill="transparent"
+                  fill={shadingFill ?? 'transparent'}
                   stroke={OUTLINE_INACTIVE}
                   strokeWidth={0.6}
                   pointerEvents="none"
@@ -381,23 +613,28 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
               <path
                 key={abbr}
                 d={path(f) ?? undefined}
-                fill="transparent"
+                fill={shadingFill ?? 'transparent'}
                 stroke={stroke}
                 strokeWidth={strokeW}
                 style={{ cursor: 'pointer' }}
-                onMouseEnter={() => setHover(abbr)}
-                onMouseLeave={() => setHover(h => (h === abbr ? null : h))}
+                onMouseEnter={(e) => {
+                  setHover(abbr);
+                  openTip(buildStateTooltip(abbr, f.properties.name, inOps, epcHit), e);
+                }}
+                onMouseLeave={() => { setHover(h => (h === abbr ? null : h)); setTip(null); }}
                 onClick={(e) => { e.stopPropagation(); onSelectState?.(isSelected ? null : abbr); }}
-              >
-                <title>{f.properties.name}</title>
-              </path>
+              />
             );
           })}
         </g>
 
         {/* ZIP3 chunks + hover-sync */}
         {drilled && !zip3Drilled && (
-          <g transform={svgTransform}>
+          <g
+            transform={svgTransform}
+            clipPath={drilledStateFeature ? 'url(#state-clip)' : undefined}
+            style={{ opacity: Math.min(1, transform.k / Math.max(1.1, transformTarget.k * 0.4)), transition: 'opacity 240ms ease-out' }}
+          >
             {sortedZips.map(f => {
               const p = f.properties.p;
               const isHot = hoverZip === p;
@@ -410,23 +647,54 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
                   strokeWidth={(isHot ? 2.2 : 1) / transform.k}
                   strokeLinejoin="round"
                   style={{ cursor: 'pointer' }}
-                  onMouseEnter={() => onHoverZip(p)}
-                  onMouseLeave={() => onHoverZip(null)}
+                  onMouseEnter={(e) => { onHoverZip(p); openTip(buildZip3Tooltip(p), e); }}
+                  onMouseLeave={() => { onHoverZip(null); setTip(null); }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelectZip3?.(p);
                   }}
-                >
-                  <title>{`${p}xx`}</title>
-                </path>
+                />
               );
             })}
+            {/* Hatched DQ overlay. Opacity scales with DQ ratio per ZIP3, so
+                ZIP3s with every ZIP disqualified read nearly solid, and ZIP3s
+                with one or two DQs read as a faint stripe. */}
+            {filter.dq && sortedZips.map(f => {
+              const p = f.properties.p;
+              const meta = zip3ByP.get(p);
+              const dqn = dqByPrefix.get(p)?.length ?? 0;
+              if (!meta || dqn === 0) return null;
+              const ratio = Math.max(0.18, Math.min(0.85, dqn / Math.max(1, meta.n)));
+              return (
+                <path
+                  key={`dq-${p}`}
+                  d={zipPath(f) ?? undefined}
+                  fill="url(#dq-hatch)"
+                  stroke="none"
+                  pointerEvents="none"
+                  opacity={ratio}
+                />
+              );
+            })}
+          </g>
+        )}
+        {/* State border, drawn OUTSIDE the clipped group so the stroke hugs
+            the clip edge on both sides. Real state silhouette in Albers. */}
+        {drilled && !zip3Drilled && drilledStateFeature && (
+          <g transform={svgTransform} style={{ pointerEvents: 'none' }}>
+            <path
+              d={zipPath(drilledStateFeature) ?? undefined}
+              fill="none"
+              stroke={ZIP_OUTER}
+              strokeWidth={1.6 / transform.k}
+              strokeLinejoin="round"
+            />
           </g>
         )}
 
         {/* ZIP5 polys when drilled into a ZIP3 */}
         {drilled && zip3Drilled && (
-          <g transform={svgTransform}>
+          <g transform={svgTransform} style={{ opacity: Math.min(1, transform.k / Math.max(2, transformTarget.k * 0.5)), transition: 'opacity 220ms ease-out' }}>
             {zip5Features.map(f => {
               const z = f.properties.z;
               const isHot = hoverZip === z;
@@ -658,35 +926,16 @@ export default function MapCanvas({ zip3, agg, filter, onSelectState, hoverZip, 
         </g>
       </svg>
 
-      <GlowLayer zip3={zip3} agg={agg} filter={filter} width={size.w} height={size.h} transform={transform} />
-
-      {drilled && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            background: SUN,
-            color: INK,
-            fontFamily: 'var(--font-gibson-mono), ui-monospace, monospace',
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            padding: '7px 12px',
-            borderRadius: 999,
-            cursor: 'pointer',
-            zIndex: 2,
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (zip3Drilled) onSelectZip3?.(null);
-            else onSelectState?.(null);
-          }}
-        >
-          {zip3Drilled ? `${filter.zip3}xx` : filter.stateAbbr} {'\u2715'}
-        </div>
+      {filter.stateShading === 'metric' && (
+        <GlowLayer zip3={zip3} agg={agg} filter={filter} width={size.w} height={size.h} transform={transform} />
       )}
+
+      <MapTooltip
+        content={tip?.content ?? null}
+        x={tip?.x ?? 0}
+        y={tip?.y ?? 0}
+        containerRect={containerRef.current?.getBoundingClientRect() ?? null}
+      />
     </div>
   );
 }

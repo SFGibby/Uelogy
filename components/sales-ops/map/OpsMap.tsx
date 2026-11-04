@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { FilterState } from './types';
-import { useMapData } from './useMapData';
+import { useMapData, useFinanciers, useUtilityRates } from './useMapData';
 import { getAgg, installCount, pickMetric } from './heat';
 import Controls from './Controls';
 import Breadcrumb from './Breadcrumb';
@@ -11,6 +11,7 @@ import TopCycles from './TopCycles';
 import CycleTable from './CycleTable';
 import MobileMarkets from './MobileMarkets';
 import StateContextBadges from './StateContextBadges';
+import LegendNote from './LegendNote';
 import { useIsNarrow } from '../useBreakpoint';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
@@ -36,12 +37,17 @@ const INITIAL: FilterState = {
   zip3: null,
   activeEpc: null,
   query: '',
+  stateShading: 'metric',
+  shadingFinancier: null,
 };
 
 export type RailMode = 'speed' | 'workable';
 
 export default function OpsMap() {
   const { data, loading, error } = useMapData();
+  const financiersFile = useFinanciers();
+  const utility = useUtilityRates();
+  const financiers = financiersFile?.financiers ?? null;
   const [filter, setFilter] = useState<FilterState>(INITIAL);
   const [tableOpen, setTableOpen] = useState(false);
   const [hoverZip, setHoverZip] = useState<string | null>(null);
@@ -110,7 +116,7 @@ export default function OpsMap() {
     return (
       <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
         <Breadcrumb filter={filter} onChange={onChange} />
-        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
+        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} financiers={financiers} />
         <MobileMarkets
           agg={data.AGG}
           zip3={data.ZIP3}
@@ -146,21 +152,25 @@ export default function OpsMap() {
         </p>
       </section>
 
-      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
+      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} financiers={financiers} />
       <Breadcrumb filter={filter} onChange={onChange} />
       {filter.stateAbbr && !filter.zip3 && <StateContextBadges stateAbbr={filter.stateAbbr} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
-          <MapCanvas
-            zip3={data.ZIP3}
-            agg={data.AGG}
-            filter={filter}
-            onSelectState={onSelectState}
-            hoverZip={hoverZip}
-            onHoverZip={setHoverZip}
-            onSelectZip3={onSelectZip3}
-          />
+          <div style={{ position: 'relative' }}>
+            <MapCanvas
+              zip3={data.ZIP3}
+              agg={data.AGG}
+              dq={data.DQ}
+              filter={filter}
+              onSelectState={onSelectState}
+              hoverZip={hoverZip}
+              onHoverZip={setHoverZip}
+              onSelectZip3={onSelectZip3}
+            />
+            <LegendNote filter={filter} utility={utility} financiers={financiers} />
+          </div>
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
             <button
               onClick={() => setTableOpen(v => !v)}

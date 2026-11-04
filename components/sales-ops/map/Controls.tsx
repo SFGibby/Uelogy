@@ -1,6 +1,6 @@
 'use client';
 
-import type { Channel, FilterState, MetricKey, WindowKey } from './types';
+import type { Channel, FilterState, MetricKey, StateShadingKey, WindowKey, Financier } from './types';
 import { METRICS, WINDOWS } from './types';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
@@ -20,9 +20,11 @@ interface Props {
   onChange: (patch: Partial<FilterState>) => void;
   totalInstalls?: number;
   totalMedian?: number | null;
+  financiers?: Financier[] | null;
 }
 
-export default function Controls({ filter, onChange, totalInstalls, totalMedian }: Props) {
+export default function Controls({ filter, onChange, totalInstalls, totalMedian, financiers }: Props) {
+  const showFinSelector = filter.stateShading === 'financiers' && (financiers?.length ?? 0) > 0;
   return (
     <div
       style={{
@@ -67,6 +69,40 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian 
           {METRICS.map(m => <option key={m.key} value={m.key} style={{ background: SURFACE }}>{m.label}</option>)}
         </select>
       </div>
+      <PillGroup
+        label="Shade"
+        value={filter.stateShading}
+        options={[
+          { k: 'metric', l: 'Install' },
+          { k: 'rate', l: 'Utility' },
+          { k: 'financiers', l: 'Financiers' },
+        ]}
+        onChange={(v) => onChange({ stateShading: v as StateShadingKey, shadingFinancier: null })}
+      />
+      {showFinSelector && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Lender</span>
+          <select
+            value={filter.shadingFinancier ?? ''}
+            onChange={(e) => onChange({ shadingFinancier: e.target.value || null })}
+            style={{
+              background: SURFACE,
+              color: TEXT,
+              border: `1px solid ${LINE_HI}`,
+              borderRadius: 999,
+              padding: '9px 14px',
+              fontFamily: SANS,
+              fontSize: 13,
+              outline: 'none',
+            }}
+          >
+            <option value="" style={{ background: SURFACE }}>All (count by state)</option>
+            {financiers!.map(f => (
+              <option key={f.key} value={f.key} style={{ background: SURFACE }}>{f.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <input
         type="search"
         value={filter.query}

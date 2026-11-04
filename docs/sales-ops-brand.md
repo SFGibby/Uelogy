@@ -362,7 +362,7 @@ If you want to pattern-match a live screen while building:
 
 ```
 URL:      uelogy.com/sales-ops
-Password: Kapil
+Password: Kerstin
 ```
 
 Walk the hero → controls → breadcrumb → grid → right-rail rhythm on any of the sub-pages. The structure is identical.

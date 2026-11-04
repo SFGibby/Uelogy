@@ -581,6 +581,55 @@ function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onSelectZip3Row
   );
 }
 
+// Compact square copy-to-clipboard button. Shows a tiny copy icon that
+// swaps to a green check for a moment after the copy succeeds. Hover + focus
+// outline, tooltip via native title.
+function CopyIconButton({
+  onCopy, copied, disabled = false, label, size = 30,
+}: {
+  onCopy: () => void;
+  copied: boolean;
+  disabled?: boolean;
+  label: string;
+  size?: number;
+}) {
+  return (
+    <button
+      onClick={onCopy}
+      disabled={disabled}
+      title={copied ? 'Copied' : label}
+      aria-label={copied ? 'Copied' : label}
+      style={{
+        flexShrink: 0,
+        width: size,
+        height: size,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: copied ? 'rgba(94,228,147,0.15)' : 'transparent',
+        border: `1px solid ${copied ? '#5EE493' : LINE_HI}`,
+        borderRadius: 6,
+        color: copied ? '#5EE493' : SUBTLE,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
+        transition: 'background 140ms ease, border-color 140ms ease, color 140ms ease',
+        padding: 0,
+      }}
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <rect x="9" y="9" width="12" height="12" rx="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 // --- ZIP5 copy panel ----------------------------------------------------
 
 interface Zip5PanelProps {
@@ -596,6 +645,23 @@ interface Zip5PanelProps {
 function Zip5Panel({ zip3, stateAbbr, agg, filter, hoverZip, onHoverZip, onBack }: Zip5PanelProps) {
   const enerflo = useEnerfloCoverage();
   const [copied, setCopied] = useState(false);
+  const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
+
+  async function copyGroup(key: string, list: string[]) {
+    const text = list.join(', ');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+    setCopiedGroup(key);
+    setTimeout(() => setCopiedGroup(c => (c === key ? null : c)), 1500);
+  }
 
   const zips = useMemo(() => {
     if (!enerflo) return [] as { z5: string; metro: string; zone: number }[];
@@ -662,33 +728,19 @@ function Zip5Panel({ zip3, stateAbbr, agg, filter, hoverZip, onHoverZip, onBack 
           Workable zips
         </span>
       </div>
-      <h3 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 18, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
-        {zip3}xx {'\u00b7 '}
-        <span style={{ color: SUN }}>{zips.length}</span>
-        <span style={{ color: MUTED, fontSize: 13 }}>{' '}zips</span>
-      </h3>
-
-      <button
-        onClick={copyAll}
-        disabled={zips.length === 0}
-        style={{
-          width: '100%',
-          background: copied ? '#5EE493' : SUN,
-          color: '#0D1023',
-          border: 0,
-          borderRadius: 999,
-          padding: '10px 14px',
-          fontFamily: DISPLAY,
-          fontSize: 12,
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          cursor: zips.length === 0 ? 'not-allowed' : 'pointer',
-          opacity: zips.length === 0 ? 0.5 : 1,
-          marginBottom: 12,
-        }}
-      >
-        {copied ? 'Copied' : `Copy all ${zips.length} zips`}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 12px' }}>
+        <h3 style={{ margin: 0, fontFamily: DISPLAY, fontSize: 18, letterSpacing: '-0.01em', textTransform: 'uppercase', flex: 1, minWidth: 0 }}>
+          {zip3}xx {'\u00b7 '}
+          <span style={{ color: SUN }}>{zips.length}</span>
+          <span style={{ color: MUTED, fontSize: 13 }}>{' '}zips</span>
+        </h3>
+        <CopyIconButton
+          onCopy={copyAll}
+          copied={copied}
+          disabled={zips.length === 0}
+          label={`Copy ${zips.length} ZIPs`}
+        />
+      </div>
 
       {groups.length === 0 && (
         <div style={{ padding: '18px 12px', fontSize: 12, color: MUTED, fontStyle: 'italic', border: `1px solid ${LINE_HI}`, borderRadius: 8 }}>
@@ -697,11 +749,19 @@ function Zip5Panel({ zip3, stateAbbr, agg, filter, hoverZip, onHoverZip, onBack 
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {groups.map(g => (
-          <div key={`${g.metro}-${g.zone}`} style={{ background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{g.metro}</span>
+        {groups.map(g => {
+          const key = `${g.metro}-${g.zone}`;
+          return (
+          <div key={key} style={{ background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', flex: 1, minWidth: 0 }}>{g.metro}</span>
               <span style={{ fontFamily: MONO, fontSize: 10, color: SUN, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Zone {g.zone}</span>
+              <CopyIconButton
+                size={26}
+                copied={copiedGroup === key}
+                onCopy={() => copyGroup(key, g.zips)}
+                label={`Copy ${g.zips.length} ZIPs in ${g.metro}`}
+              />
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {g.zips.map(z => {
@@ -736,7 +796,8 @@ function Zip5Panel({ zip3, stateAbbr, agg, filter, hoverZip, onHoverZip, onBack 
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

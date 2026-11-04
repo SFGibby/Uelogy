@@ -46,7 +46,7 @@ const BUCKETS: { key: BucketKey; label: string; format: (r: ScopeRow) => string 
   { key: 'overall',          label: 'Overall',    format: r => `${r.overall}` },
   { key: 'knocks',           label: 'Knocks',     format: r => r.knocks.toLocaleString() },
   { key: 'sits',             label: 'Sits',       format: r => r.sits.toLocaleString() },
-  { key: 'closes',           label: 'Closes',     format: r => r.closes.toLocaleString() },
+  { key: 'closes',           label: 'Bookings',   format: r => r.closes.toLocaleString() },
   { key: 'leadToConversion', label: 'L\u2192C',   format: r => `${r.leadToConversion}%` },
   { key: 'pullThrough',      label: 'Pull-thru',  format: r => `${r.pullThrough}%` },
   { key: 'installs',         label: 'Installs',   format: r => r.installs.toLocaleString() },
@@ -111,8 +111,12 @@ export default function HubGibson() {
   function drillRow(r: ScopeRow) {
     if (r.kind === 'region' && r.region) { setScope('region'); setRegion(r.region); setTeam(null); setExpanded(null); setQuery(''); return; }
     if (r.kind === 'team' && r.region && r.team) { setScope('team'); setRegion(r.region); setTeam(r.team); setExpanded(null); setQuery(''); return; }
-    // Rep row — toggle expand.
-    setExpanded(prev => prev === r.key ? null : r.key);
+    // Rep body click — open the account drilldown modal.
+    setRepOpen(r.label);
+  }
+
+  function toggleRow(key: string) {
+    setExpanded(prev => prev === key ? null : key);
   }
 
   function openRep(repName: string) {
@@ -227,7 +231,8 @@ export default function HubGibson() {
                 row={r}
                 metric={metric}
                 expanded={expanded === r.key}
-                onToggle={() => drillRow(r)}
+                onBody={() => drillRow(r)}
+                onToggle={() => toggleRow(r.key)}
                 onRepOpen={openRep}
               />
             ))}
@@ -442,9 +447,10 @@ function MetricChips({ metric, setMetric }: { metric: BucketKey; setMetric: (m: 
 }
 
 function ScopeRowTile({
-  rank, row, metric, expanded, onToggle, onRepOpen,
+  rank, row, metric, expanded, onBody, onToggle, onRepOpen,
 }: {
   rank: number; row: ScopeRow; metric: BucketKey; expanded: boolean;
+  onBody: () => void;
   onToggle: () => void;
   onRepOpen: (name: string) => void;
 }) {
@@ -452,89 +458,106 @@ function ScopeRowTile({
   const value = bucket.format(row);
   const scoreColor = row.overall >= 85 ? GOOD : row.overall >= 70 ? WATCH : BEHIND;
   const isRep = row.kind === 'rep';
+  const bodyActionLabel = isRep ? 'Open account view' : row.kind === 'region' ? 'Open region · see teams' : 'Open team · see reps';
 
   return (
     <div style={{ background: SURFACE, border: `1px solid ${LINE}`, borderRadius: 12, overflow: 'hidden' }}>
-      <button
-        onClick={onToggle}
-        aria-expanded={isRep ? expanded : undefined}
+      <div
         style={{
-          width: '100%',
           display: 'grid',
           gridTemplateColumns: '72px 1fr auto 44px',
           gap: 18,
           alignItems: 'center',
           padding: '18px 24px',
-          background: 'transparent',
           color: TEXT,
-          border: 0,
-          cursor: 'pointer',
           fontFamily: SANS,
-          textAlign: 'left',
         }}
       >
         <span style={{ fontFamily: DISPLAY, fontSize: 28, color: rank <= 3 ? SUN : MUTED, letterSpacing: '-0.02em' }}>
           {String(rank).padStart(2, '0')}
         </span>
-        <span>
+        <button
+          onClick={onBody}
+          style={{
+            background: 'transparent', border: 0, padding: 0, textAlign: 'left',
+            color: TEXT, fontFamily: SANS, cursor: 'pointer',
+          }}
+        >
           <div style={{ fontFamily: DISPLAY, fontSize: 20, color: TEXT, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
             {row.label}
           </div>
           <div style={{ fontFamily: MONO, fontSize: 11, color: MUTED, marginTop: 4, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
             {row.context}
           </div>
-        </span>
+        </button>
         <span style={{ fontFamily: DISPLAY, fontSize: 44, color: metric === 'overall' ? scoreColor : SUN, letterSpacing: '-0.03em', textAlign: 'right', lineHeight: 1 }}>
           {value}
         </span>
-        <span style={affordance}>
-          {isRep ? (
-            <svg
-              width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 160ms ease' }}
-              aria-hidden
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <polyline points="9 6 15 12 9 18" />
-            </svg>
-          )}
-        </span>
-      </button>
+        <button
+          onClick={onToggle}
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Hide scorecard' : 'Show scorecard'}
+          style={{
+            width: 44, height: 44, borderRadius: 999,
+            background: expanded ? 'rgba(250,214,70,0.12)' : 'transparent',
+            border: `1px solid ${expanded ? SUN : LINE_HI}`,
+            color: expanded ? SUN : SUBTLE,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 160ms ease' }}
+            aria-hidden
+          >
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
+        </button>
+      </div>
 
-      {isRep && expanded && (
+      {expanded && (
         <div style={{ padding: '22px 24px 26px', borderTop: `1px solid ${LINE}`, background: SURFACE_HI }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
-            {BUCKETS.filter(b => b.key !== 'overall').map(b => (
-              <button
-                key={b.key}
-                onClick={() => onRepOpen(row.label)}
-                style={{
-                  background: 'transparent', border: 0, padding: 0, cursor: 'pointer',
-                  color: TEXT, textAlign: 'left', fontFamily: SANS,
-                }}
-              >
-                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>
-                  {b.label}
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 28, color: TEXT, letterSpacing: '-0.02em', lineHeight: 1 }}>
-                  {b.format(row)}
-                </div>
-                <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 10, color: SUN, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                  Open deals
-                </div>
-              </button>
-            ))}
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase', marginBottom: 12 }}>
+            Scorecard &middot; {row.label}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 18 }}>
+            {BUCKETS.filter(b => b.key !== 'overall').map(b => {
+              const clickable = isRep;
+              return (
+                <button
+                  key={b.key}
+                  onClick={clickable ? () => onRepOpen(row.label) : undefined}
+                  disabled={!clickable}
+                  style={{
+                    background: 'transparent', border: 0, padding: 0,
+                    cursor: clickable ? 'pointer' : 'default',
+                    color: TEXT, textAlign: 'left', fontFamily: SANS,
+                    opacity: 1,
+                  }}
+                >
+                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>
+                    {b.label}
+                  </div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 28, color: TEXT, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                    {b.format(row)}
+                  </div>
+                  {clickable && (
+                    <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 10, color: SUN, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                      Open deals
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${LINE}`, display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
             <span style={{ fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.22em', textTransform: 'uppercase' }}>Overall</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 36, color: scoreColor, letterSpacing: '-0.025em' }}>{row.overall}</span>
             <span style={{ fontSize: 12, color: MUTED }}>/ 100 &middot; equal weighting across 8 buckets</span>
-            <button onClick={() => onRepOpen(row.label)} style={{ ...pillSelect, marginLeft: 'auto', cursor: 'pointer', color: SUN, borderColor: SUN }}>
-              Open account view
+            <button onClick={onBody} style={{ ...pillSelect, marginLeft: 'auto', cursor: 'pointer', color: SUN, borderColor: SUN }}>
+              {bodyActionLabel}
             </button>
           </div>
         </div>

@@ -72,22 +72,25 @@ export default function CycleTable({ agg, filter, onSelectState }: Props) {
 
   return (
     <div style={{ fontFamily: SANS, color: TEXT }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
         <h3 style={{ margin: 0, fontFamily: DISPLAY, fontSize: 14, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-          Cycle times
+          Install speed by state
         </h3>
         <span style={{ fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-          Direct vs EPC &middot; {rows.length} states
+          {rows.length} active
         </span>
       </div>
+      <div style={{ fontSize: 12, color: SUBTLE, marginBottom: 10 }}>
+        Total installs and median days from booking to install, split by Direct and EPC. Click a state to drill in.
+      </div>
       <div style={{ background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 10, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 70px 60px 70px 60px', padding: '10px 14px', fontFamily: MONO, fontSize: 10, letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase', borderBottom: `1px solid ${LINE}` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 90px 90px 90px 90px', padding: '10px 14px', fontFamily: MONO, fontSize: 10, letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase', borderBottom: `1px solid ${LINE}` }}>
           <span>State</span>
           <span></span>
-          <span style={{ textAlign: 'right' }}>D</span>
-          <span style={{ textAlign: 'right' }}>D med</span>
-          <span style={{ textAlign: 'right' }}>E</span>
-          <span style={{ textAlign: 'right' }}>E med</span>
+          <span style={{ textAlign: 'right' }}>Direct installs</span>
+          <span style={{ textAlign: 'right' }}>Direct days</span>
+          <span style={{ textAlign: 'right' }}>EPC installs</span>
+          <span style={{ textAlign: 'right' }}>EPC days</span>
         </div>
         <div style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
           {rows.map(r => {
@@ -98,7 +101,7 @@ export default function CycleTable({ agg, filter, onSelectState }: Props) {
                 onClick={() => onSelectState(r.abbr)}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '60px 1fr 70px 60px 70px 60px',
+                  gridTemplateColumns: '60px 1fr 90px 90px 90px 90px',
                   width: '100%',
                   padding: '10px 14px',
                   background: highlight ? 'rgba(250,214,70,0.08)' : 'transparent',
