@@ -540,6 +540,10 @@
     .info-card, .ghost-card{ grid-column: 1 / -1 !important; }
   }
 </style>
+<style id="embed-overrides">
+body.sp-embed #tabBar, body.sp-embed #searchBox, body.sp-embed .global-search-results { display: none !important; }
+body.sp-embed { padding-top: 0 !important; }
+</style>
 </head>
 <body>
 
@@ -6907,6 +6911,14 @@
   function init(){
     loadData();
     renderAll();
+    // Embed override: /sales-ops/resources.html?tab=calc lets ResourceFrame
+    // iframe us and force a specific tab without touching session state.
+    try {
+      const params = new URLSearchParams(location.search);
+      const want = params.get('tab');
+      if (want && !isTabHidden(want)) activeTab = want;
+      if (params.get('embed') === '1') document.body.classList.add('sp-embed');
+    } catch(e) {}
     if(isTabHidden(activeTab)) activeTab = firstVisibleTab();
     setActiveTab(activeTab);
     document.getElementById('resetCompareWidthsBtn')?.addEventListener('click', resetCompareColumnWidths);

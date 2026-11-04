@@ -155,11 +155,51 @@ export default function ResourceFrame() {
       </section>
 
       <main style={{ padding: '12px 32px 64px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-        {tab.sections.map((s, idx) => (
-          <SectionBlock key={(s as { id?: string }).id ?? `${s.kind}-${idx}`} section={s} query={q} />
-        ))}
+        {tab.key === 'calc' ? (
+          <CalculatorEmbed />
+        ) : (
+          tab.sections.map((s, idx) => (
+            <SectionBlock key={(s as { id?: string }).id ?? `${s.kind}-${idx}`} section={s} query={q} />
+          ))
+        )}
       </main>
     </Shell>
+  );
+}
+
+function CalculatorEmbed() {
+  return (
+    <section>
+      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
+        Section
+      </div>
+      <h2 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 20, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
+        Comparison calculator
+      </h2>
+      <p style={{ margin: '0 0 14px', color: SUBTLE, fontSize: 13, lineHeight: 1.5 }}>
+        Loan, lease/PPA, and cash side by side over 25 years. Inputs save to this browser only — nothing hits the server.
+      </p>
+      <div style={{
+        background: SURFACE,
+        border: `1px solid ${LINE_HI}`,
+        borderRadius: 12,
+        overflow: 'hidden',
+      }}>
+        <iframe
+          src="/sales-ops/resources.html?tab=calc&embed=1"
+          title="Financing comparison calculator"
+          loading="lazy"
+          style={{
+            display: 'block',
+            width: '100%',
+            height: 'calc(100vh - 220px)',
+            minHeight: 720,
+            border: 0,
+            background: '#ffffff',
+          }}
+        />
+      </div>
+    </section>
   );
 }
 
