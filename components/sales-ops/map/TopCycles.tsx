@@ -29,8 +29,6 @@ const STATE_NAMES: Record<string, string> = {
   WA:'Washington', WV:'West Virginia', WI:'Wisconsin', WY:'Wyoming', DC:'DC',
 };
 
-export type RailMode = 'speed' | 'workable';
-
 interface Props {
   agg: Agg;
   esIndex: EpcIndex;
@@ -42,8 +40,6 @@ interface Props {
   onSelectEpc?: (epc: string | null, states: string[]) => void;
   hoverZip?: string | null;
   onHoverZip?: (p: string | null) => void;
-  railMode?: RailMode;
-  onRailMode?: (m: RailMode) => void;
 }
 
 interface Row {
@@ -87,7 +83,7 @@ function bestEpcIn(
 
 export default function TopCycles({
   agg, esIndex, ezIndex, zip3, filter, onSelectState, onSelectZip3, onSelectEpc,
-  hoverZip, onHoverZip, railMode = 'speed', onRailMode,
+  hoverZip, onHoverZip,
 }: Props) {
   const drilled = !!filter.stateAbbr;
   const zip3Drilled = !!filter.zip3;
@@ -109,10 +105,18 @@ export default function TopCycles({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <PrimaryList
+        agg={agg}
+        esIndex={esIndex}
+        ezIndex={ezIndex}
+        zip3={zip3}
+        filter={filter}
+        onSelectState={onSelectState}
+        onSelectZip3={onSelectZip3}
+        hoverZip={hoverZip ?? null}
+        onHoverZip={onHoverZip ?? (() => {})}
+      />
       {drilled && (
-        <RailModeToggle mode={railMode} onChange={onRailMode ?? (() => {})} />
-      )}
-      {drilled && railMode === 'workable' ? (
         <WorkableList
           agg={agg}
           zip3={zip3}
@@ -121,49 +125,10 @@ export default function TopCycles({
           onHoverZip={onHoverZip ?? (() => {})}
           onSelectZip3Row={onSelectZip3 ?? (() => {})}
         />
-      ) : (
-        <PrimaryList
-          agg={agg}
-          esIndex={esIndex}
-          ezIndex={ezIndex}
-          zip3={zip3}
-          filter={filter}
-          onSelectState={onSelectState}
-          onSelectZip3={onSelectZip3}
-          hoverZip={hoverZip ?? null}
-          onHoverZip={onHoverZip ?? (() => {})}
-        />
       )}
-      {filter.channel === 'E' && !drilled && (
+      {filter.channel === 'E' && (
         <EpcList agg={agg} filter={filter} onSelectEpc={onSelectEpc ?? (() => {})} onSelectState={onSelectState} />
       )}
-      {filter.channel === 'E' && drilled && railMode === 'speed' && (
-        <EpcList agg={agg} filter={filter} onSelectEpc={onSelectEpc ?? (() => {})} onSelectState={onSelectState} />
-      )}
-    </div>
-  );
-}
-
-function RailModeToggle({ mode, onChange }: { mode: RailMode; onChange: (m: RailMode) => void }) {
-  const base: React.CSSProperties = {
-    padding: '7px 12px',
-    fontFamily: MONO,
-    fontSize: 10,
-    letterSpacing: '0.18em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
-    border: 0,
-    background: 'transparent',
-    color: SUBTLE,
-  };
-  return (
-    <div style={{ display: 'inline-flex', background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 999, overflow: 'hidden', width: 'fit-content' }}>
-      <button onClick={() => onChange('speed')} style={{ ...base, background: mode === 'speed' ? SUN : 'transparent', color: mode === 'speed' ? '#0D1023' : SUBTLE }}>
-        Fastest
-      </button>
-      <button onClick={() => onChange('workable')} style={{ ...base, background: mode === 'workable' ? SUN : 'transparent', color: mode === 'workable' ? '#0D1023' : SUBTLE }}>
-        Workable area
-      </button>
     </div>
   );
 }

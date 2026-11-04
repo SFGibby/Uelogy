@@ -95,7 +95,7 @@ export const WINDOWS: { key: WindowKey; label: string }[] = [
 
 export const MIN = { S: 10, Z3: 10, Z5: 5 };
 
-export type StateShadingKey = 'metric' | 'rate' | 'financiers';
+export type StateShadingKey = 'metric' | 'rate';
 
 export interface FilterState {
   channel: Channel;
@@ -111,10 +111,10 @@ export interface FilterState {
   // National-level state shading mode:
   //   'metric'     — color by the selected install metric (current behavior)
   //   'rate'       — 4-band blue ramp by residential ¢/kWh
-  //   'financiers' — green ramp by financier count, or binary if a single
-  //                  financier is picked
   stateShading: StateShadingKey;
-  shadingFinancier: string | null;   // financier.key when drilling to one lender
+  // Financier filter — when set to a financier.key, states without that
+  // lender render dim/greyed. Independent from the shading mode.
+  financierFilter: string | null;
 }
 
 export interface UtilityRates {

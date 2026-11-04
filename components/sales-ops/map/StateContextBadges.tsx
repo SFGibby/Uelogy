@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import Link from 'next/link';
 import { useEnerfloCoverage } from './useMapData';
 
 const MONO = 'var(--font-gibson-mono), ui-monospace, monospace';
@@ -53,16 +52,18 @@ export default function StateContextBadges({ stateAbbr }: Props) {
           </span>
         ))}
       </div>
-      <Link
-        href="/sales-ops/resources?tab=redlines"
+      <a
+        href="/sales-ops/data/pdfs/adder-sheet-2026-10-09.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
         style={{
           color: SUN, textDecoration: 'none', fontFamily: MONO,
           fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
           borderBottom: `1px solid rgba(250,214,70,0.4)`, paddingBottom: 1,
         }}
       >
-        See adder sheet &rsaquo;
-      </Link>
+        Open adder sheet &rsaquo;
+      </a>
     </div>
   );
 }

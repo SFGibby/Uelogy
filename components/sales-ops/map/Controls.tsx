@@ -24,7 +24,7 @@ interface Props {
 }
 
 export default function Controls({ filter, onChange, totalInstalls, totalMedian, financiers }: Props) {
-  const showFinSelector = filter.stateShading === 'financiers' && (financiers?.length ?? 0) > 0;
+  const hasFinanciers = (financiers?.length ?? 0) > 0;
   return (
     <div
       style={{
@@ -75,16 +75,15 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
         options={[
           { k: 'metric', l: 'Install' },
           { k: 'rate', l: 'Utility' },
-          { k: 'financiers', l: 'Financiers' },
         ]}
-        onChange={(v) => onChange({ stateShading: v as StateShadingKey, shadingFinancier: null })}
+        onChange={(v) => onChange({ stateShading: v as StateShadingKey })}
       />
-      {showFinSelector && (
+      {hasFinanciers && (
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Lender</span>
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Lender filter</span>
           <select
-            value={filter.shadingFinancier ?? ''}
-            onChange={(e) => onChange({ shadingFinancier: e.target.value || null })}
+            value={filter.financierFilter ?? ''}
+            onChange={(e) => onChange({ financierFilter: e.target.value || null })}
             style={{
               background: SURFACE,
               color: TEXT,
@@ -96,7 +95,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
               outline: 'none',
             }}
           >
-            <option value="" style={{ background: SURFACE }}>All (count by state)</option>
+            <option value="" style={{ background: SURFACE }}>Any lender</option>
             {financiers!.map(f => (
               <option key={f.key} value={f.key} style={{ background: SURFACE }}>{f.name}</option>
             ))}

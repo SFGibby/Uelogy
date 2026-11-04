@@ -10,7 +10,7 @@ import type { Agg, DqEntry, FilterState, Financier, UtilityRates, Zip3Meta } fro
 import { getAgg, installCount, pickMetric, speedColor } from './heat';
 import { useUsTopo, useZip3Topo, useZip5Topo, useServiceableStates, useEnerfloCoverage, useUtilityRates, useFinanciers, useUsStatesLonLat } from './useMapData';
 import { MAJOR_CITIES } from './cities';
-import { stateShadingFill, financierCount } from './StateShading';
+import { stateShadingFill } from './StateShading';
 import { buildDqByPrefix, computeVerdict } from './Verdict';
 import MapTooltip, { type TooltipContent } from './MapTooltip';
 
@@ -472,13 +472,20 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZ
 
   function buildStateTooltip(abbr: string, name: string, inOps: boolean, epcHit: boolean): TooltipContent {
     const rate = utility?.rates[abbr];
-    const finCount = financiers ? financierCount(abbr, financiers) : 0;
+    const stateLenders = financiers ? financiers.filter(f => f.states.includes(abbr)) : [];
     const lines: Array<{ label: string; value: string }> = [];
     if (rate != null) lines.push({ label: 'Utility', value: `${rate.toFixed(1)}¢ / kWh` });
-    lines.push({ label: 'Financiers', value: finCount > 0 ? `${finCount} active` : 'none on file' });
-    const footnote = inOps
-      ? (filter.channel === 'E' ? 'EPC: has recent installs' : 'Direct: Enerflo market')
-      : (epcHit ? 'EPC footprint, no installs in window' : 'Not serviced in this channel');
+    lines.push({
+      label: `Lenders (${stateLenders.length})`,
+      value: stateLenders.length > 0 ? stateLenders.map(f => f.name).join(', ') : 'none on file',
+    });
+    const financierMiss = !!(filter.financierFilter && financiers && !financiers
+      .find(f => f.key === filter.financierFilter)?.states.includes(abbr));
+    const footnote = financierMiss
+      ? `No ${financiers?.find(f => f.key === filter.financierFilter)?.name ?? 'lender'} here`
+      : inOps
+        ? (filter.channel === 'E' ? 'EPC: has recent installs' : 'Direct: Enerflo market')
+        : (epcHit ? 'EPC footprint, no installs in window' : 'Not serviced in this channel');
     return { title: name, lines, footnote };
   }
 
@@ -577,16 +584,23 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZ
             // off to the side, so we skip them.
             if (drilled) return null;
 
-            // When shading by utility rate or financier count, all states get a
-            // choropleth fill — that info is geographic, not tied to whether
-            // we sell there. Non-operating states stay inert (no click).
+            // When shading by utility rate, all states get a choropleth fill —
+            // that info is geographic, not tied to whether we sell there.
+            // Non-operating states stay inert (no click).
             const shadingFill = stateShadingFill({
               abbr,
               mode: filter.stateShading,
               utility,
               financiers,
-              singleFinancierKey: filter.shadingFinancier,
+              singleFinancierKey: null,
             });
+
+            // Financier filter dims out states that don't have the picked
+            // lender. Independent from shading — a dimmed state can still
+            // carry a utility rate fill, just at lower opacity.
+            const financierMiss = !!(filter.financierFilter && financiers && !financiers
+              .find(f => f.key === filter.financierFilter)?.states.includes(abbr));
+            const dimOpacity = financierMiss ? 0.22 : 1;
 
             // US level: operating states clickable; non-ops dim + inert.
             if (!inOps && !epcHit) {
@@ -598,6 +612,7 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZ
                   stroke={OUTLINE_INACTIVE}
                   strokeWidth={0.6}
                   pointerEvents="none"
+                  opacity={dimOpacity}
                 />
               );
             }
@@ -616,13 +631,18 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZ
                 fill={shadingFill ?? 'transparent'}
                 stroke={stroke}
                 strokeWidth={strokeW}
-                style={{ cursor: 'pointer' }}
+                opacity={dimOpacity}
+                style={{ cursor: financierMiss ? 'not-allowed' : 'pointer' }}
                 onMouseEnter={(e) => {
                   setHover(abbr);
                   openTip(buildStateTooltip(abbr, f.properties.name, inOps, epcHit), e);
                 }}
                 onMouseLeave={() => { setHover(h => (h === abbr ? null : h)); setTip(null); }}
-                onClick={(e) => { e.stopPropagation(); onSelectState?.(isSelected ? null : abbr); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (financierMiss) return;
+                  onSelectState?.(isSelected ? null : abbr);
+                }}
               />
             );
           })}

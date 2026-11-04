@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
 const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
@@ -34,10 +35,17 @@ interface Tab {
 interface Resources { updatedAt: string; tabs: Tab[]; }
 
 export default function ResourceFrame() {
+  const params = useSearchParams();
+  const initialTab = params?.get('tab') ?? 'sales';
   const [data, setData] = useState<Resources | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [tabKey, setTabKey] = useState<string>('sales');
+  const [tabKey, setTabKey] = useState<string>(initialTab);
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const t = params?.get('tab');
+    if (t) setTabKey(t);
+  }, [params]);
 
   useEffect(() => {
     let alive = true;

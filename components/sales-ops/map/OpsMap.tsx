@@ -12,6 +12,7 @@ import CycleTable from './CycleTable';
 import MobileMarkets from './MobileMarkets';
 import StateContextBadges from './StateContextBadges';
 import LegendNote from './LegendNote';
+import FinancierTable from './FinancierTable';
 import { useIsNarrow } from '../useBreakpoint';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
@@ -38,10 +39,8 @@ const INITIAL: FilterState = {
   activeEpc: null,
   query: '',
   stateShading: 'metric',
-  shadingFinancier: null,
+  financierFilter: null,
 };
-
-export type RailMode = 'speed' | 'workable';
 
 export default function OpsMap() {
   const { data, loading, error } = useMapData();
@@ -51,7 +50,6 @@ export default function OpsMap() {
   const [filter, setFilter] = useState<FilterState>(INITIAL);
   const [tableOpen, setTableOpen] = useState(false);
   const [hoverZip, setHoverZip] = useState<string | null>(null);
-  const [railMode, setRailMode] = useState<RailMode>('speed');
   const isNarrow = useIsNarrow();
 
   const onChange = useCallback((patch: Partial<FilterState>) => {
@@ -66,7 +64,6 @@ export default function OpsMap() {
       activeEpc: null,
       level: abbr ? 'STATE' : 'US',
     }));
-    setRailMode('speed');
   }, []);
 
   const onSelectZip3 = useCallback((zip3: string | null) => {
@@ -155,6 +152,7 @@ export default function OpsMap() {
       <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} financiers={financiers} />
       <Breadcrumb filter={filter} onChange={onChange} />
       {filter.stateAbbr && !filter.zip3 && <StateContextBadges stateAbbr={filter.stateAbbr} />}
+      {filter.stateAbbr && !filter.zip3 && <FinancierTable stateAbbr={filter.stateAbbr} financiers={financiers} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
@@ -211,8 +209,6 @@ export default function OpsMap() {
             onSelectEpc={(epc) => onSelectEpc(epc)}
             hoverZip={hoverZip}
             onHoverZip={setHoverZip}
-            railMode={railMode}
-            onRailMode={setRailMode}
             onSelectZip3={onSelectZip3}
           />
         </aside>
