@@ -156,19 +156,17 @@ export default function OpsMap() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ position: 'relative' }}>
-            <MapCanvas
-              zip3={data.ZIP3}
-              agg={data.AGG}
-              dq={data.DQ}
-              filter={filter}
-              onSelectState={onSelectState}
-              hoverZip={hoverZip}
-              onHoverZip={setHoverZip}
-              onSelectZip3={onSelectZip3}
-            />
-            <LegendNote filter={filter} utility={utility} financiers={financiers} />
-          </div>
+          <MapCanvas
+            zip3={data.ZIP3}
+            agg={data.AGG}
+            dq={data.DQ}
+            filter={filter}
+            onSelectState={onSelectState}
+            hoverZip={hoverZip}
+            onHoverZip={setHoverZip}
+            onSelectZip3={onSelectZip3}
+          />
+          <LegendNote filter={filter} utility={utility} financiers={financiers} />
           <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>
             <button
               onClick={() => setTableOpen(v => !v)}
