@@ -375,7 +375,7 @@ export const REGIONS = ROSTER.map(r => r.region);
 export const TEAMS_BY_REGION: Record<string, string[]> = Object.fromEntries(ROSTER.map(r => [r.region, r.teams]));
 export const ALL_TEAMS: string[] = ROSTER.flatMap(r => r.teams);
 
-export type Scope = 'company' | 'region' | 'team';
+export type Scope = 'company' | 'region' | 'team' | 'rep';
 
 export interface ScopeRow {
   key: string;         // stable id (region name, team name, or rep name)
@@ -424,6 +424,16 @@ export function buildScopeRows(
   // Always start from a full roster of rep rows. Each rep is tagged with
   // their region/team so we can roll up or filter however we want.
   const all = buildAllRepRows(cadence, now);
+
+  if (scope === 'rep') {
+    // Company-wide rep view. Region and team filters are optional — when
+    // null, every rep shows up; when set, narrow to that region or team.
+    const filtered = all.filter(r =>
+      (regionFilter == null || r.region === regionFilter) &&
+      (teamFilter == null || r.team === teamFilter),
+    );
+    return [...filtered].sort((a, b) => b.overall - a.overall);
+  }
 
   if (scope === 'team') {
     const filtered = all.filter(r =>

@@ -103,7 +103,13 @@ export default function HubGibson() {
   const companyAgg = useMemo(() => buildCompanyAggregate(cadence), [cadence]);
 
   const activeBucket = BUCKETS.find(b => b.key === metric)!;
-  const scopeLabel = scope === 'company' ? 'Company' : scope === 'region' ? (region ?? '').toUpperCase() : (team ?? '').toUpperCase();
+  const scopeLabel = scope === 'company'
+    ? 'Company'
+    : scope === 'region'
+      ? (region ?? '').toUpperCase()
+      : scope === 'team'
+        ? (team ?? '').toUpperCase()
+        : team ? `${team.toUpperCase()} REPS` : region ? `${region.toUpperCase()} REPS` : 'All reps';
   const headerAvg = scope === 'company'
     ? companyAgg[metric as keyof ScopeRow] as number
     : (rows.length > 0 ? Math.round(rows.reduce((s, r) => s + (r[metric as keyof ScopeRow] as number), 0) / rows.length) : 0);
@@ -178,9 +184,13 @@ export default function HubGibson() {
               const r = region ?? REGIONS[0];
               if (!team) setTeam(TEAMS_BY_REGION[r]?.[0] ?? null);
             }
+            // 'rep' keeps whatever region/team filters are already set.
+            // Null = every rep company-wide.
           }}
           onRegion={(r) => { setRegion(r); setTeam(null); if (scope === 'team') setTeam(TEAMS_BY_REGION[r]?.[0] ?? null); setExpanded(null); }}
           onTeam={(t) => { setTeam(t); setExpanded(null); }}
+          onClearRegion={() => { setRegion(null); setTeam(null); setExpanded(null); }}
+          onClearTeam={() => { setTeam(null); setExpanded(null); }}
         />
         <CadenceToggle cadence={cadence} setCadence={setCadence} />
       </section>
@@ -197,7 +207,7 @@ export default function HubGibson() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Search ${scope === 'team' ? 'reps' : scope === 'region' ? 'teams' : 'regions'}`}
+          placeholder={`Search ${scope === 'team' || scope === 'rep' ? 'reps' : scope === 'region' ? 'teams' : 'regions'}`}
           style={{
             flex: 1,
             maxWidth: 360,
@@ -255,7 +265,8 @@ function regionForTeam(teamName: string): string | null {
 function helpCopy(scope: Scope): string {
   if (scope === 'company') return 'Four regions, one view. Pick a region to see teams, or a team to see the reps.';
   if (scope === 'region') return 'Teams in this region, scored on the same chip you picked above. Tap a team to open its reps.';
-  return 'The reps on this team. Tap a row to open the breakdown, click any number to open accounts.';
+  if (scope === 'team') return 'The reps on this team. Tap a row to open the breakdown, click any number to open accounts.';
+  return 'Every rep on one list. Narrow with the region or team dropdowns, or leave both open to see the full roster.';
 }
 
 function rowNoun(scope: Scope, n: number): string {
@@ -326,18 +337,25 @@ function ScopeBreadcrumb({
 }
 
 function ScopePicker({
-  scope, region, team, onScope, onRegion, onTeam,
+  scope, region, team, onScope, onRegion, onTeam, onClearRegion, onClearTeam,
 }: {
   scope: Scope; region: string | null; team: string | null;
   onScope: (s: Scope) => void;
   onRegion: (r: string) => void;
   onTeam: (t: string) => void;
+  onClearRegion: () => void;
+  onClearTeam: () => void;
 }) {
   const regionTeams = region ? TEAMS_BY_REGION[region] ?? [] : [];
+  // Region / team dropdowns: required for 'region' and 'team' scopes,
+  // optional (both nullable) for the new 'rep' scope so a user can view
+  // every rep company-wide or narrow to one slice.
+  const showRegionSelect = scope === 'region' || scope === 'team' || scope === 'rep';
+  const showTeamSelect = (scope === 'team' && !!region) || (scope === 'rep' && !!region);
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
       <div style={{ display: 'inline-flex', background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 999, overflow: 'hidden' }}>
-        {(['company', 'region', 'team'] as Scope[]).map(s => (
+        {(['company', 'region', 'team', 'rep'] as Scope[]).map(s => (
           <button
             key={s}
             onClick={() => onScope(s)}
@@ -353,27 +371,35 @@ function ScopePicker({
               textTransform: 'uppercase',
             }}
           >
-            {s === 'company' ? 'Company' : s === 'region' ? 'Region' : 'Team'}
+            {s === 'company' ? 'Company' : s === 'region' ? 'Region' : s === 'team' ? 'Team' : 'Rep'}
           </button>
         ))}
       </div>
-      {scope !== 'company' && (
+      {showRegionSelect && (
         <select
           value={region ?? ''}
-          onChange={(e) => onRegion(e.target.value)}
+          onChange={(e) => {
+            if (e.target.value === '') onClearRegion();
+            else onRegion(e.target.value);
+          }}
           style={pillSelect}
           aria-label="Region"
         >
+          {scope === 'rep' && <option value="" style={{ background: SURFACE }}>All regions</option>}
           {REGIONS.map(r => <option key={r} value={r} style={{ background: SURFACE }}>{r}</option>)}
         </select>
       )}
-      {scope === 'team' && region && (
+      {showTeamSelect && (
         <select
           value={team ?? ''}
-          onChange={(e) => onTeam(e.target.value)}
+          onChange={(e) => {
+            if (e.target.value === '') onClearTeam();
+            else onTeam(e.target.value);
+          }}
           style={pillSelect}
           aria-label="Team"
         >
+          {scope === 'rep' && <option value="" style={{ background: SURFACE }}>All teams</option>}
           {regionTeams.map(t => <option key={t} value={t} style={{ background: SURFACE }}>{t}</option>)}
         </select>
       )}
