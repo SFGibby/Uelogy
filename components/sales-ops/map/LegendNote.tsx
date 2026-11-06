@@ -39,7 +39,6 @@ export default function LegendNote({ filter, financiers }: Props) {
       : { swatch: <Bar gradient={RATE_GRADIENT} />, title: 'Utility rate', hint: '¢/kWh, 4 bands' },
     { swatch: <SolidSwatch color="rgba(250,214,70,0.28)" border="rgba(250,214,70,0.55)" />, title: 'Workable area', hint: 'Direct, no installs yet' },
     { swatch: <HatchSwatch />, title: 'Not serviced', hint: 'Opacity = DQ ratio' },
-    { swatch: <LineSwatch />, title: 'State border', hint: 'Clipped to real outline' },
   ];
   if (financierName) {
     items.push({
@@ -117,13 +116,3 @@ function HatchSwatch() {
   );
 }
 
-function LineSwatch() {
-  return (
-    <div style={{
-      width: 20, height: 16, borderRadius: 4,
-      background: 'transparent',
-      border: `1.5px solid rgba(205,215,235,0.55)`,
-      flexShrink: 0,
-    }} />
-  );
-}
