@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-02T03:59:05.484Z",
+  "updatedAt": "2026-11-06T18:38:45.983Z",
   "tabs": [
     {
       "key": "sales",
@@ -21,7 +21,7 @@
             },
             {
               "title": "Sales Tool Logins (Troubleshooting)",
-              "body": "<i>Enerflo · Aurora · Financier Portals · Merdeka</i><br><br>Phone: 385-206-3409 Option 1<br>Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a><br><br>Sales Tool Onboarding: Click Here to Get Started",
+              "body": "<i>Enerflo · Aurora · Financier Portals · Merdeka</i><br><br>Phone: 385-206-3409 Option 1<br>Text: 855-676-6344<br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a>",
               "highlight": false
             },
             {
@@ -126,7 +126,7 @@
           "cards": [
             {
               "title": "Process",
-              "body": "1. Review Change Order process in Merdeka &gt; SunderHub &gt; SunderHQ<br><br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:ChangeOrders@sunpower.com\">ChangeOrders@sunpower.com</a><br>Change Order Process: Click Here",
+              "body": "1. Review Change Order process in Merdeka &gt; SunderHub &gt; SunderHQ<br><br>Email: <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"mailto:ChangeOrders@sunpower.com\">ChangeOrders@sunpower.com</a>",
               "highlight": false
             }
           ]
@@ -227,7 +227,7 @@
         {
           "kind": "table",
           "title": "Quick comparison",
-          "description": "All partners, side by side.",
+          "description": "All lenders, side by side. Coverage by state is shaded on the map.",
           "content": {
             "headings": [
               "Category",
@@ -604,10 +604,10 @@
     },
     {
       "key": "adders",
-      "label": "Adders",
+      "label": "Redlines & Adders",
       "hero": {
-        "title": "Adders Guide",
-        "subtitle": "What each adder is, why it's needed, and what's included. No pricing here; for current pricing, see the official adder sheet from Sales Ops."
+        "title": "Redlines & Adders",
+        "subtitle": "The current pricing cycle and the catalog that drives every quote."
       },
       "pills": [
         {
@@ -616,6 +616,33 @@
         }
       ],
       "sections": [
+        {
+          "kind": "cards",
+          "id": "adders-current-cycle",
+          "title": "Current cycle",
+          "cards": [
+            {
+              "title": "SPWR Redlines (Direct)",
+              "highlight": true,
+              "body": "<p>Approved product and price redlines for the Direct side. Replace when the next cycle publishes.</p><p><a href=\"/sales-ops/data/pdfs/spwr-redlines-2026-10-26.pdf\" target=\"_blank\" rel=\"noopener\">Open SPWR Redlines (10.26.26) →</a></p>"
+            },
+            {
+              "title": "Sunder Redlines (EPC)",
+              "highlight": true,
+              "body": "<p>Approved product and price redlines for the EPC side.</p><p><a href=\"/sales-ops/data/pdfs/epc-redlines-2026-10-26.pdf\" target=\"_blank\" rel=\"noopener\">Open Sunder Redlines (10.26.26) →</a></p>"
+            },
+            {
+              "title": "SunPower Adder Sheet",
+              "highlight": true,
+              "body": "<p>Full adder catalog by zone. Zone assignments pull from Enerflo installer markets — confirm the zone on the map before quoting.</p><p><a href=\"/sales-ops/data/pdfs/adder-sheet-2026-10-09.pdf\" target=\"_blank\" rel=\"noopener\">Open Adder Sheet (10-09-2026) →</a> · <a href=\"/sales-ops/map\">See zones on the map →</a></p>"
+            },
+            {
+              "title": "SunPower DQ ZIP codes",
+              "highlight": false,
+              "body": "<p>ZIPs we actively DQ. If a lead lands here, we don't work it. The map hatches these so you can scan coverage at a glance.</p><p><a href=\"/sales-ops/data/pdfs/sunpower-dq-zips-2026-10.pdf\" target=\"_blank\" rel=\"noopener\">Open DQ ZIP sheet →</a> · <a href=\"/sales-ops/map\">DQ overlay on the map →</a></p>"
+            }
+          ]
+        },
         {
           "kind": "cards",
           "id": "adders-add_roof_structural",

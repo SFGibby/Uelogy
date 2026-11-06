@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Derive per-financier state coverage from the Finance tab of resources.json.
+// Derive per-financier state coverage from the Finance tab of the authored
+// resources content (lib/sales-ops/resources-content.json).
 // Writes public/sales-ops/data/financiers.json.
 // Reconciles with serviceable-states.json: if the union differs, logs the diff
 // and rewrites serviceable-states.json from the finance table so the map and
@@ -9,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const RES = path.join(ROOT, 'public/sales-ops/data/resources.json');
+const RES = path.join(ROOT, 'lib/sales-ops/resources-content.json');
 const SERV = path.join(ROOT, 'public/sales-ops/data/serviceable-states.json');
 const OUT = path.join(ROOT, 'public/sales-ops/data/financiers.json');
 

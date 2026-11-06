@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import resourcesContent from '../../lib/sales-ops/resources-content.json';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
 const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
@@ -34,11 +35,11 @@ interface Tab {
 
 interface Resources { updatedAt: string; tabs: Tab[]; }
 
+const data = resourcesContent as unknown as Resources;
+
 export default function ResourceFrame() {
   const params = useSearchParams();
   const initialTab = params?.get('tab') ?? 'sales';
-  const [data, setData] = useState<Resources | null>(null);
-  const [err, setErr] = useState<string | null>(null);
   const [tabKey, setTabKey] = useState<string>(initialTab);
   const [query, setQuery] = useState('');
 
@@ -47,51 +48,7 @@ export default function ResourceFrame() {
     if (t) setTabKey(t);
   }, [params]);
 
-  useEffect(() => {
-    let alive = true;
-    fetch('/sales-ops/data/resources.json', { cache: 'force-cache' })
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(`http ${r.status}`)))
-      .then((d: Resources) => { if (alive) setData(d); })
-      .catch(e => { if (alive) setErr(String(e)); });
-    return () => { alive = false; };
-  }, []);
-
-  if (err) return <Shell><div style={{ padding: 48, color: '#FF8B9F', fontFamily: SANS }}>Resource guide failed to load: {err}</div></Shell>;
-  if (!data) return <Shell><Loading /></Shell>;
-
-  // Append a static Redlines & Adders tab that surfaces the Merdeka PDFs
-  // Colten syncs each cycle. These live in /sales-ops/data/pdfs/ in the repo.
-  const extendedTabs: Tab[] = [
-    ...data.tabs,
-    {
-      key: 'redlines',
-      label: 'Redlines & Adders',
-      hero: { title: 'Redlines & Adders', subtitle: 'The current cycle from Merdeka SPWR HQ.' },
-      sections: [
-        {
-          kind: 'cards',
-          title: 'Direct side',
-          cards: [
-            { title: 'SPWR Redlines (Direct)', highlight: true,
-              body: '<p>Approved product/price redlines for the Direct side. Current cycle.</p><p><a href="/sales-ops/data/pdfs/spwr-redlines-2026-10-26.pdf" target="_blank" rel="noopener">Open SPWR Redlines 10.26.26 \u2192</a></p>' },
-            { title: 'SunPower Adder Sheet', highlight: true,
-              body: '<p>Adder catalog by zone. Zone assignments come from Enerflo installer markets.</p><p><a href="/sales-ops/data/pdfs/adder-sheet-2026-10-09.pdf" target="_blank" rel="noopener">Open Adder Sheet 10-09-2026 \u2192</a></p>' },
-            { title: 'SunPower DQ ZIP codes', highlight: false,
-              body: '<p>ZIPs we actively DQ. If a lead lands here, we don\'t work it.</p><p><a href="/sales-ops/data/pdfs/sunpower-dq-zips-2026-10.pdf" target="_blank" rel="noopener">Open DQ ZIPs sheet \u2192</a></p>' },
-          ],
-        },
-        {
-          kind: 'cards',
-          title: 'EPC side',
-          cards: [
-            { title: 'EPC Redlines (Sunder)', highlight: true,
-              body: '<p>Approved product/price redlines for EPC partners. Current cycle.</p><p><a href="/sales-ops/data/pdfs/epc-redlines-2026-10-26.pdf" target="_blank" rel="noopener">Open Sunder Redlines 10.26.26 \u2192</a></p>' },
-          ],
-        },
-      ],
-    },
-  ];
-  const tab = extendedTabs.find(t => t.key === tabKey) ?? extendedTabs[0];
+  const tab = data.tabs.find(t => t.key === tabKey) ?? data.tabs[0];
   const q = query.trim().toLowerCase();
 
   return (
@@ -106,7 +63,7 @@ export default function ResourceFrame() {
           background: INK, position: 'sticky', top: 55, zIndex: 20,
         }}
       >
-        {extendedTabs.map(t => {
+        {data.tabs.map(t => {
           const active = t.key === tab.key;
           return (
             <button
@@ -211,14 +168,6 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Loading() {
-  return (
-    <div style={{ padding: 48, color: MUTED, fontFamily: MONO, fontSize: 12, letterSpacing: '0.22em', textTransform: 'uppercase' }}>
-      Loading{'\u2026'}
-    </div>
-  );
-}
-
 function Hero({ tabLabel }: { tabLabel: string }) {
   return (
     <section style={{ padding: '32px 32px 10px' }}>
@@ -239,7 +188,7 @@ function Hero({ tabLabel }: { tabLabel: string }) {
         <span style={{ color: SUN }}>on tap.</span>
       </h1>
       <p style={{ marginTop: 12, maxWidth: 620, color: SUBTLE, fontSize: 14, lineHeight: 1.6 }}>
-        Everything a sales leader needs between the knock and the close. {tabLabel} is the live mirror of Colten&rsquo;s source.
+        Everything a sales leader needs between the knock and the close. {tabLabel} is curated here and kept current with the field.
       </p>
     </section>
   );
