@@ -135,9 +135,6 @@ export default function HubGibson() {
         <GlowOverlay />
         <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
           <div style={{ maxWidth: 760 }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.3em', color: SUN, textTransform: 'uppercase', marginBottom: 20 }}>
-              {scopeLabel} &middot; {activeBucket.label} &middot; This {cadence}
-            </div>
             <h1
               style={{
                 margin: 0,
@@ -149,9 +146,12 @@ export default function HubGibson() {
                 color: TEXT,
               }}
             >
-              {activeBucket.label}
+              {scopeLabel}
             </h1>
-            <p style={{ marginTop: 16, maxWidth: 540, fontSize: 15, lineHeight: 1.6, color: SUBTLE }}>
+            <div style={{ marginTop: 14, fontFamily: MONO, fontSize: 11, letterSpacing: '0.24em', color: SUN, textTransform: 'uppercase' }}>
+              {activeBucket.label} &middot; This {cadence}
+            </div>
+            <p style={{ marginTop: 14, maxWidth: 540, fontSize: 15, lineHeight: 1.6, color: SUBTLE }}>
               {helpCopy(scope)}
             </p>
           </div>
@@ -196,9 +196,6 @@ export default function HubGibson() {
       </section>
 
       <section style={{ padding: '22px 32px 8px' }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 12 }}>
-          Metric
-        </div>
         <MetricChips metric={metric} setMetric={setMetric} />
       </section>
 

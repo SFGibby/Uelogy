@@ -216,13 +216,8 @@ function PrimaryList({ agg, esIndex, ezIndex, zip3, filter, onSelectState, onSel
   const title = metricIsCount
     ? (filter.stateAbbr ? `Top ZIP3s by volume \u00b7 ${filter.stateAbbr}` : 'Top states by volume')
     : (filter.stateAbbr ? `Fastest ZIP3s \u00b7 ${filter.stateAbbr}` : 'Fastest states');
-  const subhead = `${filter.channel === 'D' ? 'Direct' : 'EPC'} \u00b7 ${filter.window === '12' ? '1 yr' : filter.window + ' mo'}`;
-
   return (
     <div style={{ fontFamily: SANS, color: TEXT }}>
-      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
-        {subhead}
-      </div>
       <h3 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
         {title}
       </h3>
@@ -498,11 +493,8 @@ function WorkableList({ agg, zip3, filter, hoverZip, onHoverZip, onSelectZip3Row
 
   return (
     <div style={{ fontFamily: SANS, color: TEXT }}>
-      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
-        Enerflo coverage
-      </div>
       <h3 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-        {`Workable area \u00b7 ${filter.stateAbbr}`}
+        {`Working area \u00b7 ${filter.stateAbbr}`}
       </h3>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -689,9 +681,6 @@ function Zip5Panel({ zip3, stateAbbr, agg, filter, hoverZip, onHoverZip, onBack 
         >
           {'\u2190 Back'}
         </button>
-        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase' }}>
-          Workable zips
-        </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 12px' }}>
         <h3 style={{ margin: 0, fontFamily: DISPLAY, fontSize: 18, letterSpacing: '-0.01em', textTransform: 'uppercase', flex: 1, minWidth: 0 }}>

@@ -127,9 +127,6 @@ export default function ResourceFrame() {
 function CalculatorEmbed() {
   return (
     <section>
-      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
-        Section
-      </div>
       <h2 style={{ margin: '0 0 10px', fontFamily: DISPLAY, fontSize: 20, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
         Comparison calculator
       </h2>
@@ -408,9 +405,6 @@ function FaqItem({ item, forceOpen }: { item: { id: string; question: string; an
 function SectionShell({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
     <section>
-      <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: MUTED, textTransform: 'uppercase', marginBottom: 6 }}>
-        Section
-      </div>
       <h2 style={{ margin: '0 0 6px', fontFamily: DISPLAY, fontSize: 20, letterSpacing: '-0.01em', textTransform: 'uppercase' }}>
         {title}
       </h2>
