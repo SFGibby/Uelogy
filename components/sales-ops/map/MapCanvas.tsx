@@ -501,19 +501,12 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     return p ? [p[0], p[1]] : null;
   }
 
-  // US zoom shows the scope: 'US' anchors so the eye can orient. Once drilled,
-  // show scope: 'STATE' cities for that state. Direct view layers in extra
-  // Product-by-Market metros; EPC hides those.
+  // US zoom only — scope:'US' city anchors for orientation. Drilled state views
+  // intentionally drop city labels (they got in the way of the ZIP3 polygons).
   const visibleCities = useMemo(() => {
-    if (!drilled) {
-      return MAJOR_CITIES.filter(c => c.scope === 'US');
-    }
-    return MAJOR_CITIES.filter(c => {
-      if (c.abbr !== filter.stateAbbr) return false;
-      if (c.directOnly && filter.channel !== 'D') return false;
-      return true;
-    });
-  }, [drilled, filter.stateAbbr, filter.channel]);
+    if (drilled) return [];
+    return MAJOR_CITIES.filter(c => c.scope === 'US');
+  }, [drilled]);
 
   function buildStateTooltip(abbr: string, name: string, inOps: boolean, epcHit: boolean): TooltipContent {
     const rate = utility?.rates[abbr];

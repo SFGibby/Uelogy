@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Channel, FilterState, MetricKey, StateShadingKey, WindowKey, Zip3Meta } from './types';
 import { METRICS, WINDOWS } from './types';
+import { useIsTight } from '../useBreakpoint';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
 const DISPLAY = 'var(--font-gibson-display), "Archivo Black", Impact, sans-serif';
@@ -60,6 +61,7 @@ const STATE_INDEX: Array<{ abbr: string; name: string }> = [
 ];
 
 export default function Controls({ filter, onChange, totalInstalls, totalMedian, zip3, onSelectState, onSelectZip3, financiers }: Props) {
+  const tight = useIsTight();
   const [customOpen, setCustomOpen] = useState(false);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -132,6 +134,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
     >
       <PillGroup
         label="Channel"
+        hideLabel={tight}
         value={filter.channel}
         options={[{ k: 'D', l: 'Direct' }, { k: 'E', l: 'EPC' }]}
         onChange={(v) => onChange({ channel: v as Channel })}
@@ -139,6 +142,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
         <PillGroup
           label="Window"
+          hideLabel={tight}
           value={customOpen ? '__custom__' : filter.window}
           options={[
             ...WINDOWS.map(w => ({ k: w.key, l: w.label })),
@@ -179,7 +183,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
         )}
       </div>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Metric</span>
+        {!tight && <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Metric</span>}
         <select
           value={filter.metric}
           onChange={(e) => onChange({ metric: e.target.value as MetricKey })}
@@ -204,6 +208,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <PillGroup
           label="Shade"
+          hideLabel={tight}
           value={filter.stateShading}
           options={[
             { k: 'metric', l: 'Install' },
@@ -242,6 +247,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
           </select>
         )}
       </div>
+      {!tight && (
       <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
         <input
           type="search"
@@ -324,7 +330,8 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
           </ul>
         )}
       </div>
-      {typeof totalInstalls === 'number' && !customOpen && (
+      )}
+      {!tight && typeof totalInstalls === 'number' && !customOpen && (
         <div style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 12, color: SUBTLE, letterSpacing: '0.04em' }}>
           <span style={{ color: SUN, fontFamily: DISPLAY, fontSize: 14, letterSpacing: '0.08em', marginRight: 8 }}>
             {filter.channel === 'D' ? 'DIRECT' : 'EPC'}
@@ -351,15 +358,16 @@ const dateInput: React.CSSProperties = {
   colorScheme: 'dark',
 };
 
-function PillGroup<T extends string>({ label, value, options, onChange }: {
+function PillGroup<T extends string>({ label, hideLabel, value, options, onChange }: {
   label: string;
+  hideLabel?: boolean;
   value: T;
   options: { k: T; l: string }[];
   onChange: (v: T) => void;
 }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>{label}</span>
+      {!hideLabel && <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>{label}</span>}
       <div style={{ display: 'inline-flex', background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 999, overflow: 'hidden' }}>
         {options.map(opt => {
           const active = opt.k === value;

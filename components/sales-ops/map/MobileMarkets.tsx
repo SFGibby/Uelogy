@@ -99,28 +99,7 @@ export default function MobileMarkets({ agg, zip3, filter, onSelectState, onSele
 
   return (
     <div style={{ background: INK, color: TEXT, fontFamily: SANS }}>
-      <section style={{ padding: '20px 16px 10px' }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: SUN, textTransform: 'uppercase', marginBottom: 8 }}>
-          {filter.stateAbbr ? `${filter.stateAbbr} markets` : 'All markets'}
-        </div>
-        <h2
-          style={{
-            margin: 0,
-            fontFamily: DISPLAY,
-            fontSize: 'clamp(28px, 7vw, 44px)',
-            lineHeight: 0.95,
-            letterSpacing: '-0.02em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Where we <span style={{ color: SUN }}>sell</span>.
-        </h2>
-        <p style={{ marginTop: 10, color: SUBTLE, fontSize: 13, lineHeight: 1.5 }}>
-          Searchable list of open territories. Tap a row to see the ZIP breakdown.
-        </p>
-      </section>
-
-      <div style={{ padding: '12px 16px 10px', position: 'sticky', top: 55, background: INK, zIndex: 10, borderBottom: `1px solid ${LINE_HI}` }}>
+      <div style={{ padding: '14px 16px 10px', position: 'sticky', top: 55, background: INK, zIndex: 10, borderBottom: `1px solid ${LINE_HI}` }}>
         <input
           type="search"
           value={query}

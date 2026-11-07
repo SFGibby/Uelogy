@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 const NARROW_QUERY = '(max-width: 760px)';
-const TIGHT_QUERY = '(max-width: 980px)';
+const TIGHT_QUERY = '(max-width: 1100px)';
 
 /**
  * SSR-safe mobile breakpoint. Returns false on first render (server), then

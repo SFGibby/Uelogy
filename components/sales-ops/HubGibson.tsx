@@ -769,12 +769,17 @@ const pillSelect: React.CSSProperties = {
   background: SURFACE,
   color: TEXT,
   border: `1px solid ${LINE_HI}`,
-  padding: '9px 14px',
+  padding: '9px 18px',
   fontFamily: MONO,
   fontSize: 11,
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   borderRadius: 999,
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  MozAppearance: 'none',
+  outline: 'none',
+  cursor: 'pointer',
 };
 
 const affordance: React.CSSProperties = {
