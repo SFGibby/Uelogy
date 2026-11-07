@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { Channel, FilterState, MetricKey, StateShadingKey, WindowKey } from './types';
 import { METRICS, WINDOWS } from './types';
 
@@ -22,7 +23,34 @@ interface Props {
   totalMedian?: number | null;
 }
 
+const WINDOW_DAYS: Record<WindowKey, number> = { '3': 90, '6': 180, '12': 365 };
+
+function snapToWindow(days: number): WindowKey {
+  if (days <= 135) return '3';
+  if (days <= 270) return '6';
+  return '12';
+}
+
 export default function Controls({ filter, onChange, totalInstalls, totalMedian }: Props) {
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+
+  const customDays = customStart && customEnd
+    ? Math.max(1, Math.round((new Date(customEnd).getTime() - new Date(customStart).getTime()) / 86400000))
+    : null;
+  const snapped: WindowKey | null = customDays ? snapToWindow(customDays) : null;
+
+  const applyCustom = (start: string, end: string) => {
+    setCustomStart(start);
+    setCustomEnd(end);
+    if (start && end) {
+      const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000));
+      const key = snapToWindow(days);
+      if (key !== filter.window) onChange({ window: key });
+    }
+  };
+
   return (
     <div
       style={{
@@ -42,12 +70,48 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian 
         options={[{ k: 'D', l: 'Direct' }, { k: 'E', l: 'EPC' }]}
         onChange={(v) => onChange({ channel: v as Channel })}
       />
-      <PillGroup
-        label="Window"
-        value={filter.window}
-        options={WINDOWS.map(w => ({ k: w.key, l: w.label }))}
-        onChange={(v) => onChange({ window: v as WindowKey })}
-      />
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+        <PillGroup
+          label="Window"
+          value={customOpen ? '__custom__' : filter.window}
+          options={[
+            ...WINDOWS.map(w => ({ k: w.key, l: w.label })),
+            { k: '__custom__', l: 'Custom' },
+          ]}
+          onChange={(v) => {
+            if (v === '__custom__') {
+              setCustomOpen(true);
+            } else {
+              setCustomOpen(false);
+              setCustomStart('');
+              setCustomEnd('');
+              onChange({ window: v as WindowKey });
+            }
+          }}
+        />
+        {customOpen && (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <input
+              type="date"
+              value={customStart}
+              onChange={e => applyCustom(e.target.value, customEnd)}
+              style={dateInput}
+            />
+            <span style={{ color: MUTED, fontSize: 12 }}>to</span>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={e => applyCustom(customStart, e.target.value)}
+              style={dateInput}
+            />
+            {snapped && (
+              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', color: MUTED, textTransform: 'uppercase' }}>
+                · {customDays} d · snapped to {WINDOW_DAYS[snapped] / 30} mo
+              </span>
+            )}
+          </div>
+        )}
+      </div>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Metric</span>
         <select
@@ -99,7 +163,7 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian 
           fontSize: 13,
         }}
       />
-      {typeof totalInstalls === 'number' && (
+      {typeof totalInstalls === 'number' && !customOpen && (
         <div style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 12, color: SUBTLE, letterSpacing: '0.04em' }}>
           <span style={{ color: SUN, fontFamily: DISPLAY, fontSize: 14, letterSpacing: '0.08em', marginRight: 8 }}>
             {filter.channel === 'D' ? 'DIRECT' : 'EPC'}
@@ -113,6 +177,18 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian 
     </div>
   );
 }
+
+const dateInput: React.CSSProperties = {
+  background: SURFACE,
+  color: TEXT,
+  border: `1px solid ${LINE_HI}`,
+  borderRadius: 8,
+  padding: '6px 10px',
+  fontFamily: SANS,
+  fontSize: 12,
+  outline: 'none',
+  colorScheme: 'dark',
+};
 
 function PillGroup<T extends string>({ label, value, options, onChange }: {
   label: string;

@@ -128,25 +128,24 @@ export default function OpsMap() {
 
   return (
     <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
-      <section style={{ padding: '32px 20px 10px' }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.3em', color: SUN, textTransform: 'uppercase', marginBottom: 10 }}>
+      <section style={{ padding: '22px 20px 8px', display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap' }}>
+        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: SUN, textTransform: 'uppercase' }}>
           Install speed
         </div>
         <h1
           style={{
             margin: 0,
             fontFamily: DISPLAY,
-            fontSize: 'clamp(36px, 6vw, 72px)',
-            lineHeight: 0.95,
-            letterSpacing: '-0.02em',
+            fontSize: 'clamp(28px, 3vw, 40px)',
+            lineHeight: 1,
+            letterSpacing: '-0.01em',
             textTransform: 'uppercase',
           }}
         >
-          Where the floor<br />
-          <span style={{ color: SUN }}>moves fastest.</span>
+          The <span style={{ color: SUN }}>Big Map</span>
         </h1>
-        <p style={{ marginTop: 12, maxWidth: 580, color: SUBTLE, fontSize: 14, lineHeight: 1.6 }}>
-          Install density by ZIP3 under the current filter. Click a state to focus, Esc to go back.
+        <p style={{ margin: 0, color: SUBTLE, fontSize: 13, lineHeight: 1.5 }}>
+          Click a state to focus, Esc to back out.
         </p>
       </section>
 

@@ -485,7 +485,7 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     const footnote = financierMiss
       ? `No ${financiers?.find(f => f.key === filter.financierFilter)?.name ?? 'lender'} here`
       : inOps
-        ? (filter.channel === 'E' ? 'EPC: has recent installs' : 'Direct: Enerflo market')
+        ? (filter.channel === 'E' ? 'EPC: has recent installs' : 'Direct: working area')
         : (epcHit ? 'EPC footprint, no installs in window' : 'Not serviced in this channel');
     return { title: name, lines, footnote };
   }

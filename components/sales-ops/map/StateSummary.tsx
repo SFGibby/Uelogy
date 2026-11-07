@@ -149,9 +149,9 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
 
           {filter.channel === 'D' ? (
             <>
-              <Row label={`Enerflo zones${zones.length ? ` (${zones.length})` : ''}`}>
+              <Row label={`Working area${zones.length ? ` (${zones.length} zone${zones.length === 1 ? '' : 's'})` : ''}`}>
                 {zones.length === 0 ? (
-                  <span style={{ color: MUTED }}>No active Direct market</span>
+                  <span style={{ color: MUTED }}>Not a working area yet</span>
                 ) : (
                   <div style={{ display: 'flex', gap: 6 }}>
                     {zones.map(z => (
