@@ -501,12 +501,8 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     return p ? [p[0], p[1]] : null;
   }
 
-  // US zoom only — scope:'US' city anchors for orientation. Drilled state views
-  // intentionally drop city labels (they got in the way of the ZIP3 polygons).
-  const visibleCities = useMemo(() => {
-    if (drilled) return [];
-    return MAJOR_CITIES.filter(c => c.scope === 'US');
-  }, [drilled]);
+  // City labels disabled entirely — they clutter the map at every zoom.
+  const visibleCities = useMemo(() => [] as typeof MAJOR_CITIES, []);
 
   function buildStateTooltip(abbr: string, name: string, inOps: boolean, epcHit: boolean): TooltipContent {
     const rate = utility?.rates[abbr];
