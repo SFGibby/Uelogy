@@ -115,6 +115,8 @@ export interface FilterState {
   // Financier filter — when set to a financier.key, states without that
   // lender render dim/greyed. Independent from the shading mode.
   financierFilter: string | null;
+  // Per-layer visibility; defaults to all-on.
+  layers: LayerVisibility;
 }
 
 export interface UtilityRates {
@@ -137,3 +139,43 @@ export interface FinanciersFile {
   source: string;
   financiers: Financier[];
 }
+
+export type BlitzPhase = 'current' | 'planned';
+export type BlitzReadiness = 'Ready' | 'Preparing';
+
+export interface Blitz {
+  id: string;
+  phase: BlitzPhase;
+  state: string;
+  zip3: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  headcount: number;
+  leader: string;
+  readiness: BlitzReadiness;
+}
+
+export interface BlitzFile {
+  updatedAt: string;
+  source: string;
+  blitzes: Blitz[];
+}
+
+export interface LayerVisibility {
+  install: boolean;
+  workable: boolean;
+  dq: boolean;
+  blitzCurrent: boolean;
+  blitzPlanned: boolean;
+  cities: boolean;
+}
+
+export const DEFAULT_LAYERS: LayerVisibility = {
+  install: true,
+  workable: true,
+  dq: true,
+  blitzCurrent: true,
+  blitzPlanned: true,
+  cities: true,
+};

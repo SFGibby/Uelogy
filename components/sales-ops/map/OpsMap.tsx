@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { FilterState } from './types';
+import { DEFAULT_LAYERS } from './types';
 import { useMapData, useFinanciers, useUtilityRates } from './useMapData';
 import { getAgg, installCount, pickMetric } from './heat';
 import Controls from './Controls';
@@ -40,6 +41,7 @@ const INITIAL: FilterState = {
   query: '',
   stateShading: 'metric',
   financierFilter: null,
+  layers: DEFAULT_LAYERS,
 };
 
 export default function OpsMap() {

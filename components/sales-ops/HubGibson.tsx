@@ -169,7 +169,7 @@ export default function HubGibson() {
         />
       </section>
 
-      <section style={{ padding: '14px 32px', borderBottom: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <section style={{ padding: '14px 32px', borderBottom: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: '12px 22px', flexWrap: 'wrap' }}>
         <ScopePicker
           scope={scope}
           region={region}
@@ -353,8 +353,8 @@ function ScopePicker({
   const showRegionSelect = scope === 'region' || scope === 'team' || scope === 'rep';
   const showTeamSelect = (scope === 'team' && !!region) || (scope === 'rep' && !!region);
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <div style={{ display: 'inline-flex', background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 999, overflow: 'hidden' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <div style={{ display: 'inline-flex', background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 999, overflow: 'hidden', flexShrink: 0 }}>
         {(['company', 'region', 'team', 'rep'] as Scope[]).map(s => (
           <button
             key={s}
@@ -545,35 +545,29 @@ function ScopeRowTile({
 
       {expanded && (
         <div style={{ padding: '22px 24px 26px', borderTop: `1px solid ${LINE}`, background: SURFACE_HI }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase', marginBottom: 12 }}>
-            Scorecard &middot; {row.label}
-          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 18 }}>
             {BUCKETS.filter(b => b.key !== 'overall').map(b => {
               const clickable = isRep;
               return (
                 <button
                   key={b.key}
-                  onClick={clickable ? () => onRepOpen(row.label) : undefined}
-                  disabled={!clickable}
+                  onClick={clickable ? () => onRepOpen(row.label) : onBody}
                   style={{
-                    background: 'transparent', border: 0, padding: 0,
-                    cursor: clickable ? 'pointer' : 'default',
+                    background: 'transparent', border: 0, padding: '2px 0 4px',
+                    cursor: 'pointer',
                     color: TEXT, textAlign: 'left', fontFamily: SANS,
-                    opacity: 1,
+                    borderRadius: 6,
+                    transition: 'background 140ms ease',
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(250,214,70,0.05)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.2em', color: MUTED, textTransform: 'uppercase', marginBottom: 8 }}>
                     {b.label}
                   </div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 28, color: TEXT, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 28, color: SUN, letterSpacing: '-0.02em', lineHeight: 1, textDecoration: 'underline', textDecorationThickness: 2, textUnderlineOffset: 6, textDecorationColor: 'rgba(250,214,70,0.35)' }}>
                     {b.format(row)}
                   </div>
-                  {clickable && (
-                    <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 10, color: SUN, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                      Open deals
-                    </div>
-                  )}
                 </button>
               );
             })}
@@ -582,9 +576,9 @@ function ScopeRowTile({
             <span style={{ fontFamily: MONO, fontSize: 10, color: MUTED, letterSpacing: '0.22em', textTransform: 'uppercase' }}>Overall</span>
             <span style={{ fontFamily: DISPLAY, fontSize: 36, color: scoreColor, letterSpacing: '-0.025em' }}>{row.overall}</span>
             <span style={{ fontSize: 12, color: MUTED }}>/ 100 &middot; equal weighting across 7 performance buckets (active reps excluded)</span>
-            <button onClick={onBody} style={{ ...pillSelect, marginLeft: 'auto', cursor: 'pointer', color: SUN, borderColor: SUN }}>
-              {bodyActionLabel}
-            </button>
+            <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 11, color: MUTED, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+              Tap a number to {bodyActionLabel.toLowerCase().replace('open ', '')}
+            </span>
           </div>
         </div>
       )}

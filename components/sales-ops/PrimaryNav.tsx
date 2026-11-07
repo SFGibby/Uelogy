@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SunPowerMark from './SunPowerMark';
 import UniversalSearch from './UniversalSearch';
+import { useIsTight } from './useBreakpoint';
 
 const INK = '#0D1023';
 const SUBTLE = '#CED3E8';
@@ -23,6 +24,7 @@ const NAV = [
 
 export default function PrimaryNav() {
   const path = usePathname();
+  const tight = useIsTight();
 
   async function lock() {
     await fetch('/api/grid/lock', { method: 'POST' });
@@ -37,19 +39,23 @@ export default function PrimaryNav() {
         padding: '14px 24px',
         display: 'flex',
         alignItems: 'center',
-        gap: 24,
+        gap: tight ? 14 : 24,
         position: 'sticky',
         top: 0,
         zIndex: 50,
         fontFamily: SANS,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <SunPowerMark height={20} />
-        <span style={{ width: 1, height: 20, background: LINE_HI }} />
-        <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.28em', color: MUTED, textTransform: 'uppercase' }}>
-          Sales Ops
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+        <SunPowerMark height={20} compact={tight} />
+        {!tight && (
+          <>
+            <span style={{ width: 1, height: 20, background: LINE_HI }} />
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.28em', color: MUTED, textTransform: 'uppercase' }}>
+              Sales Ops
+            </span>
+          </>
+        )}
       </div>
 
       <nav style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10 }}>

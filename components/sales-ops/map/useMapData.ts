@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { MapData, UtilityRates, FinanciersFile } from './types';
+import type { MapData, UtilityRates, FinanciersFile, BlitzFile } from './types';
 import { buildEpcIndexes } from './types';
 
 // Single-flight loader for /sales-ops/data/map-data.json. Cached at the module
@@ -195,6 +195,27 @@ export function useFinanciers(): FinanciersFile | null {
     }
     let alive = true;
     financiersInFlight.then(d => { if (alive) setData(d); });
+    return () => { alive = false; };
+  }, []);
+  return data;
+}
+
+// Blitz entries — seed data for now, Colten's writes will replace once wired.
+let blitzCached: BlitzFile | null = null;
+let blitzInFlight: Promise<BlitzFile | null> | null = null;
+
+export function useBlitzes(): BlitzFile | null {
+  const [data, setData] = useState<BlitzFile | null>(blitzCached);
+  useEffect(() => {
+    if (blitzCached) { setData(blitzCached); return; }
+    if (!blitzInFlight) {
+      blitzInFlight = fetch('/sales-ops/data/blitzes.json', { cache: 'no-cache' })
+        .then(r => r.ok ? r.json() : null)
+        .then((d: BlitzFile | null) => { blitzCached = d; blitzInFlight = null; return d; })
+        .catch(() => { blitzInFlight = null; return null; });
+    }
+    let alive = true;
+    blitzInFlight.then(d => { if (alive) setData(d); });
     return () => { alive = false; };
   }, []);
   return data;

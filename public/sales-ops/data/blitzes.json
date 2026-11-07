@@ -1,0 +1,66 @@
+{
+  "updatedAt": "2026-11-07T00:00:00Z",
+  "source": "Seed data. Real feed will come from Colten's planner once we mount his writes.",
+  "blitzes": [
+    {
+      "id": "BLZ-SLC-001",
+      "phase": "current",
+      "state": "UT",
+      "zip3": "840",
+      "city": "Salt Lake City",
+      "startDate": "2026-11-06",
+      "endDate": "2026-11-13",
+      "headcount": 42,
+      "leader": "J. Boone",
+      "readiness": "Ready"
+    },
+    {
+      "id": "BLZ-PHX-002",
+      "phase": "current",
+      "state": "AZ",
+      "zip3": "850",
+      "city": "Phoenix",
+      "startDate": "2026-11-03",
+      "endDate": "2026-11-10",
+      "headcount": 28,
+      "leader": "A. Abbott",
+      "readiness": "Ready"
+    },
+    {
+      "id": "BLZ-DAL-003",
+      "phase": "planned",
+      "state": "TX",
+      "zip3": "752",
+      "city": "Dallas",
+      "startDate": "2026-11-17",
+      "endDate": "2026-11-24",
+      "headcount": 36,
+      "leader": "C. Martinez",
+      "readiness": "Preparing"
+    },
+    {
+      "id": "BLZ-DEN-004",
+      "phase": "planned",
+      "state": "CO",
+      "zip3": "802",
+      "city": "Denver",
+      "startDate": "2026-11-20",
+      "endDate": "2026-11-27",
+      "headcount": 24,
+      "leader": "S. Gibson",
+      "readiness": "Preparing"
+    },
+    {
+      "id": "BLZ-ORD-005",
+      "phase": "planned",
+      "state": "IL",
+      "zip3": "606",
+      "city": "Chicago",
+      "startDate": "2026-12-01",
+      "endDate": "2026-12-08",
+      "headcount": 30,
+      "leader": "K. Beltran",
+      "readiness": "Preparing"
+    }
+  ]
+}
