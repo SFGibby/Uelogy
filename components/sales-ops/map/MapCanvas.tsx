@@ -501,8 +501,17 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     return p ? [p[0], p[1]] : null;
   }
 
-  // City labels disabled entirely — they clutter the map at every zoom.
-  const visibleCities = useMemo(() => [] as typeof MAJOR_CITIES, []);
+  // Cities are off at US zoom and only render once a state is drilled, so they
+  // serve as orienting metros for the ZIP3 glow without cluttering the national
+  // view. Direct-only labels stay hidden on the EPC channel.
+  const visibleCities = useMemo(() => {
+    if (!drilled) return [];
+    return MAJOR_CITIES.filter(c => {
+      if (c.abbr !== filter.stateAbbr) return false;
+      if (c.directOnly && filter.channel !== 'D') return false;
+      return true;
+    });
+  }, [drilled, filter.stateAbbr, filter.channel]);
 
   function buildStateTooltip(abbr: string, name: string, inOps: boolean, epcHit: boolean): TooltipContent {
     const rate = utility?.rates[abbr];
