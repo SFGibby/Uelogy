@@ -67,5 +67,8 @@ export function stateShadingFill(args: {
   singleFinancierKey: string | null;
 }): string | null {
   if (args.mode === 'rate') return utilityRateFill(args.abbr, args.utility);
+  if (args.mode === 'financier' && args.financiers) {
+    return financierFill(args.abbr, args.financiers, args.singleFinancierKey);
+  }
   return null;   // 'metric' — caller handles with the existing install-metric heat
 }

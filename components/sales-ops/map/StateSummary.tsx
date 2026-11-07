@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { FilterState, Financier, UtilityRates, Agg, EpcIndex } from './types';
-import { METRIC_INDEX } from './types';
+import type { FilterState, Financier, UtilityRates, Agg, EpcIndex, Zip3Meta } from './types';
+import { METRIC_INDEX, MIN } from './types';
+import { getAgg, installCount, pickMetric } from './heat';
 import { useEnerfloCoverage } from './useMapData';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
@@ -36,9 +37,11 @@ interface Props {
   financiers: Financier[] | null;
   agg: Agg;
   esIndex: EpcIndex;
+  zip3: Zip3Meta[];
+  onSelectZip3?: (p: string | null) => void;
 }
 
-export default function StateSummary({ filter, hoverState, utility, financiers, agg, esIndex }: Props) {
+export default function StateSummary({ filter, hoverState, utility, financiers, agg, esIndex, zip3, onSelectZip3 }: Props) {
   const enerflo = useEnerfloCoverage();
   const abbr = hoverState ?? filter.stateAbbr;
 
@@ -73,7 +76,23 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
     ? utility.bands.find(b => rate >= b[0] && rate < b[1])?.[2] ?? null
     : null;
 
-  void agg;
+  const suggested = useMemo(() => {
+    if (!abbr) return [];
+    const inState = zip3.filter(z => z.st === abbr);
+    const scored = inState
+      .map(z => {
+        const row = getAgg(agg, 'Z3', filter, z.p);
+        const med = pickMetric(row, 'med');
+        const n = installCount(row);
+        return { p: z.p, city: z.city, med, n };
+      })
+      .filter(r => r.n >= MIN.Z3 && r.med != null);
+    scored.sort((a, b) => {
+      if (a.med! !== b.med!) return a.med! - b.med!;
+      return b.n - a.n;
+    });
+    return scored.slice(0, 5);
+  }, [abbr, zip3, agg, filter]);
 
   if (!abbr) return null;
 
@@ -201,6 +220,66 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
               )}
             </Row>
           )}
+
+          <Row label={`Suggested blitzes${suggested.length ? ` (${suggested.length})` : ''}`}>
+            {suggested.length === 0 ? (
+              <span style={{ color: MUTED }}>Not enough install history to rank</span>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {suggested.map(s => (
+                  <button
+                    key={s.p}
+                    onClick={() => onSelectZip3?.(s.p)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'auto 1fr auto auto',
+                      gap: 10,
+                      alignItems: 'baseline',
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      border: `1px solid ${LINE}`,
+                      background: 'transparent',
+                      color: TEXT,
+                      fontFamily: SANS,
+                      fontSize: 12,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: SUN, letterSpacing: '0.08em' }}>
+                      {s.p}xx
+                    </span>
+                    <span style={{ color: SUBTLE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {s.city}
+                    </span>
+                    <span style={{ color: MUTED, fontFamily: MONO, fontSize: 11 }}>{s.n.toLocaleString()}</span>
+                    <span style={{ color: TEXT, fontFamily: MONO, fontSize: 11, minWidth: 40, textAlign: 'right' }}>
+                      {Math.round(s.med!)} d
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Row>
+
+          <Row label="Crew & resources">
+            <div style={{
+              background: SURFACE_HI, border: `1px dashed ${LINE_HI}`, borderRadius: 8,
+              padding: '10px 12px', fontSize: 12, color: MUTED, lineHeight: 1.5,
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, color: SUBTLE }}>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', color: MUTED, textTransform: 'uppercase' }}>Crew type</span>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', color: MUTED, textTransform: 'uppercase' }}>In state</span>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', color: MUTED, textTransform: 'uppercase' }}>In range</span>
+                <span>Install crews</span><span>—</span><span>—</span>
+                <span>Survey techs</span><span>—</span><span>—</span>
+                <span>Service techs</span><span>—</span><span>—</span>
+              </div>
+              <div style={{ marginTop: 8, fontSize: 11 }}>Crew roster pending — Merdeka field pull.</div>
+            </div>
+          </Row>
         </div>
       )}
     </section>

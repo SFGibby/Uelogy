@@ -24,6 +24,7 @@ interface Props {
   zip3?: Zip3Meta[];
   onSelectState?: (abbr: string | null) => void;
   onSelectZip3?: (zip3: string | null) => void;
+  financiers?: { key: string; name: string }[] | null;
 }
 
 const WINDOW_DAYS: Record<WindowKey, number> = { '3': 90, '6': 180, '12': 365 };
@@ -58,7 +59,7 @@ const STATE_INDEX: Array<{ abbr: string; name: string }> = [
   { abbr: 'WV', name: 'West Virginia' }, { abbr: 'WI', name: 'Wisconsin' }, { abbr: 'WY', name: 'Wyoming' },
 ];
 
-export default function Controls({ filter, onChange, totalInstalls, totalMedian, zip3, onSelectState, onSelectZip3 }: Props) {
+export default function Controls({ filter, onChange, totalInstalls, totalMedian, zip3, onSelectState, onSelectZip3, financiers }: Props) {
   const [customOpen, setCustomOpen] = useState(false);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -200,15 +201,47 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
           {METRICS.map(m => <option key={m.key} value={m.key} style={{ background: SURFACE }}>{m.label}</option>)}
         </select>
       </div>
-      <PillGroup
-        label="Shade"
-        value={filter.stateShading}
-        options={[
-          { k: 'metric', l: 'Install' },
-          { k: 'rate', l: 'Utility' },
-        ]}
-        onChange={(v) => onChange({ stateShading: v as StateShadingKey })}
-      />
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <PillGroup
+          label="Shade"
+          value={filter.stateShading}
+          options={[
+            { k: 'metric', l: 'Install' },
+            { k: 'rate', l: 'Utility' },
+            { k: 'financier', l: 'Lenders' },
+          ]}
+          onChange={(v) => {
+            const patch: Partial<FilterState> = { stateShading: v as StateShadingKey };
+            if (v !== 'financier') patch.financierFilter = null;
+            onChange(patch);
+          }}
+        />
+        {filter.stateShading === 'financier' && (financiers?.length ?? 0) > 0 && (
+          <select
+            value={filter.financierFilter ?? ''}
+            onChange={e => onChange({ financierFilter: e.target.value || null })}
+            style={{
+              background: SURFACE,
+              color: TEXT,
+              border: `1px solid ${LINE_HI}`,
+              borderRadius: 999,
+              padding: '10px 36px 10px 16px',
+              fontFamily: SANS,
+              fontSize: 13,
+              outline: 'none',
+              appearance: 'none',
+              backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23CED3E8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 14px center',
+            }}
+          >
+            <option value="" style={{ background: SURFACE }}>By lender count</option>
+            {financiers!.map(f => (
+              <option key={f.key} value={f.key} style={{ background: SURFACE }}>{f.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
       <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
         <input
           type="search"

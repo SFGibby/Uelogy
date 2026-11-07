@@ -95,7 +95,7 @@ export const WINDOWS: { key: WindowKey; label: string }[] = [
 
 export const MIN = { S: 10, Z3: 10, Z5: 5 };
 
-export type StateShadingKey = 'metric' | 'rate';
+export type StateShadingKey = 'metric' | 'rate' | 'financier';
 
 export interface FilterState {
   channel: Channel;

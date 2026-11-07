@@ -91,6 +91,23 @@ export default function OpsMap() {
     };
   }, [data, filter]);
 
+  const breadcrumbMeta = useMemo(() => {
+    if (!data || !filter.stateAbbr) return null;
+    const inc = filter.channel === 'E' ? filter.inc : 0;
+    if (filter.zip3) {
+      const row = data.AGG[`Z3|${filter.window}|${filter.channel}|${inc}|${filter.zip3}|`] ?? null;
+      const n = installCount(row);
+      const m = pickMetric(row, 'med');
+      if (!n) return null;
+      return `${n.toLocaleString()} installs${m != null ? ` · median ${Math.round(m)} d` : ''}`;
+    }
+    const row = data.AGG[`S|${filter.window}|${filter.channel}|${inc}|${filter.stateAbbr}|`] ?? null;
+    const n = installCount(row);
+    const m = pickMetric(row, 'med');
+    if (!n) return null;
+    return `${n.toLocaleString()} installs${m != null ? ` · median ${Math.round(m)} d` : ''}`;
+  }, [data, filter]);
+
   if (error) {
     return (
       <div style={{ padding: 48, color: '#FF8B9F', fontFamily: SANS }}>
@@ -114,7 +131,7 @@ export default function OpsMap() {
     return (
       <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
         <Breadcrumb filter={filter} onChange={onChange} />
-        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} />
+        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} financiers={financiers} />
         <MobileMarkets
           agg={data.AGG}
           zip3={data.ZIP3}
@@ -143,8 +160,8 @@ export default function OpsMap() {
         </h1>
       </section>
 
-      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} />
-      {filter.stateAbbr && <Breadcrumb filter={filter} onChange={onChange} />}
+      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} financiers={financiers} />
+      {filter.stateAbbr && <Breadcrumb filter={filter} onChange={onChange} meta={breadcrumbMeta} />}
       {filter.stateAbbr && !filter.zip3 && <FinancierTable stateAbbr={filter.stateAbbr} financiers={financiers} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 16, padding: '0 20px 24px' }}>
@@ -198,6 +215,8 @@ export default function OpsMap() {
             financiers={financiers}
             agg={data.AGG}
             esIndex={data.esIndex}
+            zip3={data.ZIP3}
+            onSelectZip3={onSelectZip3}
           />
           <TopCycles
             agg={data.AGG}

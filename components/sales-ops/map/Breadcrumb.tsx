@@ -12,9 +12,10 @@ const SUN = '#FAD646';
 interface Props {
   filter: FilterState;
   onChange: (patch: Partial<FilterState>) => void;
+  meta?: string | null;
 }
 
-export default function Breadcrumb({ filter, onChange }: Props) {
+export default function Breadcrumb({ filter, onChange, meta }: Props) {
   const items: Array<{ label: string; onClick: (() => void) | null }> = [];
   if (filter.stateAbbr) items.push({ label: filter.stateAbbr, onClick: filter.zip3 ? () => onChange({ zip3: null, level: 'STATE' }) : () => onChange({ stateAbbr: null, zip3: null, level: 'US' }) });
   if (filter.zip3) items.push({ label: `${filter.zip3}xx`, onClick: null });
@@ -39,6 +40,11 @@ export default function Breadcrumb({ filter, onChange }: Props) {
           )}
         </span>
       ))}
+      {meta && (
+        <span style={{ color: MUTED, fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          · {meta}
+        </span>
+      )}
     </div>
   );
 }

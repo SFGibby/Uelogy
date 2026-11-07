@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { geoIdentity, geoPath, geoAlbersUsa } from 'd3-geo';
 import { feature } from 'topojson-client';
 import type { FeatureCollection, Feature, Geometry } from 'geojson';
@@ -342,15 +342,18 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
   const [transform, setTransform] = useState<GlowTransform>(transformTarget);
   const transformRef = useRef(transform);
   transformRef.current = transform;
+  const manualRef = useRef(false);
   useEffect(() => {
     const from = transformRef.current;
     const to = transformTarget;
     if (from.tx === to.tx && from.ty === to.ty && from.k === to.k) return;
+    manualRef.current = false;
     const start = performance.now();
     const dur = 480;
     const ease = (t: number) => 1 - Math.pow(1 - t, 3);
     let raf = 0;
     const step = (now: number) => {
+      if (manualRef.current) return;
       const t = Math.min(1, (now - start) / dur);
       const e = ease(t);
       const next = {
@@ -364,6 +367,45 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [transformTarget]);
+
+  // Wheel zoom + drag pan on top of the drill transform. User-initiated
+  // changes set manualRef so the drill animation won't fight. Clamped to
+  // 1x..40x; pan is unbounded (map stays usable even if dragged off-screen).
+  const panStateRef = useRef<{ startX: number; startY: number; baseTx: number; baseTy: number } | null>(null);
+  const onWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const scale = VIEW_W / rect.width;
+    const mx = (e.clientX - rect.left) * scale;
+    const my = (e.clientY - rect.top) * scale;
+    const cur = transformRef.current;
+    const factor = Math.exp(-e.deltaY * 0.0016);
+    const newK = Math.min(40, Math.max(1, cur.k * factor));
+    const newTx = mx - (mx - cur.tx) * (newK / cur.k);
+    const newTy = my - (my - cur.ty) * (newK / cur.k);
+    manualRef.current = true;
+    setTransform({ tx: newTx, ty: newTy, k: newK });
+  }, []);
+  const onPanStart = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return;
+    const cur = transformRef.current;
+    panStateRef.current = { startX: e.clientX, startY: e.clientY, baseTx: cur.tx, baseTy: cur.ty };
+  }, []);
+  const onPanMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    const s = panStateRef.current;
+    if (!s) return;
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const scale = VIEW_W / rect.width;
+    const dx = (e.clientX - s.startX) * scale;
+    const dy = (e.clientY - s.startY) * scale;
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+    manualRef.current = true;
+    const cur = transformRef.current;
+    setTransform({ tx: s.baseTx + dx, ty: s.baseTy + dy, k: cur.k });
+  }, []);
+  const onPanEnd = useCallback(() => { panStateRef.current = null; }, []);
 
   // ZIP5 geometry filtered to just the ZIPs inside the drilled ZIP3.
   const zip5Features: Zip5Feature[] = useMemo(() => {
@@ -459,11 +501,13 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     return p ? [p[0], p[1]] : null;
   }
 
-  // Cities only render once drilled into a state. Direct also layers in the
-  // Product-by-Market "Sales Region" metros; EPC hides those (they are a
-  // Direct go-to-market artefact) and shows the generic state metros only.
+  // US zoom shows the scope: 'US' anchors so the eye can orient. Once drilled,
+  // show scope: 'STATE' cities for that state. Direct view layers in extra
+  // Product-by-Market metros; EPC hides those.
   const visibleCities = useMemo(() => {
-    if (!drilled) return [];
+    if (!drilled) {
+      return MAJOR_CITIES.filter(c => c.scope === 'US');
+    }
     return MAJOR_CITIES.filter(c => {
       if (c.abbr !== filter.stateAbbr) return false;
       if (c.directOnly && filter.channel !== 'D') return false;
@@ -545,9 +589,13 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
         height={size.h}
         role="img"
         aria-label="US install speed map"
-        style={{ display: 'block', position: 'relative', zIndex: 0 }}
+        style={{ display: 'block', position: 'relative', zIndex: 0, cursor: panStateRef.current ? 'grabbing' : 'default' }}
+        onWheel={onWheel}
+        onMouseDown={onPanStart}
+        onMouseMove={onPanMove}
+        onMouseUp={onPanEnd}
         onClick={() => {
-          // Background click: pop one drill level.
+          if (panStateRef.current) return;
           if (zip3Drilled) onSelectZip3?.(null);
           else if (drilled) onSelectState?.(null);
           onHoverZip(null);
