@@ -10,9 +10,9 @@ import MapCanvas from './MapCanvas';
 import TopCycles from './TopCycles';
 import CycleTable from './CycleTable';
 import MobileMarkets from './MobileMarkets';
-import StateContextBadges from './StateContextBadges';
 import LegendNote from './LegendNote';
 import FinancierTable from './FinancierTable';
+import StateSummary from './StateSummary';
 import { useIsNarrow } from '../useBreakpoint';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
@@ -50,6 +50,7 @@ export default function OpsMap() {
   const [filter, setFilter] = useState<FilterState>(INITIAL);
   const [tableOpen, setTableOpen] = useState(false);
   const [hoverZip, setHoverZip] = useState<string | null>(null);
+  const [hoverState, setHoverState] = useState<string | null>(null);
   const isNarrow = useIsNarrow();
 
   const onChange = useCallback((patch: Partial<FilterState>) => {
@@ -113,7 +114,7 @@ export default function OpsMap() {
     return (
       <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
         <Breadcrumb filter={filter} onChange={onChange} />
-        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} financiers={financiers} />
+        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
         <MobileMarkets
           agg={data.AGG}
           zip3={data.ZIP3}
@@ -149,12 +150,11 @@ export default function OpsMap() {
         </p>
       </section>
 
-      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} financiers={financiers} />
+      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
       <Breadcrumb filter={filter} onChange={onChange} />
-      {filter.stateAbbr && !filter.zip3 && <StateContextBadges stateAbbr={filter.stateAbbr} />}
       {filter.stateAbbr && !filter.zip3 && <FinancierTable stateAbbr={filter.stateAbbr} financiers={financiers} />}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 16, padding: '0 20px 24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
           <MapCanvas
             zip3={data.ZIP3}
@@ -162,6 +162,7 @@ export default function OpsMap() {
             dq={data.DQ}
             filter={filter}
             onSelectState={onSelectState}
+            onHoverState={setHoverState}
             hoverZip={hoverZip}
             onHoverZip={setHoverZip}
             onSelectZip3={onSelectZip3}
@@ -197,6 +198,14 @@ export default function OpsMap() {
         </div>
 
         <aside>
+          <StateSummary
+            filter={filter}
+            hoverState={hoverState}
+            utility={utility}
+            financiers={financiers}
+            agg={data.AGG}
+            esIndex={data.esIndex}
+          />
           <TopCycles
             agg={data.AGG}
             esIndex={data.esIndex}

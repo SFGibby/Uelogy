@@ -1,6 +1,6 @@
 'use client';
 
-import type { Channel, FilterState, MetricKey, StateShadingKey, WindowKey, Financier } from './types';
+import type { Channel, FilterState, MetricKey, StateShadingKey, WindowKey } from './types';
 import { METRICS, WINDOWS } from './types';
 
 const SANS = 'var(--font-gibson-sans), -apple-system, system-ui, sans-serif';
@@ -20,11 +20,9 @@ interface Props {
   onChange: (patch: Partial<FilterState>) => void;
   totalInstalls?: number;
   totalMedian?: number | null;
-  financiers?: Financier[] | null;
 }
 
-export default function Controls({ filter, onChange, totalInstalls, totalMedian, financiers }: Props) {
-  const hasFinanciers = (financiers?.length ?? 0) > 0;
+export default function Controls({ filter, onChange, totalInstalls, totalMedian }: Props) {
   return (
     <div
       style={{
@@ -82,34 +80,6 @@ export default function Controls({ filter, onChange, totalInstalls, totalMedian,
         ]}
         onChange={(v) => onChange({ stateShading: v as StateShadingKey })}
       />
-      {hasFinanciers && (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.22em', color: MUTED, textTransform: 'uppercase' }}>Lender filter</span>
-          <select
-            value={filter.financierFilter ?? ''}
-            onChange={(e) => onChange({ financierFilter: e.target.value || null })}
-            style={{
-              background: SURFACE,
-              color: TEXT,
-              border: `1px solid ${LINE_HI}`,
-              borderRadius: 999,
-              padding: '10px 36px 10px 20px',
-              fontFamily: SANS,
-              fontSize: 13,
-              outline: 'none',
-              appearance: 'none',
-              backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23CED3E8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 14px center',
-            }}
-          >
-            <option value="" style={{ background: SURFACE }}>Any lender</option>
-            {financiers!.map(f => (
-              <option key={f.key} value={f.key} style={{ background: SURFACE }}>{f.name}</option>
-            ))}
-          </select>
-        </div>
-      )}
       <input
         type="search"
         value={filter.query}

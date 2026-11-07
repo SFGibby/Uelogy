@@ -79,6 +79,7 @@ interface Props {
   dq?: DqEntry[];
   filter: FilterState;
   onSelectState?: (abbr: string | null) => void;
+  onHoverState?: (abbr: string | null) => void;
   hoverZip: string | null;
   onHoverZip: (p: string | null) => void;
   onSelectZip3?: (p: string | null) => void;
@@ -86,7 +87,7 @@ interface Props {
 
 interface Zip5Feature extends Feature<Geometry, { z: string; c: string }> {}
 
-export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZip, onHoverZip, onSelectZip3 }: Props) {
+export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHoverState, hoverZip, onHoverZip, onSelectZip3 }: Props) {
   const topo = useUsTopo();
   const statesLonLat = useUsStatesLonLat(!!filter.stateAbbr);
   const zip3Topo = useZip3Topo(!!filter.stateAbbr);
@@ -635,9 +636,14 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, hoverZ
                 style={{ cursor: financierMiss ? 'not-allowed' : 'pointer' }}
                 onMouseEnter={(e) => {
                   setHover(abbr);
+                  onHoverState?.(abbr);
                   openTip(buildStateTooltip(abbr, f.properties.name, inOps, epcHit), e);
                 }}
-                onMouseLeave={() => { setHover(h => (h === abbr ? null : h)); setTip(null); }}
+                onMouseLeave={() => {
+                  setHover(h => (h === abbr ? null : h));
+                  onHoverState?.(null);
+                  setTip(null);
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (financierMiss) return;
