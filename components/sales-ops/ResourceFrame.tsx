@@ -42,11 +42,21 @@ export default function ResourceFrame() {
   const initialTab = params?.get('tab') ?? 'sales';
   const [tabKey, setTabKey] = useState<string>(initialTab);
   const [query, setQuery] = useState('');
+  const focusFinancier = params?.get('financier') ?? null;
 
   useEffect(() => {
     const t = params?.get('tab');
     if (t) setTabKey(t);
   }, [params]);
+
+  // When the URL carries ?tab=finance&financier=solrite, scroll the matching
+  // financier accordion into view after the tab paint settles.
+  useEffect(() => {
+    if (!focusFinancier || tabKey !== 'finance') return;
+    const el = document.getElementById(`financier-${focusFinancier}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [focusFinancier, tabKey]);
 
   const tab = data.tabs.find(t => t.key === tabKey) ?? data.tabs[0];
   const q = query.trim().toLowerCase();
@@ -116,7 +126,7 @@ export default function ResourceFrame() {
           <CalculatorEmbed />
         ) : (
           tab.sections.map((s, idx) => (
-            <SectionBlock key={(s as { id?: string }).id ?? `${s.kind}-${idx}`} section={s} query={q} />
+            <SectionBlock key={(s as { id?: string }).id ?? `${s.kind}-${idx}`} section={s} query={q} focusFinancier={focusFinancier} />
           ))
         )}
       </main>
@@ -193,10 +203,10 @@ function Hero({ tabLabel }: { tabLabel: string }) {
 
 // --- section blocks ------------------------------------------------------
 
-function SectionBlock({ section, query }: { section: Section; query: string }) {
+function SectionBlock({ section, query, focusFinancier }: { section: Section; query: string; focusFinancier?: string | null }) {
   if (section.kind === 'table') return <TableBlock section={section} query={query} />;
   if (section.kind === 'faq')   return <FaqBlock section={section} query={query} />;
-  if (section.kind === 'financier') return <FinancierBlock section={section} query={query} />;
+  if (section.kind === 'financier') return <FinancierBlock section={section} query={query} focusFinancier={focusFinancier} />;
   return <CardsBlock section={section} query={query} />;
 }
 
@@ -225,16 +235,24 @@ function CardsBlock({ section, query }: { section: SectionCards; query: string }
   );
 }
 
-function FinancierBlock({ section, query }: { section: SectionFinancier; query: string }) {
-  const [open, setOpen] = useState(false);
+function FinancierBlock({ section, query, focusFinancier }: { section: SectionFinancier; query: string; focusFinancier?: string | null }) {
+  const isFocused = !!section.id && section.id === focusFinancier;
+  const [open, setOpen] = useState(isFocused);
+  useEffect(() => { if (isFocused) setOpen(true); }, [isFocused]);
   const cards = section.cards.filter(c => cardMatches(c, query));
   const matchesTitle = sectionTitleMatches(section.title, query) || !!section.meta?.toLowerCase().includes(query);
   if (query && cards.length === 0 && !matchesTitle) return null;
   const show = matchesTitle ? section.cards : cards;
-  const wantsOpen = open || !!query;
+  const wantsOpen = open || !!query || isFocused;
 
   return (
-    <article style={{ background: SURFACE, border: `1px solid ${LINE_HI}`, borderRadius: 12 }}>
+    <article id={section.id ? `financier-${section.id}` : undefined} style={{
+      background: SURFACE,
+      border: `1px solid ${isFocused ? SUN : LINE_HI}`,
+      borderRadius: 12,
+      scrollMarginTop: 120,
+      transition: 'border-color 240ms ease',
+    }}>
       <button
         onClick={() => setOpen(v => !v)}
         aria-expanded={wantsOpen}

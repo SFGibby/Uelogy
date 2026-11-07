@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-06T18:38:45.983Z",
+  "updatedAt": "2026-11-07T20:15:40.474Z",
   "tabs": [
     {
       "key": "sales",
@@ -236,6 +236,7 @@
               "LightReach (Palmetto)",
               "EnFin",
               "Sungage Financial",
+              "Solrite",
               "PayKeeper (Escrow)"
             ],
             "rows": [
@@ -246,6 +247,7 @@
                 "670+ (680+ in FL and TX)",
                 "620+",
                 "640+",
+                "620+",
                 "N/A – Escrow service, not a lender"
               ],
               [
@@ -255,6 +257,7 @@
                 "Transunion and Equifax",
                 "Transunion",
                 "Experian",
+                "Soft credit (unspecified bureau)",
                 "N/A"
               ],
               [
@@ -264,6 +267,7 @@
                 "No DTI",
                 "No DTI",
                 "640–659 (40% limit) · 660–679 (50% limit) · 680–699 (65% limit) · No DTI over 700",
+                "No DTI",
                 "N/A"
               ],
               [
@@ -273,6 +277,7 @@
                 "No max system price, but monthly payment cannot exceed $500/month",
                 "N/A",
                 "700 and below: $80k · 740+: $100k",
+                "N/A — 25-yr program, not a loan",
                 "N/A"
               ],
               [
@@ -282,6 +287,7 @@
                 "Must be immediate family, no residency required",
                 "Must reside on property and must pass all credit checks",
                 "Must be a resident. If second home, applicant must be on the deed.",
+                "Homeowner must hold title; LLC owners upload ownership docs",
                 "N/A"
               ],
               [
@@ -291,6 +297,7 @@
                 "No townhomes, commercial buildings, condos, carports, home additions, ground mounts, or mobile homes.",
                 "No ground mounts and mobile homes.",
                 "No mobile homes outside of CA and TX, commercial properties, or townhomes.",
+                "SFH with clear title; LLC-owned homes require ownership docs",
                 "N/A"
               ],
               [
@@ -300,6 +307,7 @@
                 "Account Set-Up · Identification · Title Verification · Utility Bill · Clear Facts Disclosure · ACH Information",
                 "Utility Bill · Video Welcome Call · Proposal",
                 "Proof of ID · Welcome Call · ACH Form",
+                "SubHub six-step: title verified · soft credit · signatures · utility bill · AI welcome call · billing profile",
                 "N/A – Releases milestone payments, not project NTP"
               ],
               [
@@ -309,6 +317,7 @@
                 "PPA and Lease",
                 "PPA and Lease",
                 "Sunrise · Brightstart DPP · Brightstart Level Pay",
+                "Virtual Power Plant (Solrite owns batteries · homeowner pays contracted production + program rate)",
                 "Milestone Escrow (Loan/Cash deals)"
               ],
               [
@@ -318,6 +327,7 @@
                 "855-339-1831",
                 "833-586-3675",
                 "844-786-4243",
+                "877-705-2009",
                 "801-406-6711"
               ],
               [
@@ -327,6 +337,7 @@
                 "CA, CO, CT, FL, IL, MA, MD, MI, NC, NV, OH, OR, PA, SC, TX, VA",
                 "CA, IL, MA, PA, TX",
                 "CO, CT, GA, ID, IL, KS, KY, NH, NC, OH, OK, OR, MA, MI, MO, PA, TX, UT, WA",
+                "CA, TX, IL",
                 "N/A"
               ],
               [
@@ -336,6 +347,7 @@
                 "Battery only option available (TPO)",
                 "No battery only option",
                 "Battery only option available (Loan)",
+                "Program includes 20–60 kWh Duracell/Sonnen battery (bundled, not standalone)",
                 "Battery only option available (Same as cash)"
               ]
             ]
@@ -343,7 +355,7 @@
         },
         {
           "kind": "financier",
-          "id": "fin-concert",
+          "id": "concert-finance-propel",
           "title": "Concert Finance / Propel",
           "meta": "Support: (855) 925-4890 (call/text)",
           "cards": [
@@ -391,7 +403,7 @@
         },
         {
           "kind": "financier",
-          "id": "fin-goodleap",
+          "id": "goodleap-tpo",
           "title": "GoodLeap TPO",
           "meta": "Support: Application Support: 1-844-562-6725 · Account Support: 1-800-345-9372",
           "cards": [
@@ -429,7 +441,7 @@
         },
         {
           "kind": "financier",
-          "id": "fin-lightreach",
+          "id": "lightreach-palmetto",
           "title": "LightReach (Palmetto)",
           "meta": "Support: 855-339-1831",
           "cards": [
@@ -462,7 +474,7 @@
         },
         {
           "kind": "financier",
-          "id": "fin-enfin",
+          "id": "enfin",
           "title": "EnFin",
           "meta": "Support: (833) 586-3675",
           "cards": [
@@ -505,7 +517,7 @@
         },
         {
           "kind": "financier",
-          "id": "fin-sungage",
+          "id": "sungage-financial",
           "title": "Sungage Financial",
           "meta": "Support: 844-786-4243",
           "cards": [
@@ -553,7 +565,77 @@
         },
         {
           "kind": "financier",
-          "id": "fin-paykeeper",
+          "id": "solrite",
+          "title": "Solrite",
+          "meta": "Virtual Power Plant · CA, TX, IL · 877-705-2009",
+          "cards": [
+            {
+              "title": "What Solrite is",
+              "highlight": true,
+              "body": "<p>Solrite is a <b>Virtual Power Plant</b> program, not a loan or lease. Solrite owns and runs the batteries; the homeowner gets a locked program rate on contracted production plus essential-load (or whole-home in IL) backup.</p><p><b>The teach:</b> You’re not selling solar — you’re inviting a neighbor into something bigger than their roof. Lead as a Program Educator, teach, don’t pitch.</p>"
+            },
+            {
+              "title": "California · rate card",
+              "highlight": true,
+              "body": "<p><b>19¢ / kWh</b> · <b>2.9%</b> annual escalator · <b>20–45 kWh</b> Duracell battery · 25 yrs monitoring, maintenance, repairs, upgrades included.</p><p><b>Eligibility:</b> essential-load backup, up to 200% offset, 620+ credit, 1,000+ sun hours, qualifying Energy Community counties.</p><p><a href=\"/sales-ops/data/pdfs/solrite-ca-field-guide.pdf\" target=\"_blank\" rel=\"noopener\">Open CA Field Guide →</a></p>"
+            },
+            {
+              "title": "Texas · rate card",
+              "highlight": true,
+              "body": "<p><b>12.9¢ / kWh all-in</b> (~7¢ energy + ~5.9¢ delivery) · <b>2.9%</b> annual escalator · <b>60 kWh</b> Sonnen or Duracell battery · 25 yrs service included.</p><p><b>Eligibility:</b> essential-load backup, up to 120% offset, 620+ credit, 1,000+ sun hours, approved deregulated markets.</p><p><b>Compare apples to apples:</b> Texans already shop for electricity — line up 12.9¢ all-in against the homeowner’s <i>effective</i> rate, not an advertised rate that leaves out delivery.</p><p><a href=\"/sales-ops/data/pdfs/solrite-tx-field-guide.pdf\" target=\"_blank\" rel=\"noopener\">Open TX Field Guide →</a></p>"
+            },
+            {
+              "title": "Illinois · rate card",
+              "highlight": true,
+              "body": "<p><b>12¢ / kWh</b> · <b>2.9%</b> rate cap · <b>60 kWh</b> Duracell battery · 25 yrs service included.</p><p><b>Eligibility:</b> whole-home backup, 620+ credit, 750+ sun hours.</p><p><a href=\"/sales-ops/data/pdfs/solrite-il-field-guide.pdf\" target=\"_blank\" rel=\"noopener\">Open IL Field Guide →</a></p>"
+            },
+            {
+              "title": "Qualify the homeowner",
+              "body": "<p><b>Soft credit check</b> · minimum FICO <b>620</b>.</p><p><b>Frozen credit</b> may need a temporary unfreeze before the check will run.</p><p>Verify identity and confirm interest before launching the enrollment flow.</p>"
+            },
+            {
+              "title": "The SubHub six-step enrollment",
+              "highlight": true,
+              "body": "<p>Don’t leave the driveway until all six boxes are checked. Run the flow inside SubcontractorHub.</p><ol><li><b>Prove ownership</b> — run the title check. Uncheck “Continue With Existing Name,” then click Replace. <b>LLC?</b> Upload the ownership documents.</li><li><b>Qualify</b> — soft credit check, FICO 620+. Frozen credit may need a temporary unfreeze.</li><li><b>Sign</b> — you sign first, then the homeowner. Confirm every required signature.</li><li><b>Upload the utility bill</b> — front, back, and usage graph. Billed-month kWh must match SubHub exactly.</li><li><b>AI Welcome Call</b> — homeowner alone, camera on, answering aloud and on screen. Never coach or answer for them.</li><li><b>Billing profile</b> — ACH is free, Card is +$15/month. After the Stripe success screen, click <b>Back to Solrite Electric LLC</b> then <b>Add</b> — Stripe success alone is <i>not</i> the finish.</li></ol>"
+            },
+            {
+              "title": "Before the AI Welcome Call",
+              "body": "<ul><li>Review the welcome call questions with the homeowner first — they must answer on their own.</li><li>Quiet room, camera on. If someone interrupts, cancel and start over.</li><li>After the last question, click <b>Start Upload</b> and wait for it to finish.</li><li>Active <b>hardwired internet</b> only — hotspots don’t qualify (CA guide).</li><li>Roofing, HVAC, and sales promotions are <i>separate</i> from the Solrite agreement.</li></ul>"
+            },
+            {
+              "title": "Power moves (do)",
+              "body": "<ul><li>Show their numbers off the SubHub proposal.</li><li>Say there is <b>no guarantee of a $0 utility bill</b>.</li><li>Explain that Solrite owns and runs the equipment.</li></ul>"
+            },
+            {
+              "title": "Penalty flags (never do)",
+              "body": "<ul><li>Promise a $0 bill, unlimited power, or a savings percentage.</li><li>Hint that you represent the utility.</li><li>Coach the homeowner on the welcome call.</li></ul>"
+            },
+            {
+              "title": "\"What’s the catch?\" answer",
+              "body": "<p>“Solrite owns and runs the batteries. You get the program rate and the backup. You pay for the contracted production, and you may still have some utility charges.”</p>"
+            },
+            {
+              "title": "Houston door talk track",
+              "body": "<p><b>Setters</b> — win the door, book the appointment:</p><p>“Hey, we’re out educating homeowners about a Virtual Power Plant program now available in your area. Have you seen the news about data centers putting more pressure on the Texas grid? Homes that qualify get a discounted electricity plan and backup power if the grid goes down — would that be of interest?”</p><p>Offer a tight window (“between 6 and 8”) and confirm name, address, phone, and that the decision-makers will be there. Tough question? “I’m not the specialist, but they’ll walk you through that.”</p><p><b>Closers</b> — teach first, then enroll: Energy independence (reduced dependence, not off-grid) · Storm protection (essential-load backup, never “unlimited”) · Savings (use their SubHub proposal and actual bill, not generic %s).</p><p><b>The ask:</b> “Would the savings and backup be worth seeing whether your home qualifies?”</p>"
+            },
+            {
+              "title": "The 10-step conversation",
+              "body": "<p><b>Teach (1–5):</b> Introduce yourself as a Program Educator · create the problem (rising rates, aging infrastructure) · introduce the Virtual Power Plant · the exchange (space + participation for lower rates + backup) · how it works (batteries charge at low demand, support the grid at peak).</p><p><b>Qualify + enroll (6–10):</b> the economics (Solrite owns the batteries) · qualify (confirm interest, verify identity) · Solrite Power Plus if eligible · review the agreement and remove the risk · enroll and explain next steps (Welcome Call, Site Survey, Engineering, Installation).</p>"
+            },
+            {
+              "title": "Selling with Solrite · your path",
+              "body": "<p><b>Get set up:</b> onboard in Enzy with Sales HR → Sales Support sets up SubcontractorHub + Solrite logins → complete the VPP training in Ignite and Solrite.</p><p><b>Sell:</b> canvass in Enzy and calendar every lead → build the proposal in SubcontractorHub → close; sold deals auto-move into Salesforce.</p><p><b>After the sale:</b> SunPower’s Site Survey team schedules with the customer → deal moves to install (standard direct flow) → track in Merdeka with your CSM → Commissions processes pay when commissionable.</p>"
+            },
+            {
+              "title": "Support contacts",
+              "highlight": true,
+              "body": "<p><b>SunPower Sales Support</b> (first line): <a href=\"mailto:salessupport@sunpower.com\">salessupport@sunpower.com</a></p><p><b>Solrite Partner Support</b> (then): 877-705-2009 · <a href=\"mailto:partner.support@solriteenergy.com\">partner.support@solriteenergy.com</a></p>"
+            }
+          ]
+        },
+        {
+          "kind": "financier",
+          "id": "paykeeper-escrow",
           "title": "PayKeeper (Escrow)",
           "meta": "Support: 801-406-6711",
           "cards": [

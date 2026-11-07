@@ -141,7 +141,7 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
                 {stateLenders.map(f => (
                   <a
                     key={f.key}
-                    href={`/sales-ops/resources?tab=finance`}
+                    href={`/sales-ops/resources?tab=finance&financier=${encodeURIComponent(f.key)}`}
                     style={{
                       background: SURFACE_HI, border: `1px solid ${LINE_HI}`,
                       borderRadius: 999, padding: '4px 10px',

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-06T18:39:53.613Z",
+  "updatedAt": "2026-11-07T20:15:44.349Z",
   "source": "Derived from resources.json finance tab Active States column",
   "financiers": [
     {
@@ -106,6 +106,15 @@
         "TX",
         "UT",
         "WA"
+      ]
+    },
+    {
+      "key": "solrite",
+      "name": "Solrite",
+      "states": [
+        "CA",
+        "IL",
+        "TX"
       ]
     }
   ]
