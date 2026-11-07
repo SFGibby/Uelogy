@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Derive per-financier state coverage from the Finance tab of the authored
-// resources content (lib/sales-ops/resources-content.json).
-// Writes public/sales-ops/data/financiers.json.
+// OBSOLETE as of 2026-11-07 — the map now derives financiers at runtime from
+// lib/sales-ops/resources-content.json via lib/sales-ops/derive-financiers.ts,
+// so resources + map stay in lock-step with no build step. This script still
+// writes a static financiers.json if you want one for debugging, but nothing
+// in the app reads it anymore. Safe to delete.
 // Reconciles with serviceable-states.json: if the union differs, logs the diff
 // and rewrites serviceable-states.json from the finance table so the map and
 // the resources tab stay consistent.

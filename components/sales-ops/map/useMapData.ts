@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { MapData, UtilityRates, FinanciersFile, BlitzFile } from './types';
 import { buildEpcIndexes } from './types';
+import { deriveFinanciers } from '../../../lib/sales-ops/derive-financiers';
 
 // Single-flight loader for /sales-ops/data/map-data.json. Cached at the module
 // level so navigating away and back doesn't re-fetch. Index building happens
@@ -127,35 +128,10 @@ export function useEnerfloCoverage(): EnerfloCoverage | null {
 }
 
 // Serviceable states — union of all financier Active States columns.
-// Kept for EPC fallback; Direct now uses Enerflo markets instead.
-let serviceableCached: Set<string> | null = null;
-let serviceableInFlight: Promise<Set<string>> | null = null;
-
+// Derived at runtime from the bundled resources content, so adding/removing a
+// financier in the Resource guide instantly updates the map.
 export function useServiceableStates(): Set<string> | null {
-  const [set, setSet] = useState<Set<string> | null>(serviceableCached);
-  useEffect(() => {
-    if (serviceableCached) { setSet(serviceableCached); return; }
-    if (!serviceableInFlight) {
-      serviceableInFlight = fetch('/sales-ops/data/serviceable-states.json', { cache: 'force-cache' })
-        .then(r => r.ok ? r.json() : { states: [] })
-        .then((d: { states: string[] }) => {
-          const s = new Set(d.states ?? []);
-          serviceableCached = s;
-          serviceableInFlight = null;
-          return s;
-        })
-        .catch(() => {
-          const s = new Set<string>();
-          serviceableCached = s;
-          serviceableInFlight = null;
-          return s;
-        });
-    }
-    let alive = true;
-    serviceableInFlight.then(s => { if (alive) setSet(s); });
-    return () => { alive = false; };
-  }, []);
-  return set;
+  return deriveFinanciers().serviceable;
 }
 
 // Utility rates by state. Small (~1 KB) so we load eagerly and cache.
@@ -179,25 +155,11 @@ export function useUtilityRates(): UtilityRates | null {
   return data;
 }
 
-// Financiers derived from the resources.json Finance tab.
-let financiersCached: FinanciersFile | null = null;
-let financiersInFlight: Promise<FinanciersFile | null> | null = null;
-
+// Financiers — derived at runtime from the bundled resources content. Edits to
+// the Resource guide's Finance tab (Active States row) flow straight through
+// here on the next page load; no builder script, no stale JSON.
 export function useFinanciers(): FinanciersFile | null {
-  const [data, setData] = useState<FinanciersFile | null>(financiersCached);
-  useEffect(() => {
-    if (financiersCached) { setData(financiersCached); return; }
-    if (!financiersInFlight) {
-      financiersInFlight = fetch('/sales-ops/data/financiers.json', { cache: 'force-cache' })
-        .then(r => r.ok ? r.json() : null)
-        .then((d: FinanciersFile | null) => { financiersCached = d; financiersInFlight = null; return d; })
-        .catch(() => { financiersInFlight = null; return null; });
-    }
-    let alive = true;
-    financiersInFlight.then(d => { if (alive) setData(d); });
-    return () => { alive = false; };
-  }, []);
-  return data;
+  return deriveFinanciers().file;
 }
 
 // Blitz entries — seed data for now, Colten's writes will replace once wired.
