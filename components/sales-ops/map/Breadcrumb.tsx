@@ -15,11 +15,10 @@ interface Props {
 }
 
 export default function Breadcrumb({ filter, onChange }: Props) {
-  const items: Array<{ label: string; onClick: (() => void) | null }> = [
-    { label: 'United States', onClick: filter.stateAbbr ? () => onChange({ stateAbbr: null, zip3: null, level: 'US' }) : null },
-  ];
-  if (filter.stateAbbr) items.push({ label: filter.stateAbbr, onClick: filter.zip3 ? () => onChange({ zip3: null, level: 'STATE' }) : null });
+  const items: Array<{ label: string; onClick: (() => void) | null }> = [];
+  if (filter.stateAbbr) items.push({ label: filter.stateAbbr, onClick: filter.zip3 ? () => onChange({ zip3: null, level: 'STATE' }) : () => onChange({ stateAbbr: null, zip3: null, level: 'US' }) });
   if (filter.zip3) items.push({ label: `${filter.zip3}xx`, onClick: null });
+  if (items.length === 0) return null;
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', fontFamily: MONO, fontSize: 12, color: MUTED, letterSpacing: '0.08em' }}>

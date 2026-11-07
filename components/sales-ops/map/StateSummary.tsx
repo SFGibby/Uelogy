@@ -73,9 +73,9 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
     ? utility.bands.find(b => rate >= b[0] && rate < b[1])?.[2] ?? null
     : null;
 
-  // keep reference so lint doesn't bark; AGG not used here yet but will be when
-  // we surface totals like installs-in-state on hover.
   void agg;
+
+  if (!abbr) return null;
 
   return (
     <section
@@ -91,24 +91,14 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
       }}
     >
       <header style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.26em', color: SUN, textTransform: 'uppercase' }}>
-          Summary
-        </div>
-        <div style={{ marginTop: 6, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
           <h3 style={{ margin: 0, fontSize: 18, letterSpacing: '-0.01em' }}>
-            {abbr ? (STATE_NAMES[abbr] ?? abbr) : 'Hover a state'}
+            {STATE_NAMES[abbr] ?? abbr}
           </h3>
-          {abbr && (
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase' }}>
-              {filter.channel === 'D' ? 'Direct view' : 'EPC view'}
-            </span>
-          )}
+          <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.18em', color: MUTED, textTransform: 'uppercase' }}>
+            {filter.channel === 'D' ? 'Direct view' : 'EPC view'}
+          </span>
         </div>
-        {!abbr && (
-          <p style={{ margin: '6px 0 0', color: SUBTLE, fontSize: 12, lineHeight: 1.5 }}>
-            Hover or click a state to see utility rate, lenders, and EPC footprint.
-          </p>
-        )}
       </header>
 
       {abbr && (

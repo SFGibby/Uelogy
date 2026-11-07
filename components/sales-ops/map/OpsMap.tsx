@@ -114,7 +114,7 @@ export default function OpsMap() {
     return (
       <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
         <Breadcrumb filter={filter} onChange={onChange} />
-        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
+        <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} />
         <MobileMarkets
           agg={data.AGG}
           zip3={data.ZIP3}
@@ -128,10 +128,7 @@ export default function OpsMap() {
 
   return (
     <div style={{ background: INK, color: TEXT, fontFamily: SANS, minHeight: 'calc(100vh - 55px)' }}>
-      <section style={{ padding: '22px 20px 8px', display: 'flex', alignItems: 'baseline', gap: 18, flexWrap: 'wrap' }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: SUN, textTransform: 'uppercase' }}>
-          Install speed
-        </div>
+      <section style={{ padding: '22px 20px 8px' }}>
         <h1
           style={{
             margin: 0,
@@ -144,13 +141,10 @@ export default function OpsMap() {
         >
           The <span style={{ color: SUN }}>Big Map</span>
         </h1>
-        <p style={{ margin: 0, color: SUBTLE, fontSize: 13, lineHeight: 1.5 }}>
-          Click a state to focus, Esc to back out.
-        </p>
       </section>
 
-      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} />
-      <Breadcrumb filter={filter} onChange={onChange} />
+      <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} />
+      {filter.stateAbbr && <Breadcrumb filter={filter} onChange={onChange} />}
       {filter.stateAbbr && !filter.zip3 && <FinancierTable stateAbbr={filter.stateAbbr} financiers={financiers} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 16, padding: '0 20px 24px' }}>
