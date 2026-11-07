@@ -151,9 +151,6 @@ export default function HubGibson() {
             <div style={{ marginTop: 14, fontFamily: MONO, fontSize: 11, letterSpacing: '0.24em', color: SUN, textTransform: 'uppercase' }}>
               {activeBucket.label} &middot; This {cadence}
             </div>
-            <p style={{ marginTop: 14, maxWidth: 540, fontSize: 15, lineHeight: 1.6, color: SUBTLE }}>
-              {helpCopy(scope)}
-            </p>
           </div>
           <HeroScore avg={headerAvg} metric={activeBucket.label} />
         </div>
@@ -257,13 +254,6 @@ function regionForTeam(teamName: string): string | null {
     if (teams.includes(teamName)) return region;
   }
   return null;
-}
-
-function helpCopy(scope: Scope): string {
-  if (scope === 'company') return 'Four regions, one view. Pick a region to see teams, or a team to see the reps.';
-  if (scope === 'region') return 'Teams in this region, scored on the same chip you picked above. Tap a team to open its reps.';
-  if (scope === 'team') return 'The reps on this team. Tap a row to open the breakdown, click any number to open accounts.';
-  return 'Every rep on one list. Narrow with the region or team dropdowns, or leave both open to see the full roster.';
 }
 
 function rowNoun(scope: Scope, n: number): string {
