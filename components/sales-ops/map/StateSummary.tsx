@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { FilterState, Financier, UtilityRates, Agg, EpcIndex, Zip3Meta } from './types';
 import { METRIC_INDEX, MIN } from './types';
 import { getAgg, installCount, pickMetric } from './heat';
@@ -41,9 +41,16 @@ interface Props {
   onSelectZip3?: (p: string | null) => void;
 }
 
+const ZONE_INFO: Record<number, { title: string; blurb: string }> = {
+  0: { title: 'Home zone', blurb: 'Primary market. No travel adder applies.' },
+  1: { title: 'Secondary zone', blurb: 'Light travel adder applies. See the adder sheet for the current fee.' },
+  2: { title: 'Outer zone', blurb: 'Larger travel adder applies. See the adder sheet for the current fee.' },
+};
+
 export default function StateSummary({ filter, hoverState, utility, financiers, agg, esIndex, zip3, onSelectZip3 }: Props) {
   const enerflo = useEnerfloCoverage();
   const abbr = hoverState ?? filter.stateAbbr;
+  const [openZone, setOpenZone] = useState<number | null>(null);
 
   const zones = useMemo<number[]>(() => {
     if (!abbr || !enerflo) return [];
@@ -162,29 +169,42 @@ export default function StateSummary({ filter, hoverState, utility, financiers, 
                 {zones.length === 0 ? (
                   <span style={{ color: MUTED }}>Not a working area yet</span>
                 ) : (
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    {zones.map(z => (
-                      <span key={z} style={{
-                        background: SUN, color: '#0D1023',
-                        padding: '3px 9px', borderRadius: 999,
-                        fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {zones.map(z => {
+                        const active = openZone === z;
+                        return (
+                          <button
+                            key={z}
+                            onClick={() => setOpenZone(active ? null : z)}
+                            style={{
+                              background: SUN, color: '#0D1023',
+                              padding: '3px 9px', borderRadius: 999,
+                              fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                              border: active ? `2px solid #0D1023` : `2px solid transparent`,
+                              cursor: 'pointer',
+                            }}
+                            aria-expanded={active}
+                          >
+                            Z{z}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {openZone != null && ZONE_INFO[openZone] && (
+                      <div style={{
+                        background: SURFACE_HI, border: `1px solid ${LINE_HI}`, borderRadius: 8,
+                        padding: '10px 12px', fontSize: 12, color: SUBTLE, lineHeight: 1.5,
                       }}>
-                        Z{z}
-                      </span>
-                    ))}
+                        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.18em', color: SUN, textTransform: 'uppercase', marginBottom: 4 }}>
+                          Zone {openZone} \u00b7 {ZONE_INFO[openZone].title}
+                        </div>
+                        <div>{ZONE_INFO[openZone].blurb}</div>
+                      </div>
+                    )}
                   </div>
                 )}
               </Row>
-              <div style={{
-                background: SURFACE_HI, border: `1px dashed ${LINE_HI}`, borderRadius: 8,
-                padding: '10px 12px', fontSize: 12, color: SUBTLE, lineHeight: 1.5,
-              }}>
-                Adders and travel ranges apply to the <strong style={{ color: TEXT }}>Direct</strong> channel only.{' '}
-                <a href="/sales-ops/resources?tab=adders" style={{ color: SUN, textDecoration: 'underline' }}>
-                  Open the adder sheet
-                </a>
-                .
-              </div>
             </>
           ) : (
             <Row label={`EPCs active (${epcs.length})`}>

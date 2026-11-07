@@ -12,7 +12,6 @@ import TopCycles from './TopCycles';
 import CycleTable from './CycleTable';
 import MobileMarkets from './MobileMarkets';
 import LegendNote from './LegendNote';
-import FinancierTable from './FinancierTable';
 import StateSummary from './StateSummary';
 import { useIsNarrow } from '../useBreakpoint';
 
@@ -164,7 +163,6 @@ export default function OpsMap() {
 
       <Controls filter={filter} onChange={onChange} totalInstalls={totals.installs} totalMedian={totals.median} zip3={data.ZIP3} onSelectState={onSelectState} onSelectZip3={onSelectZip3} financiers={financiers} />
       {filter.stateAbbr && <Breadcrumb filter={filter} onChange={onChange} meta={breadcrumbMeta} />}
-      {filter.stateAbbr && !filter.zip3 && <FinancierTable stateAbbr={filter.stateAbbr} financiers={financiers} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 16, padding: '0 20px 24px' }}>
         <div style={{ minWidth: 0 }}>
