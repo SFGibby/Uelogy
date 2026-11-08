@@ -13,19 +13,8 @@ export default function SunPowerMark({ height = 18, compact = false }: { height?
       <span aria-label="SunPower" style={{ display: 'inline-flex', alignItems: 'center' }}>
         <svg width={size} height={size} viewBox="0 0 32 32" role="img">
           <title>SunPower</title>
-          {/* Outer sun arcs: short radial strokes evoking the ring on the real O */}
-          {Array.from({ length: 12 }).map((_, i) => {
-            const a = (i * Math.PI * 2) / 12;
-            const inner = 13;
-            const outer = 15.5;
-            const x1 = 16 + Math.cos(a) * inner;
-            const y1 = 16 + Math.sin(a) * inner;
-            const x2 = 16 + Math.cos(a) * outer;
-            const y2 = 16 + Math.sin(a) * outer;
-            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FAD646" strokeWidth={1.6} strokeLinecap="round" />;
-          })}
-          {/* White letter O */}
-          <circle cx="16" cy="16" r="10" fill="none" stroke="#FFFFFF" strokeWidth="3.4" />
+          {/* The O in SUNPOWER: a clean yellow ring, nothing else. */}
+          <circle cx="16" cy="16" r="10" fill="none" stroke="#FAD646" strokeWidth="3.4" />
         </svg>
       </span>
     );
