@@ -1,0 +1,1393 @@
+{
+  "divisions": [
+    {
+      "name": "Ambia",
+      "regionals": [
+        {
+          "name": "Stout/Walker",
+          "phone": "(509) 431-5604",
+          "regions": [
+            {
+              "name": "\"Solar's Dead\"",
+              "teams": [
+                {
+                  "team": "AEROTYNE",
+                  "dm_name": "Osama Elhasaeri",
+                  "dm_phone": "(972) 266-4818",
+                  "status": "Active",
+                  "metro": "",
+                  "state": ""
+                },
+                {
+                  "team": "CTRL",
+                  "dm_name": "Matthew Merkel",
+                  "dm_phone": "(402) 739-3540",
+                  "status": "Active",
+                  "metro": "Harrisburg",
+                  "state": "Pennsylvania",
+                  "dm_note": "Michael Barrett"
+                },
+                {
+                  "team": "Lions Den",
+                  "dm_name": "Noah Lemus-Barrera",
+                  "dm_phone": "(330) 481-3692",
+                  "status": "Active",
+                  "metro": "Philadelphia",
+                  "state": "Pennsylvania",
+                  "dm_note": "Chase Sunday"
+                },
+                {
+                  "team": "Dragons",
+                  "dm_name": "William Greer",
+                  "dm_phone": "(253) 384-8217",
+                  "status": "Active",
+                  "metro": "Seattle",
+                  "state": "Washington"
+                },
+                {
+                  "team": "The Wind",
+                  "dm_name": "Telijah Tucker",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "Olympia",
+                  "state": "Washington"
+                }
+              ]
+            }
+          ],
+          "full_name": "Jeffry Stout"
+        }
+      ]
+    },
+    {
+      "name": "Corporate",
+      "regionals": [
+        {
+          "name": "Shillig",
+          "phone": "(661) 505-0577",
+          "regions": [
+            {
+              "name": "Rising Tide",
+              "teams": [
+                {
+                  "team": "Elevate (CT)",
+                  "dm_name": "Isaac Shilig",
+                  "dm_phone": "(661) 505-0577",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Connecticut",
+                  "dm_note": "Always CC Samuel Gibson on welcome emails"
+                }
+              ]
+            }
+          ],
+          "full_name": "Isaac Shillig"
+        }
+      ]
+    },
+    {
+      "name": "Ganley",
+      "regionals": [
+        {
+          "name": "Ganley",
+          "phone": "(602) 618-8002",
+          "regions": [
+            {
+              "name": "Precision",
+              "teams": [
+                {
+                  "team": "Phoenix",
+                  "dm_name": "Tayten Babb /Matthew Horton",
+                  "dm_phone": "(435) 406-5323",
+                  "status": "Active",
+                  "metro": "Phoenix",
+                  "state": "Arizona",
+                  "dm_note": "/Adrian Hernandez"
+                },
+                {
+                  "team": "Yuma",
+                  "dm_name": "Azael Diaz",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Arizona"
+                },
+                {
+                  "team": "Integrity",
+                  "dm_name": "Max Ganley",
+                  "dm_phone": "(602) 618-8002",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "California"
+                },
+                {
+                  "team": "Gldn",
+                  "dm_name": "Alexander Reid",
+                  "dm_phone": "(208) 871-8604",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Colorado",
+                  "dm_note": "Adam Larue"
+                },
+                {
+                  "team": "The Marathon",
+                  "dm_name": "Mohammed El Haddad",
+                  "dm_phone": "(857) 701-8499",
+                  "status": "Active",
+                  "metro": "Hartford, CT",
+                  "state": "Connecticut"
+                },
+                {
+                  "team": "South Tampa",
+                  "dm_name": "Chris Munizzi /Cory Walksler",
+                  "dm_phone": "(813) 597-4008",
+                  "status": "Active",
+                  "metro": "Tampa",
+                  "state": "Florida"
+                },
+                {
+                  "team": "Suns (FL)",
+                  "dm_name": "Chris Munizzi",
+                  "dm_phone": "(813) 597-4008",
+                  "status": "Active",
+                  "metro": "Tampa",
+                  "state": "Florida"
+                },
+                {
+                  "team": "Independent (Texas)",
+                  "dm_name": "Max Ganley",
+                  "dm_phone": "(602) 618-8002",
+                  "status": "Active",
+                  "metro": "Dallas",
+                  "state": "Texas"
+                },
+                {
+                  "team": "Kaizen Legacy",
+                  "dm_name": "Jesse Dixon /Kylee Tavares",
+                  "dm_phone": "(816) 400-7277",
+                  "status": "Active",
+                  "metro": "Virginia Beach",
+                  "state": "Virginia"
+                }
+              ]
+            }
+          ],
+          "full_name": "Max Ganley"
+        }
+      ]
+    },
+    {
+      "name": "Guzman",
+      "regionals": [
+        {
+          "name": "Cohen",
+          "phone": "(702) 336-3191",
+          "regions": [
+            {
+              "name": "Movement",
+              "teams": [
+                {
+                  "team": "VGS Elite-NV",
+                  "dm_name": "Jonathan Ortega (WPP - Jordan Owens) / Jorge Rodriguez (WPP - James Rhodes)",
+                  "dm_phone": "(702) 635-5445",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Nevada"
+                },
+                {
+                  "team": "Bend (OR)",
+                  "dm_name": "Kyle Thomson /Beau Beasley /Bryan Bodnar",
+                  "dm_phone": "(406) 890-5859",
+                  "status": "Active",
+                  "metro": "Bend OR",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "EXODUS (NV/OR)",
+                  "dm_name": "Roberto Laguna",
+                  "dm_phone": "(503) 929-8855",
+                  "status": "Active",
+                  "metro": "Portland",
+                  "state": "Oregon",
+                  "dm_note": "/Daniel Hadobas /Connor Zwerg /Eduardo Campos"
+                },
+                {
+                  "team": "RTL (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Philly",
+                  "dm_name": "Lukas Yagi",
+                  "dm_phone": "(702) 738-7416",
+                  "status": "Active",
+                  "metro": "Philadelphia",
+                  "state": "Pennsylvania"
+                },
+                {
+                  "team": "X Pros",
+                  "dm_name": "Nicolas Knight",
+                  "dm_phone": "(804) 477-9111",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Virginia"
+                }
+              ]
+            }
+          ],
+          "full_name": "Steven Cohen"
+        },
+        {
+          "name": "Dwyer",
+          "phone": "(203) 592-0825",
+          "regions": [
+            {
+              "name": "Blue Raven",
+              "teams": [
+                {
+                  "team": "BRS",
+                  "dm_name": "Evan Dwyer",
+                  "dm_phone": "(203) 592-0825",
+                  "status": "Active",
+                  "metro": "",
+                  "state": ""
+                },
+                {
+                  "team": "Black Ops",
+                  "dm_name": "Jon McPherson",
+                  "dm_phone": "(707) 287-5104",
+                  "status": "Active",
+                  "metro": "",
+                  "state": ""
+                },
+                {
+                  "team": "Killawatt Crew",
+                  "dm_name": "Karion Harman",
+                  "dm_phone": "(614) 401-7104",
+                  "status": "Active",
+                  "metro": "San Diego",
+                  "state": "California"
+                },
+                {
+                  "team": "Venturacks (CA)",
+                  "dm_name": "Michael Lux",
+                  "dm_phone": "(425) 275-8700",
+                  "status": "Active",
+                  "metro": "Ventura",
+                  "state": "California"
+                },
+                {
+                  "team": "AbsoluT (CO)",
+                  "dm_name": "Tim Chung",
+                  "dm_phone": "(720) 326-5604",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Colorado"
+                },
+                {
+                  "team": "Fort Collins Finishers",
+                  "dm_name": "Max Ihry",
+                  "dm_phone": "(630) 360-0748",
+                  "status": "Active",
+                  "metro": "Fort Collins",
+                  "state": "Colorado"
+                },
+                {
+                  "team": "Conversion Commanders of Chicago",
+                  "dm_name": "John Wade III",
+                  "dm_phone": "(312) 753-8350",
+                  "status": "Active",
+                  "metro": "Chicago",
+                  "state": "Illinois"
+                },
+                {
+                  "team": "Indy 500",
+                  "dm_name": "John Steele",
+                  "dm_phone": "(419) 966-7720",
+                  "status": "Active",
+                  "metro": "Indianapolis",
+                  "state": "Indiana"
+                },
+                {
+                  "team": "Alex Martin",
+                  "dm_name": "Alex Martin",
+                  "dm_phone": "(616) 558-5607",
+                  "status": "Active",
+                  "metro": "Grand Rapids",
+                  "state": "Michigan"
+                },
+                {
+                  "team": "The Sunny D (MI)",
+                  "dm_name": "Dustin Goblirsch (MI)",
+                  "dm_phone": "(206) 640-8227",
+                  "status": "Active",
+                  "metro": "Detroit",
+                  "state": "Michigan"
+                },
+                {
+                  "team": "Minneapolis MN (Obsa)",
+                  "dm_name": "Obsa Tahir",
+                  "dm_phone": "(952) 212-3500",
+                  "status": "Active",
+                  "metro": "Minneapolis",
+                  "state": "Minnesota"
+                },
+                {
+                  "team": "Off-Grid Ops (MN)",
+                  "dm_name": "Dustin Goblirsch",
+                  "dm_phone": "(206) 640-8227",
+                  "status": "Active",
+                  "metro": "Minneapolis",
+                  "state": "Minnesota"
+                },
+                {
+                  "team": "Tyler Mayes",
+                  "dm_name": "Tyler Mayes",
+                  "dm_phone": "(913) 980-5680",
+                  "status": "Active",
+                  "metro": "Kansas City",
+                  "state": "Missouri"
+                },
+                {
+                  "team": "Shockwave (Wilmington)",
+                  "dm_name": "Paolo Brahasani",
+                  "dm_phone": "(475) 280-6084",
+                  "status": "Active",
+                  "metro": "Wilmington",
+                  "state": "North Carolina"
+                },
+                {
+                  "team": "Wilmington NC (Robin)",
+                  "dm_name": "Robin Wong",
+                  "dm_phone": "(919) 607-9038",
+                  "status": "Active",
+                  "metro": "Wilmington",
+                  "state": "North Carolina"
+                },
+                {
+                  "team": "Allison Peck",
+                  "dm_name": "Allison Peck",
+                  "dm_phone": "(313) 377-9388",
+                  "status": "Active",
+                  "metro": "Cleveland",
+                  "state": "Ohio"
+                },
+                {
+                  "team": "C Bus Regulators (Columbus)",
+                  "dm_name": "Tim Arnold",
+                  "dm_phone": "(828) 406-1377",
+                  "status": "Active",
+                  "metro": "Columbus",
+                  "state": "Ohio"
+                },
+                {
+                  "team": "Medford Money",
+                  "dm_name": "Willow Bird",
+                  "dm_phone": "(541) 841-6815",
+                  "status": "Active",
+                  "metro": "Medford",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "SUNBLAZERS (Portland)",
+                  "dm_name": "James Posford",
+                  "dm_phone": "(310) 480-4820",
+                  "status": "Active",
+                  "metro": "Portland",
+                  "state": "Oregon",
+                  "dm_note": "& Richard Burress (50) 997-1708"
+                },
+                {
+                  "team": "The Revolution (PA)",
+                  "dm_name": "Andrew Fink",
+                  "dm_phone": "(484) 678-2745",
+                  "status": "Active",
+                  "metro": "Philidelphia",
+                  "state": "Pennsylvania"
+                },
+                {
+                  "team": "Coastal Grand Empire (Myrtle Beach)",
+                  "dm_name": "Desmond Oliveri",
+                  "dm_phone": "(336) 331-7293",
+                  "status": "Active",
+                  "metro": "Myrtle Beach",
+                  "state": "South Carolina"
+                },
+                {
+                  "team": "Myrtle Beach SC (Marqis)",
+                  "dm_name": "Marqis Willis",
+                  "dm_phone": "(910) 515-8321",
+                  "status": "Active",
+                  "metro": "Myrtle Beach",
+                  "state": "South Carolina"
+                },
+                {
+                  "team": "Raleighwood (NC)",
+                  "dm_name": "Megan Thomason",
+                  "dm_phone": "(757) 693-0229",
+                  "status": "Active",
+                  "metro": "Raleigh",
+                  "state": "South Carolina"
+                },
+                {
+                  "team": "MKE Militia (Milwaukee)",
+                  "dm_name": "John Wade III",
+                  "dm_phone": "(312) 753-8350",
+                  "status": "Active",
+                  "metro": "Virginia Beach",
+                  "state": "Virginia"
+                },
+                {
+                  "team": "EverRich (Everett)",
+                  "dm_name": "Mike Lawless",
+                  "dm_phone": "(269) 303-1335",
+                  "status": "Active",
+                  "metro": "Everett",
+                  "state": "Washington"
+                },
+                {
+                  "team": "TacTown (Tacoma)",
+                  "dm_name": "Michael Heathcote",
+                  "dm_phone": "(805) 506-1819",
+                  "status": "Active",
+                  "metro": "Tacoma",
+                  "state": "Washington",
+                  "dm_note": "& Ray Patron"
+                }
+              ]
+            }
+          ],
+          "full_name": "Evan Dwyer"
+        },
+        {
+          "name": "Guzman",
+          "phone": "(360) 719-8452",
+          "regions": [
+            {
+              "name": "Movement",
+              "teams": [
+                {
+                  "team": "Senior Leadership Area Team",
+                  "dm_name": "Bryan Bodnar/Derek Jensen/Ernest Bonasera/",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "All Over",
+                  "state": ""
+                },
+                {
+                  "team": "Virtual Elite",
+                  "dm_name": "David Taylor",
+                  "dm_phone": "(385) 881-3711",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "",
+                  "dm_note": "Stephen Little"
+                },
+                {
+                  "team": "Scottsdale (AZ)",
+                  "dm_name": "David Taylor",
+                  "dm_phone": "(385) 881-3711",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Arizona",
+                  "dm_note": "Stephen Little"
+                },
+                {
+                  "team": "The Bay Area Team",
+                  "dm_name": "Mariana Flores",
+                  "dm_phone": "(505) 304-6696",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "California"
+                },
+                {
+                  "team": "Boulder Area Team",
+                  "dm_name": "Rowen Guthikonda",
+                  "dm_phone": "(318) 422-8960",
+                  "status": "Active",
+                  "metro": "Boulder",
+                  "state": "Colorado"
+                },
+                {
+                  "team": "Genesis-Orlando FL",
+                  "dm_name": "Christopher Burgess",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Florida"
+                },
+                {
+                  "team": "Titans (FL)",
+                  "dm_name": "David Taylor",
+                  "dm_phone": "(385) 881-3711",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Florida",
+                  "dm_note": "Stephen Little"
+                },
+                {
+                  "team": "Genesis-MD",
+                  "dm_name": "Christopher Burgess",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Maryland"
+                },
+                {
+                  "team": "Genesis-NJ",
+                  "dm_name": "Christopher Burgess",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "New Jersey"
+                },
+                {
+                  "team": "Medford (OR)",
+                  "dm_name": "Dean Muse",
+                  "dm_phone": "(541) 761-5833",
+                  "status": "Active",
+                  "metro": "Medford",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Medford 1",
+                  "dm_name": "Alexander Blasing",
+                  "dm_phone": "(541) 414-7402",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 0248 - Retail Sales Medford (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 1108 - Retail Sales Tigard (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 1114 - Retail Sales Wood Village (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 1600 - Retail Sales Salem (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 1690 - Retail Sales Bend (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 1741 - Retail Sales Roseburg (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 1824 - Retail Sales Clackamas (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 2619 - Retail Sales Keizer (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Sunly - 2865 - Retail Sales Redmond (OR)",
+                  "dm_name": "Ernest Bonasera /Derek Jensen /Justin Clayton",
+                  "dm_phone": "(425) 219-3191",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Oregon"
+                },
+                {
+                  "team": "Genesis-PA",
+                  "dm_name": "Christopher Burgess",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Pennsylvania"
+                },
+                {
+                  "team": "DFW (TX)",
+                  "dm_name": "Daniel Corna",
+                  "dm_phone": "(614) 949-4147",
+                  "status": "Active",
+                  "metro": "Dallas Fort Worth",
+                  "state": "Texas"
+                },
+                {
+                  "team": "Fredricksberg Area Team",
+                  "dm_name": "Stephen Brown",
+                  "dm_phone": "(540) 376-5164",
+                  "status": "Active",
+                  "metro": "Fredricksberg VA",
+                  "state": "Virginia"
+                },
+                {
+                  "team": "Genesis-VA",
+                  "dm_name": "Christopher Burgess",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Virginia"
+                },
+                {
+                  "team": "WA Blitz Area",
+                  "dm_name": "Nathan Younger",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Washington"
+                },
+                {
+                  "team": "Genesis-DC",
+                  "dm_name": "Christopher Burgess",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Washington DC"
+                }
+              ]
+            },
+            {
+              "name": "NEEI",
+              "teams": [
+                {
+                  "team": "New England Bloodhounds",
+                  "dm_name": "Anton Foz Brockmeyer/Javier Brown",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Massachusetts"
+                }
+              ]
+            },
+            {
+              "name": "The Syndicate",
+              "teams": [
+                {
+                  "team": "Dallas",
+                  "dm_name": "Ryan Campbell/Emilio Magana",
+                  "dm_phone": "",
+                  "status": "",
+                  "metro": "",
+                  "state": ""
+                },
+                {
+                  "team": "The Energy Source",
+                  "dm_name": "Christopher Derbyshire/Kevin Casper",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "California"
+                },
+                {
+                  "team": "NorCal",
+                  "dm_name": "Christopher Derbyshire/Kevin Casper",
+                  "dm_phone": "",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Massachusetts"
+                }
+              ]
+            }
+          ],
+          "full_name": "Enrique Guzman"
+        }
+      ]
+    },
+    {
+      "name": "Nielsen",
+      "regionals": [
+        {
+          "name": "Hotz",
+          "phone": "(407) 307-6428",
+          "regions": [
+            {
+              "name": "Bouknight",
+              "teams": [
+                {
+                  "team": "Bouknight",
+                  "dm_name": "Douglas Hotz",
+                  "dm_phone": "(407) 307-6428",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Florida"
+                },
+                {
+                  "team": "Team Island (GA)",
+                  "dm_name": "Douglas Hotz",
+                  "dm_phone": "(407) 307-6428",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Georgia"
+                },
+                {
+                  "team": "Resurgence",
+                  "dm_name": "Adam Hays",
+                  "dm_phone": "(309) 370-1306",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Illinois"
+                },
+                {
+                  "team": "Detroit Dawgs (MI)",
+                  "dm_name": "Ashley Salmo",
+                  "dm_phone": "(586) 863-7990",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Michigan"
+                }
+              ]
+            }
+          ],
+          "full_name": "Douglas Hotz"
+        },
+        {
+          "name": "Nielsen/Gregory",
+          "phone": "(435) 757-2497",
+          "regions": [
+            {
+              "name": "Revo",
+              "teams": [
+                {
+                  "team": "Allstars",
+                  "dm_name": "Jack King",
+                  "dm_phone": "(470) 309-8076",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Georgia"
+                },
+                {
+                  "team": "Coastal Empire",
+                  "dm_name": "Julian Rodriguez",
+                  "dm_phone": "(865) 607-9639",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Georgia"
+                },
+                {
+                  "team": "Chicago",
+                  "dm_name": "David Stanton /Laura Jones /Imelda Madrid (Mel)",
+                  "dm_phone": "(708) 717-8268",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Illinois"
+                },
+                {
+                  "team": "WXLF",
+                  "dm_name": "Chance Turner",
+                  "dm_phone": "(803) 429-3820",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Illinois"
+                },
+                {
+                  "team": "Cleveland",
+                  "dm_name": "Shawn Elkins",
+                  "dm_phone": "(216) 832-5086",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Ohio"
+                },
+                {
+                  "team": "Genesis",
+                  "dm_name": "Westin Pierce",
+                  "dm_phone": "(864) 384-4399",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "South Carolina/Georgia"
+                }
+              ]
+            }
+          ],
+          "full_name": "Corey Nielsen"
+        }
+      ]
+    },
+    {
+      "name": "Other",
+      "regionals": [
+        {
+          "name": "Stout/Walker",
+          "phone": "",
+          "regions": [
+            {
+              "name": "HQ",
+              "teams": [
+                {
+                  "team": "Dynamic FL",
+                  "dm_name": "Spence Celestine",
+                  "dm_phone": "(941) 538-1061",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Florida"
+                },
+                {
+                  "team": "Tribe (IL)",
+                  "dm_name": "Edmond Flowers (WPP: Marcus Smith) /Justin Hitchcock (WPP: Mike Smith)",
+                  "dm_phone": "(309) 413-9762",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Illinois"
+                },
+                {
+                  "team": "Conquest TX",
+                  "dm_name": "Judd Soto (WPP: James Smith)",
+                  "dm_phone": "(361) 815-3244",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Texas"
+                },
+                {
+                  "team": "POWERHOUSE (DC)",
+                  "dm_name": "Quentin Dotson",
+                  "dm_phone": "(240) 678-2475",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Washington DC"
+                }
+              ]
+            },
+            {
+              "name": "HQ(APEX)",
+              "teams": [
+                {
+                  "team": "Fresno",
+                  "dm_name": "Chris Cha",
+                  "dm_phone": "(559) 579-6587",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "California"
+                },
+                {
+                  "team": "Lincoln (CA)",
+                  "dm_name": "Michael Lozano",
+                  "dm_phone": "(916) 879-5575",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "California"
+                },
+                {
+                  "team": "San Diego",
+                  "dm_name": "Sarah Rodriguez (Sarah O Sullivan)",
+                  "dm_phone": "(775) 762-0810",
+                  "status": "Active",
+                  "metro": "San Diego",
+                  "state": "California"
+                },
+                {
+                  "team": "Colorado",
+                  "dm_name": "David Logan",
+                  "dm_phone": "(703) 939-4556",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Colorado"
+                },
+                {
+                  "team": "Postal Code",
+                  "dm_name": "Mark Hopcroft",
+                  "dm_phone": "(732) 691-7064",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Colorado"
+                },
+                {
+                  "team": "Connecticut",
+                  "dm_name": "John Klages",
+                  "dm_phone": "(203) 414-5247",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Connecticut"
+                },
+                {
+                  "team": "D.M.V.",
+                  "dm_name": "Danny Post",
+                  "dm_phone": "(303) 358-4733",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "D.C./Maryland/Virginia"
+                },
+                {
+                  "team": "Boston Badger",
+                  "dm_name": "Nick Golubnichii /Valeriy Konovalov",
+                  "dm_phone": "(813) 459-6540",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Massachusetts"
+                },
+                {
+                  "team": "Onyx Energy Group (MA)",
+                  "dm_name": "Till Freeman",
+                  "dm_phone": "(305) 645-6486",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Massachusetts"
+                },
+                {
+                  "team": "SolarWise/SBU",
+                  "dm_name": "Danny Post",
+                  "dm_phone": "(303) 358-4733",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "N/A"
+                },
+                {
+                  "team": "Appalachia (VA)",
+                  "dm_name": "Michael Linkous /Jared Watts",
+                  "dm_phone": "(540) 818-5883",
+                  "status": "Active",
+                  "metro": "",
+                  "state": "Virginia"
+                }
+              ]
+            }
+          ],
+          "full_name": "Max Britton"
+        }
+      ]
+    }
+  ],
+  "spocs": [
+    {
+      "team": "Bouknight",
+      "contact": "Douglas Hotz",
+      "address": "1145 BLACKWATER POND DR",
+      "address_2": "",
+      "city": "ORLANDO",
+      "state": "FL",
+      "zip": "32828"
+    },
+    {
+      "team": "Bouknight IL",
+      "contact": "Douglas Hotz",
+      "address": "1145 BLACKWATER POND DR",
+      "address_2": "",
+      "city": "ORLANDO",
+      "state": "FL",
+      "zip": "32828"
+    },
+    {
+      "team": "Team Island (GA)",
+      "contact": "Douglas Hotz",
+      "address": "1145 BLACKWATER POND DR",
+      "address_2": "",
+      "city": "ORLANDO",
+      "state": "FL",
+      "zip": "32828"
+    },
+    {
+      "team": "Detroit Dawgs (MI)",
+      "contact": "Douglas Hotz",
+      "address": "1146 BLACKWATER POND DR",
+      "address_2": "",
+      "city": "ORLANDO",
+      "state": "FL",
+      "zip": "32829"
+    },
+    {
+      "team": "Exodus (NV/OR)",
+      "contact": "Roberto Laguna",
+      "address": "12263 SW Strobel Rd",
+      "address_2": "",
+      "city": "Beaverton",
+      "state": "OR",
+      "zip": "97007"
+    },
+    {
+      "team": "Philly",
+      "contact": "Lukas Yagi",
+      "address": "1821 Christian St",
+      "address_2": "",
+      "city": "Philadelphia",
+      "state": "PA",
+      "zip": "19146"
+    },
+    {
+      "team": "RTL (OR)",
+      "contact": "Derek Jensen",
+      "address": "3365 SW Lava Ave",
+      "address_2": "",
+      "city": "Redmond",
+      "state": "OR",
+      "zip": "97756"
+    },
+    {
+      "team": "Bend (OR)",
+      "contact": "Bryan Bodnar",
+      "address": "61489 SE Luna Place",
+      "address_2": "",
+      "city": "Bend",
+      "state": "OR",
+      "zip": "97702"
+    },
+    {
+      "team": "X Pros",
+      "contact": "Nicolas Knight",
+      "address": "7295 Shannondale Rd",
+      "address_2": "",
+      "city": "Mechanicsville",
+      "state": "VA",
+      "zip": "23116"
+    },
+    {
+      "team": "Phoenix",
+      "contact": "Tayten Babb",
+      "address": "621 W Lowell Dr",
+      "address_2": "",
+      "city": "San Tan Valley",
+      "state": "AZ",
+      "zip": "85140"
+    },
+    {
+      "team": "The Marathon",
+      "contact": "Mohammed El Haddad",
+      "address": "409 Prospect Ave",
+      "address_2": "Unit 9",
+      "city": "West Hartford",
+      "state": "CT",
+      "zip": "6105"
+    },
+    {
+      "team": "Kaizen Legacy (VA)",
+      "contact": "Jesse Dixon",
+      "address": "2679 Vaughn Bridge Rd",
+      "address_2": "",
+      "city": "Hartselle",
+      "state": "AL",
+      "zip": "35640"
+    },
+    {
+      "team": "South Tampa",
+      "contact": "Chris Munizzi",
+      "address": "3304 Joe Sanchez Rd",
+      "address_2": "",
+      "city": "Plant City",
+      "state": "FL",
+      "zip": "33565"
+    },
+    {
+      "team": "Yuma",
+      "contact": "Azael Diaz",
+      "address": "9661 E 38th St",
+      "address_2": "",
+      "city": "Yuma",
+      "state": "AZ",
+      "zip": "85365"
+    },
+    {
+      "team": "Gldn",
+      "contact": "Adam Larue",
+      "address": "106 NW F st",
+      "address_2": "240",
+      "city": "Grants Pass",
+      "state": "OR",
+      "zip": "97526"
+    },
+    {
+      "team": "The Sunny D (MI)",
+      "contact": "Dustin Goblirsch",
+      "address": "41650 Gardenbrook Rd",
+      "address_2": "#185",
+      "city": "Novi",
+      "state": "MI",
+      "zip": "48375"
+    },
+    {
+      "team": "Raleighwood (NC)",
+      "contact": "Megan Thomason",
+      "address": "813 Green Oaks Parkway",
+      "address_2": "",
+      "city": "Holly Springs",
+      "state": "NC",
+      "zip": "27540"
+    },
+    {
+      "team": "TacTown (Tacoma)",
+      "contact": "Michael Heathcote",
+      "address": "2903 73rd Ave Ct W",
+      "address_2": "",
+      "city": "University Place",
+      "state": "WA",
+      "zip": "98466"
+    },
+    {
+      "team": "Killawatt Crew",
+      "contact": "Karion Harman",
+      "address": "950 Hillery rd.",
+      "address_2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43229"
+    },
+    {
+      "team": "Shockwave (Wilmington)",
+      "contact": "Paolo Brahansani",
+      "address": "3816 Starry Sky Rd",
+      "address_2": "",
+      "city": "Leland",
+      "state": "NC",
+      "zip": "28451"
+    },
+    {
+      "team": "Conversion Commanders of Chicago",
+      "contact": "John Wade III",
+      "address": "19108 Loomis Avenue",
+      "address_2": "",
+      "city": "Homewood",
+      "state": "IL",
+      "zip": "60430"
+    },
+    {
+      "team": "Alex Martin",
+      "contact": "Alex Martin",
+      "address": "5977 Halliday Ridge Dr SE",
+      "address_2": "",
+      "city": "Grand Rapids",
+      "state": "MI",
+      "zip": "49512"
+    },
+    {
+      "team": "C Bus Regulators (Columbus)",
+      "contact": "Armando Garcia",
+      "address": "3073 Oaklawn St",
+      "address_2": "",
+      "city": "Columbus",
+      "state": "OH",
+      "zip": "43224"
+    },
+    {
+      "team": "AbsoluT (CO)",
+      "contact": "Tim Chung",
+      "address": "21230 e Princeton pl",
+      "address_2": "",
+      "city": "Aurora",
+      "state": "CO",
+      "zip": "80013"
+    },
+    {
+      "team": "EverRich (Everett)",
+      "contact": "Mike Lawless",
+      "address": "2903 73rd Ave Ct W",
+      "address_2": "",
+      "city": "University Place",
+      "state": "WA",
+      "zip": "98466"
+    },
+    {
+      "team": "Wilmington NC (Robin)",
+      "contact": "Robin Wong",
+      "address": "811 Delaronde Ln",
+      "address_2": "",
+      "city": "Morrisville",
+      "state": "NC",
+      "zip": "27560"
+    },
+    {
+      "team": "MKE Militia (Milwaukee)",
+      "contact": "Greg Rodee",
+      "address": "19108 Loomis Avenue",
+      "address_2": "",
+      "city": "Homewood",
+      "state": "IL",
+      "zip": "60430"
+    },
+    {
+      "team": "Off-Grid Ops (MN)",
+      "contact": "Dustin Goblirsch",
+      "address": "41650 Gardenbrook Rd",
+      "address_2": "#185",
+      "city": "Novi",
+      "state": "MI",
+      "zip": "48375"
+    },
+    {
+      "team": "Myrtle Beach SC (marqis)",
+      "contact": "Marqis Willis",
+      "address": "117 Oscar Blanks Rd",
+      "address_2": "A",
+      "city": "Evergreen",
+      "state": "NC",
+      "zip": "28438"
+    },
+    {
+      "team": "Lions Den",
+      "contact": "Noah Lemus",
+      "address": "614 Meadowbrook Rd",
+      "address_2": "",
+      "city": "Norristown",
+      "state": "PA",
+      "zip": "19401"
+    },
+    {
+      "team": "CTRL",
+      "contact": "Michael Barrett",
+      "address": "1637 S 154th St",
+      "address_2": "",
+      "city": "Omaha",
+      "state": "NE",
+      "zip": "68144"
+    },
+    {
+      "team": "Colorado",
+      "contact": "Danny Post",
+      "address": "547 Buena Vista Rd",
+      "address_2": "",
+      "city": "Golden",
+      "state": "CO",
+      "zip": "80401"
+    },
+    {
+      "team": "Connecticut",
+      "contact": "John Klages",
+      "address": "547 Buena Vista Rd",
+      "address_2": "",
+      "city": "Golden",
+      "state": "CO",
+      "zip": "80401"
+    },
+    {
+      "team": "Postal Code",
+      "contact": "Mark Hopcroft",
+      "address": "59 Melanie Way",
+      "address_2": "",
+      "city": "Manahawkin",
+      "state": "NJ",
+      "zip": "08050"
+    },
+    {
+      "team": "D.M.V.",
+      "contact": "Danny Post",
+      "address": "547 Buena Vista Rd",
+      "address_2": "",
+      "city": "Golden",
+      "state": "CO",
+      "zip": "80401"
+    },
+    {
+      "team": "VGS Elite-NV",
+      "contact": "Jonathan Ortega",
+      "address": "258 BlueGrotto St",
+      "address_2": "",
+      "city": "Henderson",
+      "state": "NV",
+      "zip": "89015"
+    },
+    {
+      "team": "Chicago",
+      "contact": "Dave Stanton",
+      "address": "5112 Eastchester Court",
+      "address_2": "",
+      "city": "Plainfield",
+      "state": "IL",
+      "zip": "60586"
+    },
+    {
+      "team": "Cleveland",
+      "contact": "Shawn Elkins",
+      "address": "10421 Fidelity Ave",
+      "address_2": "",
+      "city": "Cleveland",
+      "state": "OH",
+      "zip": "44111"
+    },
+    {
+      "team": "Coastal Empire",
+      "contact": "Erica Torres",
+      "address": "234 NE 3RD ST",
+      "address_2": "#208",
+      "city": "Miami",
+      "state": "FL",
+      "zip": "33132"
+    },
+    {
+      "team": "Allstars",
+      "contact": "Jack King",
+      "address": "76 Laurel Dr NE",
+      "address_2": "",
+      "city": "Atlanta",
+      "state": "GA",
+      "zip": "30342"
+    },
+    {
+      "team": "Genesis",
+      "contact": "Westin Pierce",
+      "address": "76 Laurel Dr NE",
+      "address_2": "",
+      "city": "Atlanta",
+      "state": "GA",
+      "zip": "30342"
+    },
+    {
+      "team": "Aerotyne",
+      "contact": "Osama Elhasaeri",
+      "address": "175 Autumn Crescent",
+      "address_2": "",
+      "city": "Calgary",
+      "state": "Alberta",
+      "zip": "T3M 0H5"
+    },
+    {
+      "team": "The Wind",
+      "contact": "Telijah Tucker",
+      "address": "8018 N Bicentennial Loop SE",
+      "address_2": "Unit B",
+      "city": "Olympia",
+      "state": "WA",
+      "zip": "98503"
+    },
+    {
+      "team": "Alliance",
+      "contact": "Jack King",
+      "address": "76 Laurel Dr NE",
+      "address_2": "",
+      "city": "Atlanta",
+      "state": "GA",
+      "zip": "30342"
+    },
+    {
+      "team": "HQ",
+      "contact": "Bryan Smith",
+      "address": "1750 W 11400 S",
+      "address_2": "Unit 110",
+      "city": "South Jordan",
+      "state": "UT",
+      "zip": "84095"
+    }
+  ],
+  "generated_at": "2026-11-06",
+  "team_count": 102
+}
