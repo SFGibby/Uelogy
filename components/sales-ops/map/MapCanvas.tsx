@@ -371,7 +371,11 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
   // Wheel zoom + drag pan on top of the drill transform. User-initiated
   // changes set manualRef so the drill animation won't fight. Clamped to
   // 1x..40x; pan is unbounded (map stays usable even if dragged off-screen).
-  const panStateRef = useRef<{ startX: number; startY: number; baseTx: number; baseTy: number } | null>(null);
+  const panStateRef = useRef<{ startX: number; startY: number; baseTx: number; baseTy: number; pointerId: number } | null>(null);
+  // Sticky: once a drag passes the threshold, any click that follows must
+  // be swallowed (no drill-in, no drill-pop). Cleared on the next pointerdown.
+  const didDragRef = useRef(false);
+  const [panning, setPanning] = useState(false);
   const onWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault();
     const svg = e.currentTarget;
@@ -387,12 +391,14 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     manualRef.current = true;
     setTransform({ tx: newTx, ty: newTy, k: newK });
   }, []);
-  const onPanStart = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const onPanStart = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (e.button !== 0) return;
     const cur = transformRef.current;
-    panStateRef.current = { startX: e.clientX, startY: e.clientY, baseTx: cur.tx, baseTy: cur.ty };
+    didDragRef.current = false;
+    panStateRef.current = { startX: e.clientX, startY: e.clientY, baseTx: cur.tx, baseTy: cur.ty, pointerId: e.pointerId };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
   }, []);
-  const onPanMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const onPanMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     const s = panStateRef.current;
     if (!s) return;
     const svg = e.currentTarget;
@@ -400,12 +406,24 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
     const scale = VIEW_W / rect.width;
     const dx = (e.clientX - s.startX) * scale;
     const dy = (e.clientY - s.startY) * scale;
-    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+    if (!didDragRef.current && Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+    didDragRef.current = true;
+    if (!panning) setPanning(true);
     manualRef.current = true;
+    setTip(null);
     const cur = transformRef.current;
     setTransform({ tx: s.baseTx + dx, ty: s.baseTy + dy, k: cur.k });
+  }, [panning]);
+  const onPanEnd = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    const s = panStateRef.current;
+    if (s) {
+      try { e.currentTarget.releasePointerCapture(s.pointerId); } catch {}
+    }
+    panStateRef.current = null;
+    setPanning(false);
+    // didDragRef stays true for the follow-on click, then any later
+    // pointerdown resets it. That's what keeps post-drag clicks inert.
   }, []);
-  const onPanEnd = useCallback(() => { panStateRef.current = null; }, []);
 
   // ZIP5 geometry filtered to just the ZIPs inside the drilled ZIP3.
   const zip5Features: Zip5Feature[] = useMemo(() => {
@@ -562,6 +580,7 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
   }
 
   const handleContainerMouseMove = (e: React.MouseEvent) => {
+    if (panning) return;
     if (!tip) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -569,6 +588,7 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
   };
 
   const openTip = (content: TooltipContent, e: React.MouseEvent) => {
+    if (panning || panStateRef.current) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
     setTip({ content, x: e.clientX - rect.left, y: e.clientY - rect.top });
@@ -587,13 +607,14 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
         height={size.h}
         role="img"
         aria-label="US install speed map"
-        style={{ display: 'block', position: 'relative', zIndex: 0, cursor: panStateRef.current ? 'grabbing' : 'default' }}
+        style={{ display: 'block', position: 'relative', zIndex: 0, cursor: panning ? 'grabbing' : 'grab', touchAction: 'none' }}
         onWheel={onWheel}
-        onMouseDown={onPanStart}
-        onMouseMove={onPanMove}
-        onMouseUp={onPanEnd}
+        onPointerDown={onPanStart}
+        onPointerMove={onPanMove}
+        onPointerUp={onPanEnd}
+        onPointerCancel={onPanEnd}
         onClick={() => {
-          if (panStateRef.current) return;
+          if (didDragRef.current) return;
           if (zip3Drilled) onSelectZip3?.(null);
           else if (drilled) onSelectState?.(null);
           onHoverZip(null);
@@ -692,6 +713,7 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (didDragRef.current) return;
                   if (financierMiss) return;
                   onSelectState?.(isSelected ? null : abbr);
                 }}
@@ -723,6 +745,7 @@ export default function MapCanvas({ zip3, agg, dq, filter, onSelectState, onHove
                   onMouseLeave={() => { onHoverZip(null); setTip(null); }}
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (didDragRef.current) return;
                     onSelectZip3?.(p);
                   }}
                 />
